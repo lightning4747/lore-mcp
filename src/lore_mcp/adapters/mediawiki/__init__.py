@@ -1,0 +1,1 @@
+"""MediaWiki source adapter."""
