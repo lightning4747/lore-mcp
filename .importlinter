@@ -1,0 +1,60 @@
+[importlinter]
+root_packages =
+    lore_mcp
+include_external_packages = True
+
+[importlinter:contract:layers]
+name = Hexagonal layers architecture
+type = layers
+layers =
+    lore_mcp.interfaces
+    lore_mcp.application
+    lore_mcp.ports
+    lore_mcp.domain
+
+[importlinter:contract:adapter-independence]
+name = Adapter independence
+type = independence
+modules =
+    lore_mcp.adapters.qdrant
+    lore_mcp.adapters.redis
+    lore_mcp.adapters.tavily
+    lore_mcp.adapters.mediawiki
+    lore_mcp.adapters.srt
+    lore_mcp.adapters.docstore
+
+[importlinter:contract:domain-no-io]
+name = Domain imports no I/O libraries
+type = forbidden
+source_modules =
+    lore_mcp.domain
+forbidden_modules =
+    httpx
+    requests
+    urllib
+    socket
+    http
+    aiohttp
+    redis
+    upstash_redis
+    qdrant_client
+    fastmcp
+    tavily
+    srt
+    mwclient
+
+[importlinter:contract:mcp-no-ingest]
+name = MCP interface imports no ingestion modules
+type = forbidden
+source_modules =
+    lore_mcp.interfaces.mcp
+forbidden_modules =
+    lore_mcp.application.ingest
+
+[importlinter:contract:cli-no-fastmcp]
+name = Ingest CLI imports no FastMCP
+type = forbidden
+source_modules =
+    lore_mcp.interfaces.cli
+forbidden_modules =
+    fastmcp
