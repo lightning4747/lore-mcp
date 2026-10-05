@@ -21,6 +21,8 @@ from lore_mcp.domain import (
     SearchHit,
     SearchQuery,
     SeriesId,
+    SeriesManifest,
+    WebSearchResult,
     validate_series_id,
 )
 
@@ -238,7 +240,47 @@ def test_evidence_and_evidence_bundle(sample_provenance: Provenance) -> None:
 
 
 @pytest.mark.unit
-def test_json_roundtrip(sample_chunk: Chunk) -> None:
-    json_data = sample_chunk.model_dump_json()
-    reconstituted = Chunk.model_validate_json(json_data)
-    assert reconstituted == sample_chunk
+def test_json_roundtrip(sample_chunk: Chunk, sample_provenance: Provenance) -> None:
+    # Chunk roundtrip
+    chunk_json = sample_chunk.model_dump_json()
+    assert Chunk.model_validate_json(chunk_json) == sample_chunk
+
+    # Entity roundtrip
+    entity = Entity(
+        entity_id=EntityId("kang"),
+        series_id=SeriesId("loki"),
+        name="Kang",
+        entity_type="character",
+        aliases=["He Who Remains"],
+    )
+    assert Entity.model_validate_json(entity.model_dump_json()) == entity
+
+    # Event roundtrip
+    event = Event(
+        event_id=EventId("ev-1"),
+        series_id=SeriesId("loki"),
+        name="Event 1",
+        description="Description 1",
+    )
+    assert Event.model_validate_json(event.model_dump_json()) == event
+
+    # SearchQuery roundtrip
+    query = SearchQuery(series_id=SeriesId("loki"), query="test query")
+    assert SearchQuery.model_validate_json(query.model_dump_json()) == query
+
+    # SeriesManifest roundtrip
+    manifest = SeriesManifest(
+        series_id=SeriesId("loki"),
+        display_name="Loki",
+        kind="show",
+        aliases=["MCU Loki"],
+    )
+    assert SeriesManifest.model_validate_json(manifest.model_dump_json()) == manifest
+
+    # WebSearchResult roundtrip
+    web_res = WebSearchResult(
+        url="https://example.com",
+        title="Example",
+        snippet="Snippet text",
+    )
+    assert WebSearchResult.model_validate_json(web_res.model_dump_json()) == web_res
