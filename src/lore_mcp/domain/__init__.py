@@ -6,7 +6,7 @@ from lore_mcp.domain.documents import (
     NormalizedDocument,
     RawDocument,
 )
-from lore_mcp.domain.entities import Entity, Event
+from lore_mcp.domain.entities import Entity, Event, SeriesManifest
 from lore_mcp.domain.identifiers import (
     LORE_CHUNK_NAMESPACE,
     generate_chunk_id,
@@ -20,6 +20,7 @@ from lore_mcp.domain.search import (
     EvidenceBundle,
     SearchHit,
     SearchQuery,
+    WebSearchResult,
 )
 from lore_mcp.domain.types import (
     ChunkId,
@@ -47,7 +48,9 @@ __all__ = [
     "SearchHit",
     "SearchQuery",
     "SeriesId",
+    "SeriesManifest",
     "ValidatedSeriesId",
+    "WebSearchResult",
     "generate_chunk_id",
     "generate_entity_id",
     "generate_event_id",

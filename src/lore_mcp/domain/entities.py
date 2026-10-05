@@ -68,3 +68,36 @@ class Event(BaseModel):
         default_factory=list[str],
         description="Resulting consequences or follow-up events",
     )
+
+
+class SeriesManifest(BaseModel):
+    """Metadata manifest describing an indexed series and its boundaries."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    series_id: ValidatedSeriesId = Field(description="Unique series slug identifier")
+    display_name: str = Field(description="Human-readable title of the series")
+    kind: str = Field(
+        default="show",
+        description="Type of series (e.g. 'show', 'anime')",
+    )
+    aliases: list[str] = Field(
+        default_factory=list[str],
+        description="Alternative names and search aliases for the series",
+    )
+    seasons: list[int] = Field(
+        default_factory=list[int],
+        description="List of available season numbers",
+    )
+    entity_count: int = Field(
+        default=0, description="Total number of extracted entities"
+    )
+    chunk_count: int = Field(
+        default=0, description="Total number of indexed vector chunks"
+    )
+    ingest_version: int = Field(
+        default=1, description="Current ingestion batch version"
+    )
+    schema_version: int = Field(
+        default=1, description="Data schema version for manifest compatibility"
+    )

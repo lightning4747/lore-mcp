@@ -121,3 +121,13 @@ class EvidenceBundle(BaseModel):
         default_factory=list[str],
         description="Informational notices (e.g. spoiler guards, cache status)",
     )
+
+
+class WebSearchResult(BaseModel):
+    """External web search result item retrieved during fallback."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    url: str = Field(description="URL of the web result")
+    title: str = Field(description="Title of the web search result")
+    snippet: str = Field(description="Textual snippet from search result")
