@@ -9,6 +9,10 @@ from lore_mcp.application.errors import (
     InvalidScope,
     RateLimited,
 )
+from lore_mcp.application.series_loader import (
+    load_all_series_configs,
+    load_series_config,
+)
 
 __all__ = [
     "ApplicationError",
@@ -18,4 +22,6 @@ __all__ = [
     "InvalidArgument",
     "InvalidScope",
     "RateLimited",
+    "load_all_series_configs",
+    "load_series_config",
 ]

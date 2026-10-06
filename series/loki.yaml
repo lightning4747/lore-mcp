@@ -1,0 +1,29 @@
+id: loki
+display_names:
+  - "Loki"
+  - "Loki (TV Series)"
+kind: show
+aliases:
+  - "MCU Loki"
+  - "Loki Series"
+  - "Marvel's Loki"
+wiki_endpoints:
+  - api_url: "https://marvel.fandom.com/api.php"
+    wiki_type: "fandom"
+    license: "CC-BY-SA-3.0"
+    attribution: "Marvel Database Contributors (Fandom)"
+category_to_entity_type:
+  "Characters": "character"
+  "Locations": "location"
+  "Devices": "device"
+  "Vehicles": "vehicle"
+  "Organizations": "organization"
+  "Events": "event"
+  "Concepts": "concept"
+  "Abilities": "ability"
+web_fallback_domain_allowlist:
+  - "marvel.fandom.com"
+  - "en.wikipedia.org"
+  - "marvelcinematicuniverse.fandom.com"
+curated_timeline_path: "series/timelines/loki_timeline.json"
+transcripts_dir: "series/transcripts/loki"

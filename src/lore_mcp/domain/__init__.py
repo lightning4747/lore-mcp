@@ -22,6 +22,7 @@ from lore_mcp.domain.search import (
     SearchQuery,
     WebSearchResult,
 )
+from lore_mcp.domain.series_config import SeriesConfig, WikiEndpointConfig
 from lore_mcp.domain.types import (
     ChunkId,
     EntityId,
@@ -47,10 +48,12 @@ __all__ = [
     "RawDocument",
     "SearchHit",
     "SearchQuery",
+    "SeriesConfig",
     "SeriesId",
     "SeriesManifest",
     "ValidatedSeriesId",
     "WebSearchResult",
+    "WikiEndpointConfig",
     "generate_chunk_id",
     "generate_entity_id",
     "generate_event_id",
