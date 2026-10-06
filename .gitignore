@@ -60,3 +60,5 @@ coverage.xml
 # Project specific
 data/
 scratch/
+transcripts/
+*.srt
