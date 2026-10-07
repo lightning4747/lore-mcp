@@ -64,8 +64,8 @@ def test_deliberate_import_violations_fail_linter(
             f"Expected import-linter to fail for {violation_import}, "
             f"but passed with output:\n{result.stdout}"
         )
-        assert expected_broken in result.stdout, (
-            f"Expected {expected_broken!r} in stdout, got:\n{result.stdout}"
-        )
+        assert (
+            expected_broken in result.stdout
+        ), f"Expected {expected_broken!r} in stdout, got:\n{result.stdout}"
     finally:
         target_path.write_text(original_content, encoding="utf-8")

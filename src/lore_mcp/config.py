@@ -43,6 +43,43 @@ class QdrantSettings(BaseSettings):
         validation_alias=AliasChoices("QDRANT_META_COLLECTION"),
         description="Qdrant collection name for series manifests and metadata",
     )
+    embedding_model: str = Field(
+        default="all-MiniLM-L6-v2",
+        validation_alias=AliasChoices("QDRANT_EMBEDDING_MODEL"),
+        description="Dense embedding model name",
+    )
+    dimension: int = Field(
+        default=384,
+        validation_alias=AliasChoices("QDRANT_DIMENSION"),
+        description="Dense vector dimension",
+    )
+    inference_backend: Literal["cloud", "fastembed"] = Field(
+        default="cloud",
+        validation_alias=AliasChoices("QDRANT_INFERENCE_BACKEND"),
+        description="Embedding inference backend (cloud or fastembed)",
+    )
+    schema_version: int = Field(
+        default=1,
+        validation_alias=AliasChoices("QDRANT_SCHEMA_VERSION"),
+        description="Vector store schema version",
+    )
+    dense_vector_name: str = Field(
+        default="dense",
+        validation_alias=AliasChoices("QDRANT_DENSE_VECTOR_NAME"),
+        description="Named dense vector identifier in collection",
+    )
+    sparse_vector_name: str = Field(
+        default="bm25",
+        validation_alias=AliasChoices("QDRANT_SPARSE_VECTOR_NAME"),
+        description="Named sparse vector identifier in collection",
+    )
+
+    @field_validator("dimension", "schema_version")
+    @classmethod
+    def validate_positive_int(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("Value must be greater than 0")
+        return value
 
 
 class RedisSettings(BaseSettings):
