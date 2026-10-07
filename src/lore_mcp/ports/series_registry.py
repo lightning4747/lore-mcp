@@ -25,3 +25,11 @@ class SeriesRegistry(Protocol):
     async def delete_series(self, series_id: SeriesId) -> bool:
         """Delete a series manifest from the registry."""
         ...
+
+    async def resolve_alias(self, alias_or_name: str) -> SeriesId | None:
+        """Resolve a display name or alias to canonical SeriesId."""
+        ...
+
+    async def get_alias_map(self) -> dict[str, SeriesId]:
+        """Return a mapping of all lowercase aliases and names to SeriesId."""
+        ...

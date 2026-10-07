@@ -78,6 +78,17 @@ class FakeVectorIndex(VectorIndex):
             return len(self._chunks)
         return sum(1 for c in self._chunks.values() if c.series_id == series_id)
 
+    async def prune_older_versions(
+        self, series_id: SeriesId, active_version: int
+    ) -> None:
+        to_delete = [
+            cid
+            for cid, c in self._chunks.items()
+            if c.series_id == series_id and c.ingest_version < active_version
+        ]
+        for cid in to_delete:
+            del self._chunks[cid]
+
 
 class FakeSeriesRegistry(SeriesRegistry):
     """In-memory fake implementation of SeriesRegistry."""
@@ -99,6 +110,19 @@ class FakeSeriesRegistry(SeriesRegistry):
             del self._manifests[series_id]
             return True
         return False
+
+    async def get_alias_map(self) -> dict[str, SeriesId]:
+        alias_map: dict[str, SeriesId] = {}
+        for s_id, manifest in self._manifests.items():
+            alias_map[str(s_id).lower()] = s_id
+            alias_map[manifest.display_name.lower()] = s_id
+            for a in manifest.aliases:
+                alias_map[a.strip().lower()] = s_id
+        return alias_map
+
+    async def resolve_alias(self, alias_or_name: str) -> SeriesId | None:
+        alias_map = await self.get_alias_map()
+        return alias_map.get(alias_or_name.strip().lower())
 
 
 class FakeCache(Cache):

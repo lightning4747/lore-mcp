@@ -8,9 +8,11 @@ from qdrant_client import AsyncQdrantClient, models
 
 from lore_mcp.adapters.qdrant.index import QdrantVectorIndex
 from lore_mcp.adapters.qdrant.initializer import QdrantInitializer
+from lore_mcp.adapters.qdrant.registry import QdrantSeriesRegistry
 from lore_mcp.config import QdrantSettings
+from lore_mcp.ports.series_registry import SeriesRegistry
 from lore_mcp.ports.vector_index import VectorIndex
-from lore_mcp.testing import VectorIndexContractSuite
+from lore_mcp.testing import SeriesRegistryContractSuite, VectorIndexContractSuite
 
 
 @pytest.fixture
@@ -55,5 +57,17 @@ class TestQdrantVectorIndexContract(VectorIndexContractSuite):
 
             client._embed_models = fake_embed_models  # type: ignore[assignment]
             return QdrantVectorIndex(client, contract_settings)
+
+        return asyncio.run(_setup())
+
+
+@pytest.mark.contract
+class TestQdrantSeriesRegistryContract(SeriesRegistryContractSuite):
+    @pytest.fixture
+    def registry(self, contract_settings: QdrantSettings) -> SeriesRegistry:
+        async def _setup() -> SeriesRegistry:
+            client = AsyncQdrantClient(":memory:")
+            await QdrantInitializer.ensure_collections_ready(client, contract_settings)
+            return QdrantSeriesRegistry(client, contract_settings)
 
         return asyncio.run(_setup())

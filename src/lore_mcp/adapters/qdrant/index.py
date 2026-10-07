@@ -271,6 +271,34 @@ class QdrantVectorIndex(VectorIndex):
                 f"Failed to count chunks in '{self._settings.chunks_collection}': {err}"
             ) from err
 
+    async def prune_older_versions(
+        self, series_id: SeriesId, active_version: int
+    ) -> None:
+        """Prune chunks belonging to series_id with ingest_version < active_version."""
+        prune_conditions: list[models.Condition] = [
+            models.FieldCondition(
+                key="series",
+                match=models.MatchValue(value=str(series_id)),
+            ),
+            models.FieldCondition(
+                key="ingest_version",
+                range=models.Range(lt=active_version),
+            ),
+        ]
+        try:
+            await self._client.delete(
+                collection_name=self._settings.chunks_collection,
+                points_selector=models.FilterSelector(
+                    filter=models.Filter(must=prune_conditions)
+                ),
+                wait=True,
+            )
+        except Exception as err:
+            raise QdrantOperationError(
+                f"Failed to prune older versions (<{active_version}) for series "
+                f"'{series_id}' from '{self._settings.chunks_collection}': {err}"
+            ) from err
+
     async def search(self, query: SearchQuery) -> list[SearchHit]:
         """Search for candidate chunks matching series and constraints."""
         query_filter = build_filter_from_query(query)

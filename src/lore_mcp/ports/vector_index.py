@@ -31,3 +31,9 @@ class VectorIndex(Protocol):
     async def count(self, series_id: SeriesId | None = None) -> int:
         """Return total chunks count, optionally scoped to a series."""
         ...
+
+    async def prune_older_versions(
+        self, series_id: SeriesId, active_version: int
+    ) -> None:
+        """Prune chunks belonging to series_id with ingest_version < active_version."""
+        ...

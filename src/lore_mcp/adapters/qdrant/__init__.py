@@ -17,6 +17,10 @@ from lore_mcp.adapters.qdrant.index import (
     to_point_id,
 )
 from lore_mcp.adapters.qdrant.initializer import QdrantInitializer
+from lore_mcp.adapters.qdrant.registry import (
+    QdrantSeriesRegistry,
+    to_manifest_point_id,
+)
 
 __all__ = [
     "QdrantAdapterError",
@@ -24,10 +28,12 @@ __all__ = [
     "QdrantInitializer",
     "QdrantMetadataMismatchError",
     "QdrantOperationError",
+    "QdrantSeriesRegistry",
     "QdrantVectorIndex",
     "build_filter_from_query",
     "build_metadata_filter",
     "create_async_qdrant_client",
     "resolve_embedding_model_name",
+    "to_manifest_point_id",
     "to_point_id",
 ]
