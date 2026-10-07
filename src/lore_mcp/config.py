@@ -73,8 +73,13 @@ class QdrantSettings(BaseSettings):
         validation_alias=AliasChoices("QDRANT_SPARSE_VECTOR_NAME"),
         description="Named sparse vector identifier in collection",
     )
+    batch_size: int = Field(
+        default=64,
+        validation_alias=AliasChoices("QDRANT_BATCH_SIZE"),
+        description="Batch size for vector upserts",
+    )
 
-    @field_validator("dimension", "schema_version")
+    @field_validator("dimension", "schema_version", "batch_size")
     @classmethod
     def validate_positive_int(cls, value: int) -> int:
         if value <= 0:

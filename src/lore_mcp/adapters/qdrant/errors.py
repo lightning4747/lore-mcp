@@ -54,3 +54,10 @@ class QdrantInitializationError(DependencyUnavailable):
 
     def __init__(self, message: str) -> None:
         super().__init__(service_name="qdrant", message=message)
+
+
+class QdrantOperationError(DependencyUnavailable):
+    """Raised when an operation against Qdrant fails."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(service_name="qdrant", message=message)
