@@ -7,6 +7,10 @@ from lore_mcp.adapters.qdrant.errors import (
     QdrantMetadataMismatchError,
     QdrantOperationError,
 )
+from lore_mcp.adapters.qdrant.filters import (
+    build_filter_from_query,
+    build_metadata_filter,
+)
 from lore_mcp.adapters.qdrant.index import (
     QdrantVectorIndex,
     resolve_embedding_model_name,
@@ -21,6 +25,8 @@ __all__ = [
     "QdrantMetadataMismatchError",
     "QdrantOperationError",
     "QdrantVectorIndex",
+    "build_filter_from_query",
+    "build_metadata_filter",
     "create_async_qdrant_client",
     "resolve_embedding_model_name",
     "to_point_id",

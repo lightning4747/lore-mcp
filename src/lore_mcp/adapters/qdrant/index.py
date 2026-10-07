@@ -9,6 +9,7 @@ from typing import Any
 from qdrant_client import AsyncQdrantClient, models
 
 from lore_mcp.adapters.qdrant.errors import QdrantOperationError
+from lore_mcp.adapters.qdrant.filters import build_filter_from_query
 from lore_mcp.config import QdrantSettings
 from lore_mcp.domain.documents import Chunk
 from lore_mcp.domain.identifiers import LORE_CHUNK_NAMESPACE
@@ -272,14 +273,7 @@ class QdrantVectorIndex(VectorIndex):
 
     async def search(self, query: SearchQuery) -> list[SearchHit]:
         """Search for candidate chunks matching series and constraints."""
-        filter_conditions: list[models.Condition] = [
-            models.FieldCondition(
-                key="series",
-                match=models.MatchValue(value=str(query.series_id)),
-            )
-        ]
-
-        query_filter = models.Filter(must=filter_conditions)
+        query_filter = build_filter_from_query(query)
 
         try:
             response = await self._client.query_points(

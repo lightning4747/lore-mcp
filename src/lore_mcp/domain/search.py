@@ -33,6 +33,12 @@ class SearchQuery(BaseModel):
     entity: str | None = Field(
         default=None, description="Target entity or concept focus filter"
     )
+    entity_type: str | None = Field(
+        default=None, description="Entity type classification filter"
+    )
+    source_type: str | None = Field(
+        default=None, description="Source provenance type filter"
+    )
     max_results: int = Field(
         default=8, description="Requested number of evidence results"
     )
