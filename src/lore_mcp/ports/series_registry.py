@@ -30,6 +30,10 @@ class SeriesRegistry(Protocol):
         """Resolve a display name or alias to canonical SeriesId."""
         ...
 
+    async def get_manifests(self) -> list[SeriesManifest]:
+        """Retrieve all registered series manifests."""
+        ...
+
     async def get_alias_map(self) -> dict[str, SeriesId]:
         """Return a mapping of all lowercase aliases and names to SeriesId."""
         ...

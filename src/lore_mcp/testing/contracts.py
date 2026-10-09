@@ -145,6 +145,38 @@ class SeriesRegistryContractSuite:
         assert deleted is True
         assert await registry.get_series(SeriesId("loki")) is None
 
+    @pytest.mark.asyncio
+    async def test_get_manifests_and_aliases(self, registry: SeriesRegistry) -> None:
+        m1 = SeriesManifest(
+            series_id=SeriesId("loki"),
+            display_name="Loki",
+            aliases=["MCU Loki", "God of Stories"],
+        )
+        m2 = SeriesManifest(
+            series_id=SeriesId("andor"),
+            display_name="Andor",
+            aliases=["Cassian"],
+        )
+        await registry.register_series(m1)
+        await registry.register_series(m2)
+
+        manifests = await registry.get_manifests()
+        series_ids = {m.series_id for m in manifests}
+        assert SeriesId("loki") in series_ids
+        assert SeriesId("andor") in series_ids
+
+        alias_map = await registry.get_alias_map()
+        assert alias_map["loki"] == SeriesId("loki")
+        assert alias_map["mcu loki"] == SeriesId("loki")
+        assert alias_map["god of stories"] == SeriesId("loki")
+        assert alias_map["andor"] == SeriesId("andor")
+        assert alias_map["cassian"] == SeriesId("andor")
+
+        assert await registry.resolve_alias("LOKI") == SeriesId("loki")
+        assert await registry.resolve_alias("mcu loki") == SeriesId("loki")
+        assert await registry.resolve_alias("Cassian") == SeriesId("andor")
+        assert await registry.resolve_alias("nonexistent") is None
+
 
 class CacheContractSuite:
     """Contract test suite for Cache port implementations."""

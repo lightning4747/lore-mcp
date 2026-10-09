@@ -111,6 +111,9 @@ class FakeSeriesRegistry(SeriesRegistry):
             return True
         return False
 
+    async def get_manifests(self) -> list[SeriesManifest]:
+        return list(self._manifests.values())
+
     async def get_alias_map(self) -> dict[str, SeriesId]:
         alias_map: dict[str, SeriesId] = {}
         for s_id, manifest in self._manifests.items():
