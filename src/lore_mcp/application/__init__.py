@@ -10,23 +10,27 @@ from lore_mcp.application.errors import (
     InvalidScope,
     RateLimited,
 )
+from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.scope import ResolvedScope, ScopeResolver
 from lore_mcp.application.series_loader import (
     load_all_series_configs,
     load_series_config,
 )
+from lore_mcp.application.sparse import SparseRetriever
 
 __all__ = [
     "ApplicationError",
     "DataUnavailable",
     "DenseRetriever",
     "DependencyUnavailable",
+    "HybridRetriever",
     "IncompatibleData",
     "InvalidArgument",
     "InvalidScope",
     "RateLimited",
     "ResolvedScope",
     "ScopeResolver",
+    "SparseRetriever",
     "load_all_series_configs",
     "load_series_config",
 ]

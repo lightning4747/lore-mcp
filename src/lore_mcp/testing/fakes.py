@@ -65,6 +65,45 @@ class FakeVectorIndex(VectorIndex):
         hits.sort(key=lambda h: h.score, reverse=True)
         return hits[: query.max_results]
 
+    async def search_sparse(self, query: SearchQuery) -> list[SearchHit]:
+        hits: list[SearchHit] = []
+        query_terms = set(query.query.lower().split())
+        for chunk in self._chunks.values():
+            if chunk.series_id != query.series_id:
+                continue
+            if query.season is not None and chunk.season != query.season:
+                continue
+            if query.episode is not None and chunk.episode != query.episode:
+                continue
+            if query.max_season is not None and chunk.season is not None:
+                if chunk.season > query.max_season:
+                    continue
+            if query.max_episode is not None and chunk.episode is not None:
+                if (
+                    query.season is not None
+                    and chunk.season == query.season
+                    and chunk.episode > query.max_episode
+                ):
+                    continue
+
+            # Lexical BM25 score approximation via term overlap
+            text_terms = set(chunk.text.lower().split())
+            overlap = len(query_terms & text_terms)
+            if overlap == 0:
+                continue
+
+            score = float(overlap) / max(len(query_terms), 1)
+            hits.append(
+                SearchHit(
+                    chunk=chunk,
+                    score=score,
+                    sparse_score=score,
+                )
+            )
+
+        hits.sort(key=lambda h: h.score, reverse=True)
+        return hits[: query.max_results]
+
     async def search(self, query: SearchQuery) -> list[SearchHit]:
         return await self.search_dense(query)
 

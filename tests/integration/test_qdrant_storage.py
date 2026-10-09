@@ -61,7 +61,12 @@ async def create_initialized_client(settings: QdrantSettings) -> AsyncQdrantClie
         points_or_queries: Any, is_query: bool = False, batch_size: int = 8
     ) -> Any:
         if is_query:
-            yield [0.0] * 384
+            nearest = getattr(points_or_queries, "nearest", points_or_queries)
+            model_name = getattr(nearest, "model", None)
+            if model_name == "Qdrant/bm25" or "bm25" in str(points_or_queries).lower():
+                yield models.SparseVector(indices=[0, 1], values=[1.0, 0.5])
+            else:
+                yield [0.0] * 384
             return
         for p in points_or_queries:
             yield models.PointStruct(

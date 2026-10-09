@@ -4,6 +4,7 @@ Every suite defines the behavioral invariants required of any adapter implementi
 the port (both in-memory fakes and production network/database adapters).
 """
 
+import asyncio
 from datetime import UTC, datetime
 
 import pytest
@@ -116,6 +117,43 @@ class VectorIndexContractSuite:
         # Descending order verification
         scores = [h.score for h in hits]
         assert scores == sorted(scores, reverse=True)
+
+    @pytest.mark.asyncio
+    async def test_search_sparse_ranks_candidates_with_scores(
+        self, index: VectorIndex
+    ) -> None:
+        c1 = make_test_chunk("c1", "loki", "Loki and Sylvie at the Citadel")
+        c2 = make_test_chunk("c2", "loki", "Loki in TVA archives")
+        c3 = make_test_chunk("c3", "star-wars", "Sylvie in wrong galaxy")
+        await index.upsert([c1, c2, c3])
+
+        query = SearchQuery(series_id=SeriesId("loki"), query="Sylvie Citadel")
+        hits = await index.search_sparse(query)
+
+        assert len(hits) >= 1
+        assert all(h.chunk.series_id == "loki" for h in hits)
+        for h in hits:
+            assert h.sparse_score is not None
+            assert h.score == h.sparse_score
+            assert h.chunk.text != ""
+        scores = [h.score for h in hits]
+        assert scores == sorted(scores, reverse=True)
+
+    @pytest.mark.asyncio
+    async def test_parallel_dense_and_sparse_search(self, index: VectorIndex) -> None:
+        c1 = make_test_chunk("c1", "loki", "Loki and Sylvie at the Citadel")
+        await index.upsert([c1])
+
+        query = SearchQuery(series_id=SeriesId("loki"), query="Sylvie Citadel")
+        dense_hits, sparse_hits = await asyncio.gather(
+            index.search_dense(query),
+            index.search_sparse(query),
+        )
+
+        assert len(dense_hits) >= 1
+        assert len(sparse_hits) >= 1
+        assert dense_hits[0].dense_score is not None
+        assert sparse_hits[0].sparse_score is not None
 
     @pytest.mark.asyncio
     async def test_delete_series(self, index: VectorIndex) -> None:

@@ -341,6 +341,49 @@ class QdrantVectorIndex(VectorIndex):
             )
         return hits
 
+    async def search_sparse(self, query: SearchQuery) -> list[SearchHit]:
+        """Search BM25 sparse vector with series filter and lexical scoring."""
+        query_filter = build_filter_from_query(query)
+
+        try:
+            response = await self._client.query_points(
+                collection_name=self._settings.chunks_collection,
+                query=models.Document(
+                    text=query.query,
+                    model="Qdrant/bm25",
+                ),
+                using=self._settings.sparse_vector_name,
+                query_filter=query_filter,
+                limit=query.max_results,
+                with_payload=True,
+                with_vectors=False,
+            )
+        except Exception as err:
+            raise QdrantOperationError(
+                "Failed to query sparse chunks in "
+                f"'{self._settings.chunks_collection}': {err}"
+            ) from err
+
+        hits: list[SearchHit] = []
+        for scored_point in response.points:
+            payload = scored_point.payload or {}
+            chunk: Chunk | None = None
+            chunk_json = payload.get("_chunk_json")
+            if isinstance(chunk_json, str):
+                chunk = Chunk.model_validate_json(chunk_json)
+            else:
+                chunk = self._reconstruct_chunk_from_payload(scored_point.id, payload)
+
+            score = float(scored_point.score)
+            hits.append(
+                SearchHit(
+                    chunk=chunk,
+                    score=score,
+                    sparse_score=score,
+                )
+            )
+        return hits
+
     async def search(self, query: SearchQuery) -> list[SearchHit]:
         """Search for candidate chunks matching series and constraints."""
         return await self.search_dense(query)
