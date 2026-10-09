@@ -96,6 +96,28 @@ class VectorIndexContractSuite:
         assert hits[0].chunk.series_id == "loki"
 
     @pytest.mark.asyncio
+    async def test_search_dense_ranks_candidates_with_scores(
+        self, index: VectorIndex
+    ) -> None:
+        c1 = make_test_chunk("c1", "loki", "Loki and Sylvie at the Citadel")
+        c2 = make_test_chunk("c2", "loki", "Loki in TVA archives")
+        c3 = make_test_chunk("c3", "star-wars", "Loki cross series leak")
+        await index.upsert([c1, c2, c3])
+
+        query = SearchQuery(series_id=SeriesId("loki"), query="Sylvie Citadel")
+        hits = await index.search_dense(query)
+
+        assert len(hits) >= 1
+        assert all(h.chunk.series_id == "loki" for h in hits)
+        for h in hits:
+            assert h.dense_score is not None
+            assert h.score == h.dense_score
+            assert h.chunk.text != ""
+        # Descending order verification
+        scores = [h.score for h in hits]
+        assert scores == sorted(scores, reverse=True)
+
+    @pytest.mark.asyncio
     async def test_delete_series(self, index: VectorIndex) -> None:
         c1 = make_test_chunk("c1", "loki", "Loki text")
         c2 = make_test_chunk("c2", "star-wars", "Star wars text")

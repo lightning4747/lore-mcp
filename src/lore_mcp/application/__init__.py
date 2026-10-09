@@ -1,5 +1,6 @@
 """Application layer: orchestrations, use cases, and ingestion stages."""
 
+from lore_mcp.application.dense import DenseRetriever
 from lore_mcp.application.errors import (
     ApplicationError,
     DataUnavailable,
@@ -18,6 +19,7 @@ from lore_mcp.application.series_loader import (
 __all__ = [
     "ApplicationError",
     "DataUnavailable",
+    "DenseRetriever",
     "DependencyUnavailable",
     "IncompatibleData",
     "InvalidArgument",

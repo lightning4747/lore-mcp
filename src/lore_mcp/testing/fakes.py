@@ -27,7 +27,7 @@ class FakeVectorIndex(VectorIndex):
         for chunk in chunks:
             self._chunks[chunk.chunk_id] = chunk
 
-    async def search(self, query: SearchQuery) -> list[SearchHit]:
+    async def search_dense(self, query: SearchQuery) -> list[SearchHit]:
         hits: list[SearchHit] = []
         for chunk in self._chunks.values():
             if chunk.series_id != query.series_id:
@@ -64,6 +64,9 @@ class FakeVectorIndex(VectorIndex):
 
         hits.sort(key=lambda h: h.score, reverse=True)
         return hits[: query.max_results]
+
+    async def search(self, query: SearchQuery) -> list[SearchHit]:
+        return await self.search_dense(query)
 
     async def get_by_id(self, chunk_id: ChunkId) -> Chunk | None:
         return self._chunks.get(chunk_id)

@@ -20,6 +20,10 @@ class VectorIndex(Protocol):
         """Search for candidate chunks matching constraints."""
         ...
 
+    async def search_dense(self, query: SearchQuery) -> list[SearchHit]:
+        """Search dense vector with series filter and return ranked candidates."""
+        ...
+
     async def get_by_id(self, chunk_id: ChunkId) -> Chunk | None:
         """Retrieve a specific chunk by its stable identifier."""
         ...

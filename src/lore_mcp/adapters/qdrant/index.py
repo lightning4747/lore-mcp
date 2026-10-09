@@ -299,8 +299,8 @@ class QdrantVectorIndex(VectorIndex):
                 f"'{series_id}' from '{self._settings.chunks_collection}': {err}"
             ) from err
 
-    async def search(self, query: SearchQuery) -> list[SearchHit]:
-        """Search for candidate chunks matching series and constraints."""
+    async def search_dense(self, query: SearchQuery) -> list[SearchHit]:
+        """Search dense vector with mandatory series filter and cosine scoring."""
         query_filter = build_filter_from_query(query)
 
         try:
@@ -331,11 +331,16 @@ class QdrantVectorIndex(VectorIndex):
             else:
                 chunk = self._reconstruct_chunk_from_payload(scored_point.id, payload)
 
+            score = float(scored_point.score)
             hits.append(
                 SearchHit(
                     chunk=chunk,
-                    score=float(scored_point.score),
-                    dense_score=float(scored_point.score),
+                    score=score,
+                    dense_score=score,
                 )
             )
         return hits
+
+    async def search(self, query: SearchQuery) -> list[SearchHit]:
+        """Search for candidate chunks matching series and constraints."""
+        return await self.search_dense(query)
