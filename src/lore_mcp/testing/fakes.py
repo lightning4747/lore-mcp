@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 from lore_mcp.domain.documents import Chunk, NormalizedDocument, RawDocument
 from lore_mcp.domain.entities import SeriesManifest
 from lore_mcp.domain.search import SearchHit, SearchQuery, WebSearchResult
-from lore_mcp.domain.types import ChunkId, SeriesId
+from lore_mcp.domain.types import ChunkId, EntityId, SeriesId
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock
@@ -27,25 +27,55 @@ class FakeVectorIndex(VectorIndex):
         for chunk in chunks:
             self._chunks[chunk.chunk_id] = chunk
 
+    def _matches_filters(self, chunk: Chunk, query: SearchQuery) -> bool:
+        if chunk.series_id != query.series_id:
+            return False
+
+        if query.season is not None and chunk.season != query.season:
+            return False
+
+        if query.episode is not None and chunk.episode != query.episode:
+            return False
+
+        if query.entity is not None:
+            if EntityId(str(query.entity)) not in chunk.entity_ids:
+                return False
+
+        if query.source_type is not None:
+            if chunk.provenance.source_type != query.source_type:
+                return False
+
+        has_spoiler_bound = (
+            query.max_season is not None or query.max_episode is not None
+        )
+        if has_spoiler_bound:
+            if chunk.season is None:
+                if not query.include_unscoped:
+                    return False
+            else:
+                if query.max_season is not None and query.max_episode is not None:
+                    if chunk.season > query.max_season:
+                        return False
+                    if (
+                        chunk.season == query.max_season
+                        and chunk.episode is not None
+                        and chunk.episode > query.max_episode
+                    ):
+                        return False
+                elif query.max_season is not None:
+                    if chunk.season > query.max_season:
+                        return False
+                elif query.max_episode is not None:
+                    if chunk.episode is not None and chunk.episode > query.max_episode:
+                        return False
+
+        return True
+
     async def search_dense(self, query: SearchQuery) -> list[SearchHit]:
         hits: list[SearchHit] = []
         for chunk in self._chunks.values():
-            if chunk.series_id != query.series_id:
+            if not self._matches_filters(chunk, query):
                 continue
-            if query.season is not None and chunk.season != query.season:
-                continue
-            if query.episode is not None and chunk.episode != query.episode:
-                continue
-            if query.max_season is not None and chunk.season is not None:
-                if chunk.season > query.max_season:
-                    continue
-            if query.max_episode is not None and chunk.episode is not None:
-                if (
-                    query.season is not None
-                    and chunk.season == query.season
-                    and chunk.episode > query.max_episode
-                ):
-                    continue
 
             # Basic relevance calculation for in-memory testing
             text_lower = chunk.text.lower()
@@ -69,22 +99,8 @@ class FakeVectorIndex(VectorIndex):
         hits: list[SearchHit] = []
         query_terms = set(query.query.lower().split())
         for chunk in self._chunks.values():
-            if chunk.series_id != query.series_id:
+            if not self._matches_filters(chunk, query):
                 continue
-            if query.season is not None and chunk.season != query.season:
-                continue
-            if query.episode is not None and chunk.episode != query.episode:
-                continue
-            if query.max_season is not None and chunk.season is not None:
-                if chunk.season > query.max_season:
-                    continue
-            if query.max_episode is not None and chunk.episode is not None:
-                if (
-                    query.season is not None
-                    and chunk.season == query.season
-                    and chunk.episode > query.max_episode
-                ):
-                    continue
 
             # Lexical BM25 score approximation via term overlap
             text_terms = set(chunk.text.lower().split())

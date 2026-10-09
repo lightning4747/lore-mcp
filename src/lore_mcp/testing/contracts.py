@@ -18,7 +18,7 @@ from lore_mcp.domain.documents import (
 from lore_mcp.domain.entities import SeriesManifest
 from lore_mcp.domain.provenance import Provenance
 from lore_mcp.domain.search import SearchQuery
-from lore_mcp.domain.types import ChunkId, SeriesId
+from lore_mcp.domain.types import ChunkId, EntityId, SeriesId
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock
@@ -42,6 +42,8 @@ def make_test_chunk(
     text: str = "Test chunk text",
     season: int | None = 1,
     episode: int | None = 1,
+    entity_ids: list[str] | None = None,
+    source_type: str = "fandom",
 ) -> Chunk:
     return Chunk(
         chunk_id=ChunkId(chunk_id),
@@ -50,7 +52,12 @@ def make_test_chunk(
         season=season,
         episode=episode,
         content_hash="hash1",
-        provenance=make_test_provenance(),
+        entity_ids=[EntityId(e) for e in (entity_ids or [])],
+        provenance=Provenance(
+            source_type=source_type,
+            source_url="https://marvel.fandom.com/wiki/Loki",
+            retrieval_timestamp=datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC),
+        ),
     )
 
 
@@ -154,6 +161,109 @@ class VectorIndexContractSuite:
         assert len(sparse_hits) >= 1
         assert dense_hits[0].dense_score is not None
         assert sparse_hits[0].sparse_score is not None
+
+    @pytest.mark.asyncio
+    async def test_metadata_filters_equality_and_entities(
+        self, index: VectorIndex
+    ) -> None:
+        c1 = make_test_chunk(
+            "c1",
+            "loki",
+            "Loki and Mobius at TVA",
+            season=1,
+            episode=1,
+            entity_ids=["loki", "mobius"],
+            source_type="transcript",
+        )
+        c2 = make_test_chunk(
+            "c2",
+            "loki",
+            "Sylvie at Citadel",
+            season=1,
+            episode=6,
+            entity_ids=["sylvie"],
+            source_type="fandom",
+        )
+        c3 = make_test_chunk(
+            "c3",
+            "loki",
+            "Loki and Sylvie in void",
+            season=1,
+            episode=5,
+            entity_ids=["loki", "sylvie"],
+            source_type="transcript",
+        )
+        await index.upsert([c1, c2, c3])
+
+        # Filter by season and episode
+        hits = await index.search_dense(
+            SearchQuery(series_id=SeriesId("loki"), query="Loki", season=1, episode=1)
+        )
+        assert len(hits) == 1
+        assert hits[0].chunk.chunk_id == "c1"
+
+        # Filter by entity
+        hits_entity = await index.search_dense(
+            SearchQuery(series_id=SeriesId("loki"), query="Loki", entity="mobius")
+        )
+        assert len(hits_entity) == 1
+        assert hits_entity[0].chunk.chunk_id == "c1"
+
+        # Filter by source_type
+        hits_src = await index.search_dense(
+            SearchQuery(
+                series_id=SeriesId("loki"), query="Citadel", source_type="fandom"
+            )
+        )
+        assert len(hits_src) == 1
+        assert hits_src[0].chunk.chunk_id == "c2"
+
+    @pytest.mark.asyncio
+    async def test_metadata_filters_spoiler_bounds_and_unscoped(
+        self, index: VectorIndex
+    ) -> None:
+        c_s1e6 = make_test_chunk("c1", "loki", "End of season 1", season=1, episode=6)
+        c_s2e2 = make_test_chunk(
+            "c2", "loki", "Early season 2 Brad Wolfe", season=2, episode=2
+        )
+        c_s2e5 = make_test_chunk(
+            "c3", "loki", "Late season 2 timeline collapse", season=2, episode=5
+        )
+        c_s3e1 = make_test_chunk(
+            "c4", "loki", "Season 3 hypothetical", season=3, episode=1
+        )
+        c_unscoped = make_test_chunk(
+            "c5", "loki", "General background lore", season=None, episode=None
+        )
+        await index.upsert([c_s1e6, c_s2e2, c_s2e5, c_s3e1, c_unscoped])
+
+        # Spoiler bound: max_season=2, max_episode=2, include_unscoped=False
+        # Should include S1E6 and S2E2, but NOT S2E5, S3E1, or unscoped
+        hits_bound = await index.search_dense(
+            SearchQuery(
+                series_id=SeriesId("loki"),
+                query="Loki",
+                max_season=2,
+                max_episode=2,
+                include_unscoped=False,
+            )
+        )
+        hit_ids = {h.chunk.chunk_id for h in hits_bound}
+        assert hit_ids == {ChunkId("c1"), ChunkId("c2")}
+
+        # Spoiler bound: max_season=2, max_episode=2, include_unscoped=True
+        # Should include S1E6, S2E2, and unscoped
+        hits_unscoped = await index.search_dense(
+            SearchQuery(
+                series_id=SeriesId("loki"),
+                query="Loki",
+                max_season=2,
+                max_episode=2,
+                include_unscoped=True,
+            )
+        )
+        hit_ids_unscoped = {h.chunk.chunk_id for h in hits_unscoped}
+        assert hit_ids_unscoped == {ChunkId("c1"), ChunkId("c2"), ChunkId("c5")}
 
     @pytest.mark.asyncio
     async def test_delete_series(self, index: VectorIndex) -> None:
