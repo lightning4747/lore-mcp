@@ -260,3 +260,116 @@ def test_lifespan_closes_owned_client(test_settings: Settings) -> None:
         res = client.get("/healthz")
         assert res.status_code == 200
     # Exiting TestClient triggers lifespan shutdown
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_list_series_tool_with_fake_registry(test_settings: Settings) -> None:
+    """Tool list_series returns series ids, display names, aliases, and kind."""
+    from lore_mcp.domain.entities import SeriesManifest
+    from lore_mcp.domain.types import SeriesId
+    from lore_mcp.testing import FakeSeriesRegistry
+
+    registry = FakeSeriesRegistry()
+    await registry.register_series(
+        SeriesManifest(
+            series_id=SeriesId("loki"),
+            display_name="Loki (TV Series)",
+            kind="show",
+            aliases=["MCU Loki", "God of Stories"],
+            seasons=[1, 2],
+        )
+    )
+    await registry.register_series(
+        SeriesManifest(
+            series_id=SeriesId("arcane"),
+            display_name="Arcane",
+            kind="anime",
+            aliases=["League Arcane"],
+            seasons=[1],
+        )
+    )
+
+    memory_client = AsyncQdrantClient(":memory:")
+    mcp = create_mcp_server(
+        settings=test_settings, client=memory_client, registry=registry
+    )
+
+    # 1. Verify tool registration
+    tools = await mcp.list_tools()
+    tool_names = [t.name for t in tools]
+    assert "list_series" in tool_names
+
+    # 2. Call tool directly via FastMCP call_tool
+    result = await mcp.call_tool("list_series", {})
+    assert result.is_error is False
+    assert result.structured_content is not None
+    assert "result" in result.structured_content
+
+    series_data = result.structured_content["result"]
+    assert len(series_data) == 2
+
+    # Map by series_id
+    by_id = {item["series_id"]: item for item in series_data}
+    assert "loki" in by_id
+    assert by_id["loki"]["display_name"] == "Loki (TV Series)"
+    assert by_id["loki"]["aliases"] == ["MCU Loki", "God of Stories"]
+    assert by_id["loki"]["kind"] == "show"
+
+    assert "arcane" in by_id
+    assert by_id["arcane"]["display_name"] == "Arcane"
+    assert by_id["arcane"]["aliases"] == ["League Arcane"]
+    assert by_id["arcane"]["kind"] == "anime"
+
+
+@pytest.mark.unit
+def test_list_series_via_streamable_http(test_settings: Settings) -> None:
+    """Tool list_series is discoverable and callable via Streamable HTTP POST /mcp."""
+    from lore_mcp.domain.entities import SeriesManifest
+    from lore_mcp.domain.types import SeriesId
+    from lore_mcp.testing import FakeSeriesRegistry
+
+    registry = FakeSeriesRegistry()
+    registry._manifests[SeriesId("loki")] = SeriesManifest(
+        series_id=SeriesId("loki"),
+        display_name="Loki",
+        kind="show",
+        aliases=["MCU Loki"],
+    )
+
+    memory_client = AsyncQdrantClient(":memory:")
+    mcp = create_mcp_server(
+        settings=test_settings, client=memory_client, registry=registry
+    )
+    app = create_http_app(mcp)
+
+    with TestClient(app) as client:
+        # Call tools/call over JSON-RPC
+        payload: dict[str, Any] = {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {
+                "name": "list_series",
+                "arguments": {},
+            },
+        }
+        res = client.post(
+            "/mcp",
+            json=payload,
+            headers={"Accept": "application/json, text/event-stream"},
+        )
+        assert res.status_code == 200
+        content_type = res.headers.get("content-type", "")
+        if "text/event-stream" in content_type:
+            import json
+
+            lines = res.text.strip().splitlines()
+            data_line = next(line for line in lines if line.startswith("data: "))
+            data = json.loads(data_line.removeprefix("data: ").strip())
+        else:
+            data = res.json()
+
+        assert data.get("jsonrpc") == "2.0"
+        assert "result" in data
+        assert "content" in data["result"]
