@@ -5,7 +5,12 @@ import asyncio
 from lore_mcp.application.dense import DenseRetriever
 from lore_mcp.application.errors import InvalidArgument
 from lore_mcp.application.sparse import SparseRetriever
-from lore_mcp.domain.search import SearchHit, SearchQuery, reciprocal_rank_fusion
+from lore_mcp.domain.search import (
+    SearchHit,
+    SearchQuery,
+    reciprocal_rank_fusion,
+    rerank_candidates,
+)
 from lore_mcp.ports.vector_index import VectorIndex
 
 
@@ -19,11 +24,13 @@ class HybridRetriever:
         sparse_retriever: SparseRetriever | None = None,
         *,
         rrf_k: int = 60,
+        enable_rerank: bool = True,
     ) -> None:
         self._index = index
         self._dense = dense_retriever or DenseRetriever(index)
         self._sparse = sparse_retriever or SparseRetriever(index)
         self._rrf_k = rrf_k
+        self._enable_rerank = enable_rerank
 
     async def retrieve_parallel(
         self, query: SearchQuery
@@ -46,15 +53,18 @@ class HybridRetriever:
         return dense_hits, sparse_hits
 
     async def retrieve(self, query: SearchQuery) -> list[SearchHit]:
-        """Execute parallel hybrid retrieval and fuse candidates with
-        Reciprocal Rank Fusion [S3].
+        """Execute parallel hybrid retrieval, fuse candidates with
+        Reciprocal Rank Fusion [S3], and apply heuristic reranking.
 
         Removes duplicate chunks, preserves per-signal scores, and returns
-        ranked candidates sorted descending by fused RRF score.
+        ranked candidates sorted descending by relevance and reranking score.
         """
         dense_hits, sparse_hits = await self.retrieve_parallel(query)
-        return reciprocal_rank_fusion(
+        fused = reciprocal_rank_fusion(
             [dense_hits, sparse_hits],
             k=self._rrf_k,
-            max_results=query.max_results,
+            max_results=None if self._enable_rerank else query.max_results,
         )
+        if self._enable_rerank:
+            return rerank_candidates(fused, query, max_results=query.max_results)
+        return fused

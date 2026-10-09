@@ -225,3 +225,116 @@ def reciprocal_rank_fusion(
         fused_candidates = fused_candidates[:max_results]
 
     return fused_candidates
+
+
+# Default source quality tier weights (primary canonical sources prioritized)
+SOURCE_QUALITY_WEIGHTS: dict[str, float] = {
+    "transcript": 1.0,
+    "fandom": 0.9,
+    "wikipedia": 0.8,
+    "web": 0.6,
+}
+
+
+def rerank_candidates(
+    candidates: Sequence[SearchHit],
+    query: SearchQuery,
+    *,
+    entity_match_boost: float = 0.2,
+    source_quality_weights: dict[str, float] | None = None,
+    chronology_tie_break: bool = True,
+    max_results: int | None = None,
+) -> list[SearchHit]:
+    """Rerank fused candidates using heuristic signals [S3].
+
+    Reranking signals:
+    1. Base fused / relevance score.
+    2. Entity/concept match: boosted when candidate explicitly associates with
+       the target query entity or concept terms.
+    3. Source quality: weighted by provenance source tier
+       (transcript > fandom > wiki > web).
+    4. Chronology: strictly used as a secondary tie-breaker (never displaces relevance).
+
+    The returned candidates have:
+    - `rerank_score`: computed heuristic reranking score.
+    - `score`: updated to rerank_score.
+    - `dense_score` & `sparse_score`: fully preserved.
+    """
+    if not candidates:
+        return []
+
+    weights = source_quality_weights or SOURCE_QUALITY_WEIGHTS
+    query_entity_str = str(query.entity).lower() if query.entity else None
+
+    # Lightweight tokenization of query for concept matching
+    query_tokens = {
+        token.lower()
+        for token in query.query.replace("-", " ").replace("_", " ").split()
+        if len(token) > 2
+    }
+
+    scored_candidates: list[tuple[SearchHit, float, tuple[int, int, int]]] = []
+
+    for hit in candidates:
+        base_score = hit.score
+
+        # 1. Entity / concept match bonus
+        entity_bonus = 0.0
+        chunk_entity_strings = {str(e).lower() for e in hit.chunk.entity_ids}
+
+        # Check explicit query entity match
+        if query_entity_str and (
+            query_entity_str in chunk_entity_strings
+            or any(query_entity_str in e for e in chunk_entity_strings)
+        ):
+            entity_bonus += entity_match_boost
+        elif query_tokens and chunk_entity_strings:
+            # Concept match: token overlap with chunk entities
+            matching_tokens = query_tokens.intersection(chunk_entity_strings)
+            if matching_tokens:
+                entity_bonus += entity_match_boost * (
+                    len(matching_tokens) / len(query_tokens)
+                )
+
+        # 2. Source quality factor
+        src_type = hit.chunk.provenance.source_type.lower()
+        quality_factor = weights.get(src_type, 0.7)
+
+        # Combined score: base_score * (1 + entity_bonus) * quality_factor
+        rerank_score = (base_score * (1.0 + entity_bonus)) * quality_factor
+
+        # 3. Chronology tie-breaker key (season, episode, narrative_order/scene_index)
+        # Using 0 for None so earlier lore is deterministically ordered
+        season_key = hit.chunk.season if hit.chunk.season is not None else 0
+        episode_key = hit.chunk.episode if hit.chunk.episode is not None else 0
+        order_key = (
+            hit.chunk.narrative_order
+            if hit.chunk.narrative_order is not None
+            else (hit.chunk.scene_index if hit.chunk.scene_index is not None else 0)
+        )
+        tie_break_key = (season_key, episode_key, order_key)
+
+        reranked_hit = SearchHit(
+            chunk=hit.chunk,
+            score=rerank_score,
+            dense_score=hit.dense_score,
+            sparse_score=hit.sparse_score,
+            rerank_score=rerank_score,
+        )
+        scored_candidates.append((reranked_hit, rerank_score, tie_break_key))
+
+    # Sort descending by rerank_score (rounded to 6 decimals to allow tie-breaking)
+    # followed by chronological tie-breaker ascending (or descending)
+    if chronology_tie_break:
+        scored_candidates.sort(
+            key=lambda item: (-round(item[1], 6), item[2]),
+        )
+    else:
+        scored_candidates.sort(
+            key=lambda item: item[1],
+            reverse=True,
+        )
+
+    result = [item[0] for item in scored_candidates]
+    limit = max_results if max_results is not None else query.max_results
+    return result[:limit]

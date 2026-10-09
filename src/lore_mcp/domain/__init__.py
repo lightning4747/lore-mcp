@@ -22,6 +22,7 @@ from lore_mcp.domain.search import (
     SearchQuery,
     WebSearchResult,
     reciprocal_rank_fusion,
+    rerank_candidates,
 )
 from lore_mcp.domain.series_config import SeriesConfig, WikiEndpointConfig
 from lore_mcp.domain.types import (
@@ -59,6 +60,7 @@ __all__ = [
     "generate_entity_id",
     "generate_event_id",
     "reciprocal_rank_fusion",
+    "rerank_candidates",
     "slugify",
     "validate_series_id",
 ]
