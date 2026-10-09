@@ -14,12 +14,21 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from lore_mcp.adapters.qdrant.client import create_async_qdrant_client
+from lore_mcp.adapters.qdrant.index import QdrantVectorIndex
 from lore_mcp.adapters.qdrant.registry import QdrantSeriesRegistry
+from lore_mcp.application.hybrid import HybridRetriever
+from lore_mcp.application.retrieval_service import LoreRetrievalService
+from lore_mcp.application.scope import ScopeResolver
 from lore_mcp.config import Settings, get_settings
+from lore_mcp.domain.search import EvidenceBundle
 from lore_mcp.interfaces.mcp.models import SeriesSummary
 from lore_mcp.interfaces.mcp.readiness import ReadinessChecker
+from lore_mcp.ports.budget import BudgetCounter
+from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock
 from lore_mcp.ports.series_registry import SeriesRegistry
+from lore_mcp.ports.vector_index import VectorIndex
+from lore_mcp.ports.web_search import WebSearch
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +37,11 @@ def create_mcp_server(
     settings: Settings | None = None,
     client: AsyncQdrantClient | None = None,
     registry: SeriesRegistry | None = None,
+    vector_index: VectorIndex | None = None,
+    retrieval_service: LoreRetrievalService | None = None,
+    cache: Cache | None = None,
+    web_search: WebSearch | None = None,
+    budget_counter: BudgetCounter | None = None,
     clock: Clock | None = None,
     readiness_checker: ReadinessChecker | None = None,
 ) -> FastMCP:
@@ -40,6 +54,8 @@ def create_mcp_server(
       compatibility (~30s TTL).
     - Tool `list_series`: discover registered series ids, display names,
       aliases, and kind.
+    - Tool `search_series_lore`: scope-resolved, cached, hybrid retrieval with
+      provenance and temporal context.
     """
     app_settings = settings or get_settings()
     owns_client = client is None
@@ -48,6 +64,32 @@ def create_mcp_server(
     series_registry = registry or QdrantSeriesRegistry(
         client=qdrant_client,
         settings=app_settings.qdrant,
+    )
+
+    index = vector_index or QdrantVectorIndex(
+        client=qdrant_client,
+        settings=app_settings.qdrant,
+    )
+
+    scope_resolver = ScopeResolver(
+        registry=series_registry,
+        clock=clock,
+    )
+
+    hybrid_retriever = HybridRetriever(
+        index=index,
+        rrf_k=app_settings.qdrant.rrf_k,
+    )
+
+    retrieval_orch = retrieval_service or LoreRetrievalService(
+        scope_resolver=scope_resolver,
+        retriever=hybrid_retriever,
+        cache=cache,
+        web_search=web_search,
+        budget_counter=budget_counter,
+        clock=clock,
+        web_search_settings=app_settings.web_search,
+        limits_settings=app_settings.limits,
     )
 
     checker = readiness_checker or ReadinessChecker(
@@ -122,6 +164,37 @@ def create_mcp_server(
             )
             for m in manifests
         ]
+
+    # 4. Retrieval Tool: search_series_lore
+    @mcp.tool()
+    async def search_series_lore(
+        query: str,
+        series: str,
+        season: int | None = None,
+        episode: int | None = None,
+        max_season: int | None = None,
+        max_episode: int | None = None,
+        include_unscoped: bool = False,
+        entity: str | None = None,
+        max_results: int | None = None,
+    ) -> EvidenceBundle:
+        """Search lore evidence for a specific series/franchise scope.
+
+        Executes scope-resolved, cached, hybrid dense+sparse retrieval with
+        heuristic reranking, spoiler bounds, sufficiency check, and chronological
+        timeline context.
+        """
+        return await retrieval_orch.search(
+            query=query,
+            series=series,
+            season=season,
+            episode=episode,
+            max_season=max_season,
+            max_episode=max_episode,
+            include_unscoped=include_unscoped,
+            entity=entity,
+            max_results=max_results,
+        )
 
     return mcp
 
