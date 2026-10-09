@@ -6,7 +6,12 @@ from datetime import UTC, datetime, timedelta
 
 from lore_mcp.domain.documents import Chunk, NormalizedDocument, RawDocument
 from lore_mcp.domain.entities import SeriesManifest
-from lore_mcp.domain.search import SearchHit, SearchQuery, WebSearchResult
+from lore_mcp.domain.search import (
+    SearchHit,
+    SearchQuery,
+    WebSearchResult,
+    reciprocal_rank_fusion,
+)
 from lore_mcp.domain.types import ChunkId, EntityId, SeriesId
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
@@ -121,7 +126,13 @@ class FakeVectorIndex(VectorIndex):
         return hits[: query.max_results]
 
     async def search(self, query: SearchQuery) -> list[SearchHit]:
-        return await self.search_dense(query)
+        dense_hits = await self.search_dense(query)
+        sparse_hits = await self.search_sparse(query)
+        return reciprocal_rank_fusion(
+            [dense_hits, sparse_hits],
+            k=60,
+            max_results=query.max_results,
+        )
 
     async def get_by_id(self, chunk_id: ChunkId) -> Chunk | None:
         return self._chunks.get(chunk_id)

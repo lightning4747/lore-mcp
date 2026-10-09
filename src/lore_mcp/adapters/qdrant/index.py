@@ -14,7 +14,11 @@ from lore_mcp.config import QdrantSettings
 from lore_mcp.domain.documents import Chunk
 from lore_mcp.domain.identifiers import LORE_CHUNK_NAMESPACE
 from lore_mcp.domain.provenance import Provenance
-from lore_mcp.domain.search import SearchHit, SearchQuery
+from lore_mcp.domain.search import (
+    SearchHit,
+    SearchQuery,
+    reciprocal_rank_fusion,
+)
 from lore_mcp.domain.types import ChunkId, EntityId, SeriesId
 from lore_mcp.ports.vector_index import VectorIndex
 
@@ -384,6 +388,80 @@ class QdrantVectorIndex(VectorIndex):
             )
         return hits
 
+    async def _search_server_side_fusion(self, query: SearchQuery) -> list[SearchHit]:
+        """Execute hybrid search using Qdrant server-side Query API
+        prefetch RRF fusion [S2].
+        """
+        query_filter = build_filter_from_query(query)
+
+        prefetch_requests = [
+            models.Prefetch(
+                query=models.Document(
+                    text=query.query,
+                    model=self._dense_model_name,
+                ),
+                using=self._settings.dense_vector_name,
+                filter=query_filter,
+                limit=query.max_results,
+            ),
+            models.Prefetch(
+                query=models.Document(
+                    text=query.query,
+                    model="Qdrant/bm25",
+                ),
+                using=self._settings.sparse_vector_name,
+                filter=query_filter,
+                limit=query.max_results,
+            ),
+        ]
+
+        try:
+            response = await self._client.query_points(
+                collection_name=self._settings.chunks_collection,
+                prefetch=prefetch_requests,
+                query=models.FusionQuery(fusion=models.Fusion.RRF),
+                limit=query.max_results,
+                with_payload=True,
+                with_vectors=False,
+            )
+        except Exception as err:
+            raise QdrantOperationError(
+                "Failed to execute server-side fusion query in "
+                f"'{self._settings.chunks_collection}': {err}"
+            ) from err
+
+        hits: list[SearchHit] = []
+        for scored_point in response.points:
+            payload = scored_point.payload or {}
+            chunk: Chunk | None = None
+            chunk_json = payload.get("_chunk_json")
+            if isinstance(chunk_json, str):
+                chunk = Chunk.model_validate_json(chunk_json)
+            else:
+                chunk = self._reconstruct_chunk_from_payload(scored_point.id, payload)
+
+            hits.append(
+                SearchHit(
+                    chunk=chunk,
+                    score=float(scored_point.score),
+                )
+            )
+        return hits
+
     async def search(self, query: SearchQuery) -> list[SearchHit]:
-        """Search for candidate chunks matching series and constraints."""
-        return await self.search_dense(query)
+        """Search for candidate chunks matching series and constraints [S2, S3].
+
+        If enable_server_side_fusion is configured, delegates to Qdrant's Query API
+        prefetch RRF fusion. Otherwise, runs parallel dense and sparse searches
+        and fuses results using reciprocal_rank_fusion with preserved per-signal scores.
+        """
+        if self._settings.enable_server_side_fusion:
+            return await self._search_server_side_fusion(query)
+
+        dense_hits = await self.search_dense(query)
+        sparse_hits = await self.search_sparse(query)
+        return reciprocal_rank_fusion(
+            [dense_hits, sparse_hits],
+            k=self._settings.rrf_k,
+            max_results=query.max_results,
+        )

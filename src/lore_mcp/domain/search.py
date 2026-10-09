@@ -1,5 +1,6 @@
 """Domain models for lore search queries, retrieval hits, and evidence bundles."""
 
+from collections.abc import Sequence
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -137,3 +138,90 @@ class WebSearchResult(BaseModel):
     url: str = Field(description="URL of the web result")
     title: str = Field(description="Title of the web search result")
     snippet: str = Field(description="Textual snippet from search result")
+
+
+def reciprocal_rank_fusion(
+    ranked_lists: Sequence[Sequence[SearchHit]],
+    *,
+    k: int = 60,
+    max_results: int | None = None,
+) -> list[SearchHit]:
+    """Fuse multiple ranked candidate lists using Reciprocal Rank Fusion [S3].
+
+    Computes RRF score for each unique chunk:
+        RRF_score(d) = sum_{list in ranked_lists} (1 / (k + rank_{list}(d)))
+    where rank starts at 1.
+
+    Invariants:
+    - Pure domain function with default k=60.
+    - Removes duplicate chunks across rankings by chunk_id.
+    - Preserves per-signal scores (dense_score, sparse_score, rerank_score)
+      present on any occurrence of the candidate.
+    - Preserves the full Chunk payload.
+    - Returns candidates sorted strictly by fused score descending.
+    """
+    if k <= 0:
+        raise ValueError(f"RRF smoothing parameter k must be positive, got {k}")
+
+    rrf_scores: dict[ChunkId, float] = {}
+    merged_hits: dict[ChunkId, SearchHit] = {}
+
+    for ranking in ranked_lists:
+        seen_in_ranking: set[ChunkId] = set()
+        for rank_idx, hit in enumerate(ranking, start=1):
+            cid = hit.chunk.chunk_id
+            if cid in seen_in_ranking:
+                continue
+            seen_in_ranking.add(cid)
+
+            rrf_score = 1.0 / (k + rank_idx)
+            rrf_scores[cid] = rrf_scores.get(cid, 0.0) + rrf_score
+
+            existing = merged_hits.get(cid)
+            if existing is None:
+                merged_hits[cid] = hit
+            else:
+                # Merge per-signal scores from other lists
+                dense_score = (
+                    hit.dense_score
+                    if hit.dense_score is not None
+                    else existing.dense_score
+                )
+                sparse_score = (
+                    hit.sparse_score
+                    if hit.sparse_score is not None
+                    else existing.sparse_score
+                )
+                rerank_score = (
+                    hit.rerank_score
+                    if hit.rerank_score is not None
+                    else existing.rerank_score
+                )
+                merged_hits[cid] = SearchHit(
+                    chunk=existing.chunk,
+                    score=0.0,
+                    dense_score=dense_score,
+                    sparse_score=sparse_score,
+                    rerank_score=rerank_score,
+                )
+
+    fused_candidates: list[SearchHit] = []
+    for cid, combined_score in rrf_scores.items():
+        base_hit = merged_hits[cid]
+        fused_candidates.append(
+            SearchHit(
+                chunk=base_hit.chunk,
+                score=combined_score,
+                dense_score=base_hit.dense_score,
+                sparse_score=base_hit.sparse_score,
+                rerank_score=base_hit.rerank_score,
+            )
+        )
+
+    # Sort descending by fused score
+    fused_candidates.sort(key=lambda h: h.score, reverse=True)
+
+    if max_results is not None:
+        fused_candidates = fused_candidates[:max_results]
+
+    return fused_candidates

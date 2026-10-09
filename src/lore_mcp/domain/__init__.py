@@ -21,6 +21,7 @@ from lore_mcp.domain.search import (
     SearchHit,
     SearchQuery,
     WebSearchResult,
+    reciprocal_rank_fusion,
 )
 from lore_mcp.domain.series_config import SeriesConfig, WikiEndpointConfig
 from lore_mcp.domain.types import (
@@ -57,6 +58,7 @@ __all__ = [
     "generate_chunk_id",
     "generate_entity_id",
     "generate_event_id",
+    "reciprocal_rank_fusion",
     "slugify",
     "validate_series_id",
 ]

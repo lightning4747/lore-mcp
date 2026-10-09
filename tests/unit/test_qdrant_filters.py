@@ -65,7 +65,12 @@ async def make_filter_client(settings: QdrantSettings) -> AsyncQdrantClient:
 
     def fake_embed_models(points_or_queries, is_query=False, batch_size=8):
         if is_query:
-            yield [0.0] * 384
+            nearest = getattr(points_or_queries, "nearest", points_or_queries)
+            model_name = getattr(nearest, "model", None)
+            if model_name == "Qdrant/bm25" or "bm25" in str(points_or_queries).lower():
+                yield models.SparseVector(indices=[0], values=[1.0])
+            else:
+                yield [0.0] * 384
             return
         for p in points_or_queries:
             yield models.PointStruct(

@@ -78,8 +78,22 @@ class QdrantSettings(BaseSettings):
         validation_alias=AliasChoices("QDRANT_BATCH_SIZE"),
         description="Batch size for vector upserts",
     )
+    enable_server_side_fusion: bool = Field(
+        default=False,
+        validation_alias=AliasChoices(
+            "QDRANT_ENABLE_SERVER_SIDE_FUSION", "ENABLE_SERVER_SIDE_FUSION"
+        ),
+        description=(
+            "Whether to use server-side Qdrant Query API prefetch RRF fusion [S2]"
+        ),
+    )
+    rrf_k: int = Field(
+        default=60,
+        validation_alias=AliasChoices("QDRANT_RRF_K", "RRF_K"),
+        description="Reciprocal rank fusion smoothing parameter k [S3]",
+    )
 
-    @field_validator("dimension", "schema_version", "batch_size")
+    @field_validator("dimension", "schema_version", "batch_size", "rrf_k")
     @classmethod
     def validate_positive_int(cls, value: int) -> int:
         if value <= 0:

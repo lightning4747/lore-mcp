@@ -5,7 +5,7 @@ import asyncio
 from lore_mcp.application.dense import DenseRetriever
 from lore_mcp.application.errors import InvalidArgument
 from lore_mcp.application.sparse import SparseRetriever
-from lore_mcp.domain.search import SearchHit, SearchQuery
+from lore_mcp.domain.search import SearchHit, SearchQuery, reciprocal_rank_fusion
 from lore_mcp.ports.vector_index import VectorIndex
 
 
@@ -17,10 +17,13 @@ class HybridRetriever:
         index: VectorIndex,
         dense_retriever: DenseRetriever | None = None,
         sparse_retriever: SparseRetriever | None = None,
+        *,
+        rrf_k: int = 60,
     ) -> None:
         self._index = index
         self._dense = dense_retriever or DenseRetriever(index)
         self._sparse = sparse_retriever or SparseRetriever(index)
+        self._rrf_k = rrf_k
 
     async def retrieve_parallel(
         self, query: SearchQuery
@@ -41,3 +44,17 @@ class HybridRetriever:
             self._sparse.retrieve(query),
         )
         return dense_hits, sparse_hits
+
+    async def retrieve(self, query: SearchQuery) -> list[SearchHit]:
+        """Execute parallel hybrid retrieval and fuse candidates with
+        Reciprocal Rank Fusion [S3].
+
+        Removes duplicate chunks, preserves per-signal scores, and returns
+        ranked candidates sorted descending by fused RRF score.
+        """
+        dense_hits, sparse_hits = await self.retrieve_parallel(query)
+        return reciprocal_rank_fusion(
+            [dense_hits, sparse_hits],
+            k=self._rrf_k,
+            max_results=query.max_results,
+        )
