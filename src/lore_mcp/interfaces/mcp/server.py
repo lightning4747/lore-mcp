@@ -14,18 +14,21 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from lore_mcp.adapters.qdrant.client import create_async_qdrant_client
+from lore_mcp.adapters.qdrant.entity_registry import QdrantEntityRegistry
 from lore_mcp.adapters.qdrant.index import QdrantVectorIndex
 from lore_mcp.adapters.qdrant.registry import QdrantSeriesRegistry
+from lore_mcp.application.entity_service import EntityService
 from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.retrieval_service import LoreRetrievalService
 from lore_mcp.application.scope import ScopeResolver
 from lore_mcp.config import Settings, get_settings
 from lore_mcp.domain.search import EvidenceBundle
-from lore_mcp.interfaces.mcp.models import SeriesSummary
+from lore_mcp.interfaces.mcp.models import EntityDetails, SeriesSummary
 from lore_mcp.interfaces.mcp.readiness import ReadinessChecker
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock
+from lore_mcp.ports.entity_registry import EntityRegistry
 from lore_mcp.ports.series_registry import SeriesRegistry
 from lore_mcp.ports.vector_index import VectorIndex
 from lore_mcp.ports.web_search import WebSearch
@@ -37,8 +40,10 @@ def create_mcp_server(
     settings: Settings | None = None,
     client: AsyncQdrantClient | None = None,
     registry: SeriesRegistry | None = None,
+    entity_registry: EntityRegistry | None = None,
     vector_index: VectorIndex | None = None,
     retrieval_service: LoreRetrievalService | None = None,
+    entity_service: EntityService | None = None,
     cache: Cache | None = None,
     web_search: WebSearch | None = None,
     budget_counter: BudgetCounter | None = None,
@@ -56,12 +61,19 @@ def create_mcp_server(
       aliases, and kind.
     - Tool `search_series_lore`: scope-resolved, cached, hybrid retrieval with
       provenance and temporal context.
+    - Tool `get_entity`: resolve canonical entity by id/alias and retrieve
+      associated evidence with provenance.
     """
     app_settings = settings or get_settings()
     owns_client = client is None
     qdrant_client = client or create_async_qdrant_client(app_settings.qdrant)
 
     series_registry = registry or QdrantSeriesRegistry(
+        client=qdrant_client,
+        settings=app_settings.qdrant,
+    )
+
+    entity_reg = entity_registry or QdrantEntityRegistry(
         client=qdrant_client,
         settings=app_settings.qdrant,
     )
@@ -92,6 +104,13 @@ def create_mcp_server(
         limits_settings=app_settings.limits,
     )
 
+    entity_svc = entity_service or EntityService(
+        scope_resolver=scope_resolver,
+        retriever=hybrid_retriever,
+        entity_registry=entity_reg,
+        limits_settings=app_settings.limits,
+    )
+
     checker = readiness_checker or ReadinessChecker(
         client=qdrant_client,
         settings=app_settings.qdrant,
@@ -107,8 +126,10 @@ def create_mcp_server(
                 "settings": app_settings,
                 "qdrant_client": qdrant_client,
                 "series_registry": series_registry,
+                "entity_registry": entity_reg,
                 "readiness_checker": checker,
             }
+
         finally:
             logger.info("Shutting down lore-mcp server resources...")
             if owns_client:
@@ -193,6 +214,22 @@ def create_mcp_server(
             max_episode=max_episode,
             include_unscoped=include_unscoped,
             entity=entity,
+            max_results=max_results,
+        )
+
+    # 5. Entity Tool: get_entity
+    @mcp.tool()
+    async def get_entity(
+        entity: str,
+        series: str,
+        max_results: int | None = 8,
+    ) -> EntityDetails:
+        """Resolve a canonical entity by ID or alias, retrieve associated evidence,
+        and return entity metadata with source provenance.
+        """
+        return await entity_svc.get_entity(
+            entity=entity,
+            series=series,
             max_results=max_results,
         )
 

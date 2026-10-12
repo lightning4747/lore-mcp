@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from lore_mcp.domain.provenance import Provenance
+from lore_mcp.domain.search import Evidence
 from lore_mcp.domain.types import EntityId, EventId, ValidatedSeriesId
 
 
@@ -100,4 +102,25 @@ class SeriesManifest(BaseModel):
     )
     schema_version: int = Field(
         default=1, description="Data schema version for manifest compatibility"
+    )
+
+
+class EntityDetails(BaseModel):
+    """Canonical entity metadata with associated evidence and provenance."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    entity: Entity = Field(description="Canonical entity metadata and attributes")
+    evidence: list[Evidence] = Field(
+        default_factory=list[Evidence],
+        description="Associated evidence chunks retrieved for this entity",
+    )
+    provenance: list[Provenance] = Field(
+        default_factory=list[Provenance],
+        description="Deduplicated source provenance records for the entity",
+    )
+
+    notices: list[str] = Field(
+        default_factory=list[str],
+        description="Operational notices or warnings",
     )

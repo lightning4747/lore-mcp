@@ -2,6 +2,7 @@
 
 from lore_mcp.application.classifier import ClassifiedQuery, QueryClassifier
 from lore_mcp.application.dense import DenseRetriever
+from lore_mcp.application.entity_service import EntityService
 from lore_mcp.application.errors import (
     ApplicationError,
     DataUnavailable,
@@ -29,6 +30,7 @@ __all__ = [
     "DataUnavailable",
     "DenseRetriever",
     "DependencyUnavailable",
+    "EntityService",
     "HybridRetriever",
     "IncompatibleData",
     "InvalidArgument",

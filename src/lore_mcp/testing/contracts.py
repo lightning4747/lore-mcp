@@ -15,7 +15,7 @@ from lore_mcp.domain.documents import (
     NormalizedDocument,
     RawDocument,
 )
-from lore_mcp.domain.entities import SeriesManifest
+from lore_mcp.domain.entities import Entity, SeriesManifest
 from lore_mcp.domain.provenance import Provenance
 from lore_mcp.domain.search import SearchQuery
 from lore_mcp.domain.types import ChunkId, EntityId, SeriesId
@@ -23,6 +23,7 @@ from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock
 from lore_mcp.ports.documents import DocumentSource, DocumentStore
+from lore_mcp.ports.entity_registry import EntityRegistry
 from lore_mcp.ports.series_registry import SeriesRegistry
 from lore_mcp.ports.vector_index import VectorIndex
 from lore_mcp.ports.web_search import WebSearch
@@ -462,3 +463,82 @@ class ClockContractSuite:
         now = clock.now()
         assert isinstance(now, datetime)
         assert now.tzinfo is not None
+
+
+class EntityRegistryContractSuite:
+    """Contract test suite for EntityRegistry port implementations."""
+
+    @pytest.mark.asyncio
+    async def test_register_and_get_entity(self, registry: EntityRegistry) -> None:
+        entity = Entity(
+            entity_id=EntityId("loki"),
+            series_id=SeriesId("loki"),
+            name="Loki Laufeyson",
+            entity_type="character",
+            aliases=["God of Mischief", "Variant L1130"],
+            summary="God of Mischief.",
+            related_entities=[EntityId("mobius"), EntityId("sylvie")],
+            metadata={"status": "alive"},
+        )
+        await registry.register_entity(entity)
+
+        retrieved = await registry.get_entity(SeriesId("loki"), EntityId("loki"))
+        assert retrieved is not None
+        assert retrieved.entity_id == EntityId("loki")
+        assert retrieved.name == "Loki Laufeyson"
+        assert retrieved.aliases == ["God of Mischief", "Variant L1130"]
+        assert retrieved.summary == "God of Mischief."
+        assert retrieved.related_entities == [EntityId("mobius"), EntityId("sylvie")]
+        assert retrieved.metadata == {"status": "alive"}
+
+        # Non-existent
+        assert (
+            await registry.get_entity(SeriesId("loki"), EntityId("nonexistent")) is None
+        )
+
+    @pytest.mark.asyncio
+    async def test_list_entities(self, registry: EntityRegistry) -> None:
+        e1 = Entity(
+            entity_id=EntityId("loki"),
+            series_id=SeriesId("loki"),
+            name="Loki",
+            entity_type="character",
+        )
+        e2 = Entity(
+            entity_id=EntityId("mobius"),
+            series_id=SeriesId("loki"),
+            name="Mobius M. Mobius",
+            entity_type="character",
+        )
+        await registry.register_entities([e1, e2])
+
+        entities = await registry.list_entities(SeriesId("loki"))
+        entity_ids = {e.entity_id for e in entities}
+        assert EntityId("loki") in entity_ids
+        assert EntityId("mobius") in entity_ids
+
+    @pytest.mark.asyncio
+    async def test_resolve_entity(self, registry: EntityRegistry) -> None:
+        entity = Entity(
+            entity_id=EntityId("he-who-remains"),
+            series_id=SeriesId("loki"),
+            name="He Who Remains",
+            entity_type="character",
+            aliases=["Kang Variant", "Creator of TVA"],
+        )
+        await registry.register_entity(entity)
+
+        # By canonical slug ID
+        r1 = await registry.resolve_entity(SeriesId("loki"), "he-who-remains")
+        assert r1 is not None and r1.entity_id == "he-who-remains"
+
+        # By name (case-insensitive)
+        r2 = await registry.resolve_entity(SeriesId("loki"), "he who remains")
+        assert r2 is not None and r2.entity_id == "he-who-remains"
+
+        # By alias (case-insensitive)
+        r3 = await registry.resolve_entity(SeriesId("loki"), "kang variant")
+        assert r3 is not None and r3.entity_id == "he-who-remains"
+
+        # Non-existent
+        assert await registry.resolve_entity(SeriesId("loki"), "Thor") is None

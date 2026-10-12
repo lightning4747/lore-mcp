@@ -1,6 +1,10 @@
 """Qdrant vector store adapter implementing [S4], [S5], [S9], [S10], [S11]."""
 
 from lore_mcp.adapters.qdrant.client import create_async_qdrant_client
+from lore_mcp.adapters.qdrant.entity_registry import (
+    QdrantEntityRegistry,
+    to_entity_point_id,
+)
 from lore_mcp.adapters.qdrant.errors import (
     QdrantAdapterError,
     QdrantInitializationError,
@@ -24,6 +28,7 @@ from lore_mcp.adapters.qdrant.registry import (
 
 __all__ = [
     "QdrantAdapterError",
+    "QdrantEntityRegistry",
     "QdrantInitializationError",
     "QdrantInitializer",
     "QdrantMetadataMismatchError",
@@ -34,6 +39,7 @@ __all__ = [
     "build_metadata_filter",
     "create_async_qdrant_client",
     "resolve_embedding_model_name",
+    "to_entity_point_id",
     "to_manifest_point_id",
     "to_point_id",
 ]

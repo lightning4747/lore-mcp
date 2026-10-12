@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from lore_mcp.domain.entities import EntityDetails
+
 
 class SeriesSummary(BaseModel):
     """Metadata summary of a registered series for client discovery."""
@@ -18,3 +20,9 @@ class SeriesSummary(BaseModel):
         default="show",
         description="Series category/kind (e.g. 'show', 'anime', 'movie')",
     )
+
+
+__all__ = [
+    "EntityDetails",
+    "SeriesSummary",
+]

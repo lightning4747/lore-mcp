@@ -5,7 +5,8 @@ from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 
 from lore_mcp.domain.documents import Chunk, NormalizedDocument, RawDocument
-from lore_mcp.domain.entities import SeriesManifest
+from lore_mcp.domain.entities import Entity, SeriesManifest
+from lore_mcp.domain.identifiers import slugify
 from lore_mcp.domain.search import (
     SearchHit,
     SearchQuery,
@@ -17,6 +18,7 @@ from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock
 from lore_mcp.ports.documents import DocumentSource, DocumentStore
+from lore_mcp.ports.entity_registry import EntityRegistry
 from lore_mcp.ports.series_registry import SeriesRegistry
 from lore_mcp.ports.vector_index import VectorIndex
 from lore_mcp.ports.web_search import WebSearch
@@ -349,3 +351,57 @@ class FakeClock(Clock):
 
     def advance(self, delta: timedelta) -> None:
         self._current_time += delta
+
+
+class FakeEntityRegistry(EntityRegistry):
+    """In-memory fake implementation of EntityRegistry."""
+
+    def __init__(self, entities: Sequence[Entity] | None = None) -> None:
+        self._entities: dict[tuple[str, str], Entity] = {}
+        if entities:
+            for entity in entities:
+                self._entities[(str(entity.series_id), str(entity.entity_id))] = entity
+
+    async def register_entity(self, entity: Entity) -> None:
+        self._entities[(str(entity.series_id), str(entity.entity_id))] = entity
+
+    async def register_entities(self, entities: Sequence[Entity]) -> None:
+        for entity in entities:
+            await self.register_entity(entity)
+
+    async def get_entity(
+        self, series_id: SeriesId, entity_id: EntityId
+    ) -> Entity | None:
+        return self._entities.get((str(series_id), str(entity_id)))
+
+    async def list_entities(self, series_id: SeriesId) -> list[Entity]:
+        return [
+            entity
+            for (s_id, _), entity in self._entities.items()
+            if s_id == str(series_id)
+        ]
+
+    async def resolve_entity(
+        self, series_id: SeriesId, name_or_alias: str
+    ) -> Entity | None:
+        clean = name_or_alias.strip()
+        if not clean:
+            return None
+
+        slug = slugify(clean)
+        if slug:
+            direct = self._entities.get((str(series_id), slug))
+            if direct is not None:
+                return direct
+
+        clean_lower = clean.lower()
+        series_entities = await self.list_entities(series_id)
+        for entity in series_entities:
+            if entity.name.lower() == clean_lower:
+                return entity
+
+        for entity in series_entities:
+            if any(alias.lower() == clean_lower for alias in entity.aliases):
+                return entity
+
+        return None

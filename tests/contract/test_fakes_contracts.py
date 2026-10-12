@@ -13,11 +13,13 @@ from lore_mcp.testing import (
     ClockContractSuite,
     DocumentSourceContractSuite,
     DocumentStoreContractSuite,
+    EntityRegistryContractSuite,
     FakeBudgetCounter,
     FakeCache,
     FakeClock,
     FakeDocumentSource,
     FakeDocumentStore,
+    FakeEntityRegistry,
     FakeSeriesRegistry,
     FakeVectorIndex,
     FakeWebSearch,
@@ -39,6 +41,13 @@ class TestFakeSeriesRegistryContract(SeriesRegistryContractSuite):
     @pytest.fixture
     def registry(self) -> FakeSeriesRegistry:
         return FakeSeriesRegistry()
+
+
+@pytest.mark.contract
+class TestFakeEntityRegistryContract(EntityRegistryContractSuite):
+    @pytest.fixture
+    def registry(self) -> FakeEntityRegistry:
+        return FakeEntityRegistry()
 
 
 @pytest.mark.contract
