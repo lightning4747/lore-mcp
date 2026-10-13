@@ -1,5 +1,6 @@
 """Application layer: orchestrations, use cases, and ingestion stages."""
 
+from lore_mcp.application.chunk_service import ChunkService
 from lore_mcp.application.classifier import ClassifiedQuery, QueryClassifier
 from lore_mcp.application.dense import DenseRetriever
 from lore_mcp.application.entity_service import EntityService
@@ -26,6 +27,7 @@ from lore_mcp.application.sparse import SparseRetriever
 
 __all__ = [
     "ApplicationError",
+    "ChunkService",
     "ClassifiedQuery",
     "DataUnavailable",
     "DenseRetriever",

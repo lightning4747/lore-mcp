@@ -17,11 +17,13 @@ from lore_mcp.adapters.qdrant.client import create_async_qdrant_client
 from lore_mcp.adapters.qdrant.entity_registry import QdrantEntityRegistry
 from lore_mcp.adapters.qdrant.index import QdrantVectorIndex
 from lore_mcp.adapters.qdrant.registry import QdrantSeriesRegistry
+from lore_mcp.application.chunk_service import ChunkService
 from lore_mcp.application.entity_service import EntityService
 from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.retrieval_service import LoreRetrievalService
 from lore_mcp.application.scope import ScopeResolver
 from lore_mcp.config import Settings, get_settings
+from lore_mcp.domain.documents import Chunk
 from lore_mcp.domain.search import EvidenceBundle
 from lore_mcp.interfaces.mcp.models import EntityDetails, SeriesSummary
 from lore_mcp.interfaces.mcp.readiness import ReadinessChecker
@@ -44,6 +46,7 @@ def create_mcp_server(
     vector_index: VectorIndex | None = None,
     retrieval_service: LoreRetrievalService | None = None,
     entity_service: EntityService | None = None,
+    chunk_service: ChunkService | None = None,
     cache: Cache | None = None,
     web_search: WebSearch | None = None,
     budget_counter: BudgetCounter | None = None,
@@ -63,7 +66,10 @@ def create_mcp_server(
       provenance and temporal context.
     - Tool `get_entity`: resolve canonical entity by id/alias and retrieve
       associated evidence with provenance.
+    - Tool `get_chunk`: fetch a full chunk by id to expand truncated evidence,
+      verifying series scope [S11].
     """
+
     app_settings = settings or get_settings()
     owns_client = client is None
     qdrant_client = client or create_async_qdrant_client(app_settings.qdrant)
@@ -109,6 +115,11 @@ def create_mcp_server(
         retriever=hybrid_retriever,
         entity_registry=entity_reg,
         limits_settings=app_settings.limits,
+    )
+
+    chunk_svc = chunk_service or ChunkService(
+        scope_resolver=scope_resolver,
+        vector_index=index,
     )
 
     checker = readiness_checker or ReadinessChecker(
@@ -231,6 +242,20 @@ def create_mcp_server(
             entity=entity,
             series=series,
             max_results=max_results,
+        )
+
+    # 6. Chunk Tool: get_chunk
+    @mcp.tool()
+    async def get_chunk(
+        chunk_id: str,
+        series: str,
+    ) -> Chunk:
+        """Fetch a full chunk by ID to expand truncated evidence,
+        verifying series scope ownership [S11].
+        """
+        return await chunk_svc.get_chunk(
+            chunk_id=chunk_id,
+            series=series,
         )
 
     return mcp
