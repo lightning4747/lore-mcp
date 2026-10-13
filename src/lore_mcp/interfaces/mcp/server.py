@@ -15,11 +15,13 @@ from starlette.responses import JSONResponse
 
 from lore_mcp.adapters.qdrant.client import create_async_qdrant_client
 from lore_mcp.adapters.qdrant.entity_registry import QdrantEntityRegistry
+from lore_mcp.adapters.qdrant.event_registry import QdrantEventRegistry
 from lore_mcp.adapters.qdrant.index import QdrantVectorIndex
 from lore_mcp.adapters.qdrant.registry import QdrantSeriesRegistry
 from lore_mcp.application.chunk_service import ChunkService
 from lore_mcp.application.dialogue_service import DialogueService
 from lore_mcp.application.entity_service import EntityService
+from lore_mcp.application.event_service import EventService
 from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.retrieval_service import LoreRetrievalService
 from lore_mcp.application.scope import ScopeResolver
@@ -29,6 +31,7 @@ from lore_mcp.domain.search import EvidenceBundle
 from lore_mcp.interfaces.mcp.models import (
     DialogueSnippet,
     EntityDetails,
+    EventTrace,
     SeriesSummary,
 )
 from lore_mcp.interfaces.mcp.readiness import ReadinessChecker
@@ -36,6 +39,7 @@ from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock
 from lore_mcp.ports.entity_registry import EntityRegistry
+from lore_mcp.ports.event_registry import EventRegistry
 from lore_mcp.ports.series_registry import SeriesRegistry
 from lore_mcp.ports.vector_index import VectorIndex
 from lore_mcp.ports.web_search import WebSearch
@@ -48,9 +52,11 @@ def create_mcp_server(
     client: AsyncQdrantClient | None = None,
     registry: SeriesRegistry | None = None,
     entity_registry: EntityRegistry | None = None,
+    event_registry: EventRegistry | None = None,
     vector_index: VectorIndex | None = None,
     retrieval_service: LoreRetrievalService | None = None,
     entity_service: EntityService | None = None,
+    event_service: EventService | None = None,
     chunk_service: ChunkService | None = None,
     dialogue_service: DialogueService | None = None,
     cache: Cache | None = None,
@@ -76,6 +82,9 @@ def create_mcp_server(
       verifying series scope [S11].
     - Tool `search_dialogue`: search transcript chunks only, returning short
       snippets with locators (season, episode, timestamps).
+    - Tool `trace_event`: resolve a narrative event, retrieve related evidence,
+      and return participants, relevant locations/entities, and chronological
+      evidence.
     """
 
     app_settings = settings or get_settings()
@@ -88,6 +97,11 @@ def create_mcp_server(
     )
 
     entity_reg = entity_registry or QdrantEntityRegistry(
+        client=qdrant_client,
+        settings=app_settings.qdrant,
+    )
+
+    event_reg = event_registry or QdrantEventRegistry(
         client=qdrant_client,
         settings=app_settings.qdrant,
     )
@@ -122,6 +136,13 @@ def create_mcp_server(
         scope_resolver=scope_resolver,
         retriever=hybrid_retriever,
         entity_registry=entity_reg,
+        limits_settings=app_settings.limits,
+    )
+
+    event_svc = event_service or EventService(
+        scope_resolver=scope_resolver,
+        retriever=hybrid_retriever,
+        event_registry=event_reg,
         limits_settings=app_settings.limits,
     )
 
@@ -298,6 +319,24 @@ def create_mcp_server(
             speaker=speaker,
             entity=entity,
             character=character,
+            max_results=max_results,
+        )
+
+    # 8. Event Tool: trace_event
+    @mcp.tool()
+    async def trace_event(
+        event_id: str,
+        series: str,
+        event: str | None = None,
+        max_results: int | None = None,
+    ) -> EventTrace:
+        """Resolve an event, retrieve related evidence, and return participants,
+        relevant locations/entities, and chronological evidence.
+        """
+        return await event_svc.trace_event(
+            event_id=event_id,
+            series=series,
+            event=event,
             max_results=max_results,
         )
 

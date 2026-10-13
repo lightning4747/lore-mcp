@@ -14,6 +14,7 @@ from lore_mcp.application.errors import (
     InvalidScope,
     RateLimited,
 )
+from lore_mcp.application.event_service import EventService
 from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.retrieval_service import (
     LoreRetrievalService,
@@ -35,6 +36,7 @@ __all__ = [
     "DependencyUnavailable",
     "DialogueService",
     "EntityService",
+    "EventService",
     "HybridRetriever",
     "IncompatibleData",
     "InvalidArgument",
