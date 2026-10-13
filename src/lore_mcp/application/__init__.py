@@ -3,6 +3,7 @@
 from lore_mcp.application.chunk_service import ChunkService
 from lore_mcp.application.classifier import ClassifiedQuery, QueryClassifier
 from lore_mcp.application.dense import DenseRetriever
+from lore_mcp.application.dialogue_service import DialogueService
 from lore_mcp.application.entity_service import EntityService
 from lore_mcp.application.errors import (
     ApplicationError,
@@ -32,6 +33,7 @@ __all__ = [
     "DataUnavailable",
     "DenseRetriever",
     "DependencyUnavailable",
+    "DialogueService",
     "EntityService",
     "HybridRetriever",
     "IncompatibleData",

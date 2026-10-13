@@ -18,6 +18,7 @@ from lore_mcp.adapters.qdrant.entity_registry import QdrantEntityRegistry
 from lore_mcp.adapters.qdrant.index import QdrantVectorIndex
 from lore_mcp.adapters.qdrant.registry import QdrantSeriesRegistry
 from lore_mcp.application.chunk_service import ChunkService
+from lore_mcp.application.dialogue_service import DialogueService
 from lore_mcp.application.entity_service import EntityService
 from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.retrieval_service import LoreRetrievalService
@@ -25,7 +26,11 @@ from lore_mcp.application.scope import ScopeResolver
 from lore_mcp.config import Settings, get_settings
 from lore_mcp.domain.documents import Chunk
 from lore_mcp.domain.search import EvidenceBundle
-from lore_mcp.interfaces.mcp.models import EntityDetails, SeriesSummary
+from lore_mcp.interfaces.mcp.models import (
+    DialogueSnippet,
+    EntityDetails,
+    SeriesSummary,
+)
 from lore_mcp.interfaces.mcp.readiness import ReadinessChecker
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
@@ -47,6 +52,7 @@ def create_mcp_server(
     retrieval_service: LoreRetrievalService | None = None,
     entity_service: EntityService | None = None,
     chunk_service: ChunkService | None = None,
+    dialogue_service: DialogueService | None = None,
     cache: Cache | None = None,
     web_search: WebSearch | None = None,
     budget_counter: BudgetCounter | None = None,
@@ -68,6 +74,8 @@ def create_mcp_server(
       associated evidence with provenance.
     - Tool `get_chunk`: fetch a full chunk by id to expand truncated evidence,
       verifying series scope [S11].
+    - Tool `search_dialogue`: search transcript chunks only, returning short
+      snippets with locators (season, episode, timestamps).
     """
 
     app_settings = settings or get_settings()
@@ -120,6 +128,12 @@ def create_mcp_server(
     chunk_svc = chunk_service or ChunkService(
         scope_resolver=scope_resolver,
         vector_index=index,
+    )
+
+    dialogue_svc = dialogue_service or DialogueService(
+        scope_resolver=scope_resolver,
+        retriever=hybrid_retriever,
+        limits_settings=app_settings.limits,
     )
 
     checker = readiness_checker or ReadinessChecker(
@@ -256,6 +270,35 @@ def create_mcp_server(
         return await chunk_svc.get_chunk(
             chunk_id=chunk_id,
             series=series,
+        )
+
+    # 7. Dialogue Tool: search_dialogue
+    @mcp.tool()
+    async def search_dialogue(
+        query: str,
+        series: str,
+        season: int | None = None,
+        episode: int | None = None,
+        speaker: str | None = None,
+        entity: str | None = None,
+        character: str | None = None,
+        max_results: int | None = None,
+    ) -> list[DialogueSnippet]:
+        """Search transcript chunks only for dialogue and spoken quotes.
+
+        Supports optional season, episode, and speaker/entity constraints.
+        Returns concise quote snippets with locators (season, episode, timestamps,
+        speaker), avoiding long verbatim runs.
+        """
+        return await dialogue_svc.search_dialogue(
+            query=query,
+            series=series,
+            season=season,
+            episode=episode,
+            speaker=speaker,
+            entity=entity,
+            character=character,
+            max_results=max_results,
         )
 
     return mcp

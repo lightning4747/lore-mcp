@@ -101,6 +101,27 @@ class Evidence(BaseModel):
     )
 
 
+class DialogueSnippet(BaseModel):
+    """Concise dialogue quotation snippet with episode and timecode locators."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    content: str = Field(description="Short dialogue quotation snippet")
+    speaker: str | None = Field(
+        default=None, description="Identified speaker name if known"
+    )
+    season: int | None = Field(default=None, description="Season number locator")
+    episode: int | None = Field(default=None, description="Episode number locator")
+    timestamp: str | None = Field(
+        default=None, description="Formatted timecode or timestamp locator"
+    )
+    score: float = Field(default=1.0, description="Retrieval relevance score")
+    chunk_id: ChunkId = Field(
+        description="Source transcript chunk identifier for full expansion"
+    )
+    provenance: Provenance = Field(description="Source attribution and citation")
+
+
 class EvidenceBundle(BaseModel):
     """Complete evidence bundle returned for an MCP retrieval tool invocation."""
 

@@ -3,6 +3,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from lore_mcp.domain.entities import EntityDetails
+from lore_mcp.domain.search import DialogueSnippet
 
 
 class SeriesSummary(BaseModel):
@@ -23,6 +24,7 @@ class SeriesSummary(BaseModel):
 
 
 __all__ = [
+    "DialogueSnippet",
     "EntityDetails",
     "SeriesSummary",
 ]

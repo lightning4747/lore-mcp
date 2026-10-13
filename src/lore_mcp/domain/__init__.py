@@ -16,6 +16,7 @@ from lore_mcp.domain.identifiers import (
 )
 from lore_mcp.domain.provenance import Provenance
 from lore_mcp.domain.search import (
+    DialogueSnippet,
     Evidence,
     EvidenceBundle,
     SearchHit,
@@ -38,6 +39,7 @@ __all__ = [
     "LORE_CHUNK_NAMESPACE",
     "Chunk",
     "ChunkId",
+    "DialogueSnippet",
     "DocumentSection",
     "Entity",
     "EntityDetails",
