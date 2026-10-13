@@ -165,3 +165,71 @@ class EventTrace(BaseModel):
 
 
 EventDetails = EventTrace
+
+
+class EventComparisonSide(BaseModel):
+    """Structured evidence and provenance for one side of a narrative comparison."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    reference: str = Field(description="Original event or entity reference queried")
+    target_type: str = Field(
+        default="event",
+        description="Type of resolved reference ('event' or 'entity')",
+    )
+    event: Event | None = Field(
+        default=None, description="Resolved canonical event metadata if an event"
+    )
+    entity: Entity | None = Field(
+        default=None, description="Resolved canonical entity metadata if an entity"
+    )
+    participants: list[EntityId] = Field(
+        default_factory=list[EntityId],
+        description="Key participating or involved entities",
+    )
+    locations: list[str] = Field(
+        default_factory=list[str],
+        description="Locations associated with this occurrence or entity",
+    )
+    entities: list[EntityId] = Field(
+        default_factory=list[EntityId],
+        description="All relevant entities extracted from evidence",
+    )
+    evidence: list[Evidence] = Field(
+        default_factory=list[Evidence],
+        description="Chronologically ordered evidence chunks for this side",
+    )
+    chronology: list[str] = Field(
+        default_factory=list[str],
+        description="Sequential timeline notes for this side",
+    )
+    provenance: list[Provenance] = Field(
+        default_factory=list[Provenance],
+        description="Dedicated, separate source provenance records for this side",
+    )
+
+
+class EventComparison(BaseModel):
+    """Comparable structured evidence between two narrative events or entities."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    series_id: ValidatedSeriesId = Field(description="Owning series identifier")
+    side_a: EventComparisonSide = Field(
+        description="Resolved evidence and provenance for reference A"
+    )
+    side_b: EventComparisonSide = Field(
+        description="Resolved evidence and provenance for reference B"
+    )
+    shared_entities: list[EntityId] = Field(
+        default_factory=list[EntityId],
+        description="Entities present in or shared across both occurrences",
+    )
+    shared_locations: list[str] = Field(
+        default_factory=list[str],
+        description="Locations present in or shared across both occurrences",
+    )
+    notices: list[str] = Field(
+        default_factory=list[str],
+        description="Operational notices or warnings",
+    )

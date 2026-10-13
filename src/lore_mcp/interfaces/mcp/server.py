@@ -31,6 +31,7 @@ from lore_mcp.domain.search import EvidenceBundle
 from lore_mcp.interfaces.mcp.models import (
     DialogueSnippet,
     EntityDetails,
+    EventComparison,
     EventTrace,
     SeriesSummary,
 )
@@ -85,6 +86,8 @@ def create_mcp_server(
     - Tool `trace_event`: resolve a narrative event, retrieve related evidence,
       and return participants, relevant locations/entities, and chronological
       evidence.
+    - Tool `compare_events`: construct comparative context between two narrative
+      occurrences or entities, keeping evidence and provenance separate.
     """
 
     app_settings = settings or get_settings()
@@ -143,6 +146,7 @@ def create_mcp_server(
         scope_resolver=scope_resolver,
         retriever=hybrid_retriever,
         event_registry=event_reg,
+        entity_registry=entity_reg,
         limits_settings=app_settings.limits,
     )
 
@@ -337,6 +341,30 @@ def create_mcp_server(
             event_id=event_id,
             series=series,
             event=event,
+            max_results=max_results,
+        )
+
+    # 9. Comparison Tool: compare_events
+    @mcp.tool()
+    async def compare_events(
+        event_id_a: str,
+        event_id_b: str,
+        series: str,
+        event_a: str | None = None,
+        event_b: str | None = None,
+        max_results: int | None = None,
+    ) -> EventComparison:
+        """Construct comparative context between two narrative occurrences or entities.
+
+        Retrieves evidence for both references, keeps evidence and provenance separate,
+        and returns comparable structured evidence with shared entities and locations.
+        """
+        return await event_svc.compare_events(
+            event_id_a=event_id_a,
+            event_id_b=event_id_b,
+            series=series,
+            event_a=event_a,
+            event_b=event_b,
             max_results=max_results,
         )
 

@@ -3,6 +3,8 @@
 from lore_mcp.interfaces.mcp.models import (
     DialogueSnippet,
     EntityDetails,
+    EventComparison,
+    EventComparisonSide,
     EventDetails,
     EventTrace,
     SeriesSummary,
@@ -13,6 +15,8 @@ from lore_mcp.interfaces.mcp.server import create_http_app, create_mcp_server
 __all__ = [
     "DialogueSnippet",
     "EntityDetails",
+    "EventComparison",
+    "EventComparisonSide",
     "EventDetails",
     "EventTrace",
     "ReadinessChecker",
