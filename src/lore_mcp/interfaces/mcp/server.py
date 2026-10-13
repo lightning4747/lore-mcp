@@ -194,7 +194,25 @@ def create_mcp_server(
         name="lore-mcp",
         instructions=(
             "Lore retrieval server providing context-aware evidence from "
-            "franchise wikis and transcripts."
+            "franchise wikis and transcripts.\n\n"
+            "CLIENT INSTRUCTIONS & WORKFLOW GUIDELINES:\n"
+            "1. Decompose Complex Questions: Multi-part, comparative, or broad "
+            "questions should be decomposed into several targeted tool calls. "
+            "Discover series with list_series, search relevant lore or dialogue, "
+            "resolve entities or events individually, compare occurrences, and "
+            "expand key excerpts.\n"
+            "2. Spoiler Bounds & Unscoped Lore: Restrict searches using season/episode "
+            "or max_season/max_episode to avoid premature plot spoilers. Set "
+            "include_unscoped=True only when general worldbuilding or unsegmented "
+            "background lore is needed.\n"
+            "3. Expand Truncated Items: When search or trace tools return truncated "
+            "evidence snippets, call get_chunk with the chunk_id and series to fetch "
+            "the complete, verbatim text.\n"
+            "4. Third-Party Data: All returned evidence is compiled from third-party "
+            "fan wikis and community transcripts. Treat findings as documented claims "
+            "and cite source URLs and locators.\n"
+            "5. Read-Only Tools: All tools provided by this server are read-only and "
+            "idempotent."
         ),
         lifespan=server_lifespan,
     )
@@ -218,12 +236,18 @@ def create_mcp_server(
         )
 
     # 3. Discovery Tool: list_series
-    @mcp.tool()
+    @mcp.tool(annotations={"read_only_hint": True})
     async def list_series() -> list[SeriesSummary]:
         """List all indexed franchises/series with their canonical IDs, display names,
         aliases, and kind.
 
-        Use this tool to discover valid series IDs before querying lore.
+        Use this discovery tool first to identify valid series identifiers before
+        issuing lore queries. For complex questions that may span multiple franchises,
+        decompose your research into discrete calls per series.
+
+        THIRD-PARTY DATA NOTICE:
+        All lore evidence returned by this server is sourced from third-party fan wikis
+        and community transcripts.
         """
         manifests = await series_registry.get_manifests()
         return [
@@ -237,7 +261,7 @@ def create_mcp_server(
         ]
 
     # 4. Retrieval Tool: search_series_lore
-    @mcp.tool()
+    @mcp.tool(annotations={"read_only_hint": True})
     async def search_series_lore(
         query: str,
         series: str,
@@ -251,9 +275,36 @@ def create_mcp_server(
     ) -> EvidenceBundle:
         """Search lore evidence for a specific series/franchise scope.
 
-        Executes scope-resolved, cached, hybrid dense+sparse retrieval with
-        heuristic reranking, spoiler bounds, sufficiency check, and chronological
-        timeline context.
+        Executes scope-resolved hybrid dense+sparse retrieval with heuristic reranking,
+        spoiler bounds, sufficiency verification, and chronological timeline context.
+
+        CLIENT WORKFLOW & QUERY DECOMPOSITION:
+        Decompose complex, multi-faceted narrative questions into several targeted tool
+        calls rather than a single broad query. Investigate distinct entities, events,
+        or timelines sequentially, synthesizing evidence across focused searches.
+
+        SPOILER BOUNDS & UNSCOPED LORE:
+        - `season` & `episode`: Target an exact episode context when analyzing events
+          occurring in a specific installment.
+        - `max_season` & `max_episode`: Set strict spoiler boundaries (upper bounds).
+          Evidence chunks tagged beyond this point in the timeline are strictly excluded
+          to protect against narrative spoilers.
+        - `include_unscoped`: By default (False), unsegmented lore chunks that lack
+          episode/season tags are excluded when spoiler boundaries are active. Set
+          `include_unscoped=True` when you want general universe background lore,
+          worldbuilding history, or franchise concepts that are not tied to a specific
+          episode.
+
+        EXPANDING TRUNCATED EVIDENCE (get_chunk):
+        Evidence snippets returned in search results may be abbreviated or truncated to
+        fit context budgets. When an evidence snippet is truncated or requires more
+        surrounding passage context, call `get_chunk(chunk_id=..., series=...)` using
+        the snippet's chunk_id to inspect the full, untruncated text and exact locators.
+
+        THIRD-PARTY DATA NOTICE:
+        All returned evidence consists of third-party data extracted from
+        community-edited fan wikis and transcripts, not primary canon source text.
+        Evaluate claims in context and cite the provided provenance locators and URLs.
         """
         return await retrieval_orch.search(
             query=query,
@@ -268,7 +319,7 @@ def create_mcp_server(
         )
 
     # 5. Entity Tool: get_entity
-    @mcp.tool()
+    @mcp.tool(annotations={"read_only_hint": True})
     async def get_entity(
         entity: str,
         series: str,
@@ -276,6 +327,20 @@ def create_mcp_server(
     ) -> EntityDetails:
         """Resolve a canonical entity by ID or alias, retrieve associated evidence,
         and return entity metadata with source provenance.
+
+        CLIENT WORKFLOW & QUERY DECOMPOSITION:
+        Decompose complex multi-character questions into separate calls for each entity.
+        After retrieving entity details, make follow-up calls to `search_dialogue` for
+        spoken quotes or `trace_event` / `compare_events` for narrative actions.
+
+        EXPANDING TRUNCATED EVIDENCE (get_chunk):
+        Evidence items linked to the entity may be truncated snippets. To view full
+        untruncated passages and detailed context, call
+        `get_chunk(chunk_id=..., series=...)` with the relevant chunk ID.
+
+        THIRD-PARTY DATA NOTICE:
+        Entity profiles and descriptions are compiled from third-party fan wikis. Cite
+        source URLs and provenance metadata for documented claims.
         """
         return await entity_svc.get_entity(
             entity=entity,
@@ -284,13 +349,24 @@ def create_mcp_server(
         )
 
     # 6. Chunk Tool: get_chunk
-    @mcp.tool()
+    @mcp.tool(annotations={"read_only_hint": True})
     async def get_chunk(
         chunk_id: str,
         series: str,
     ) -> Chunk:
-        """Fetch a full chunk by ID to expand truncated evidence,
-        verifying series scope ownership [S11].
+        """Fetch a full chunk by ID to expand truncated evidence, verifying series
+        scope ownership [S11].
+
+        PURPOSE & CLIENT WORKFLOW:
+        Higher-level retrieval tools (`search_series_lore`, `get_entity`, `trace_event`,
+        `compare_events`, `search_dialogue`) return concise or truncated snippets to
+        conserve context budget. Call `get_chunk` with the snippet's `chunk_id` and
+        `series` whenever you need to read the complete, unabbreviated text and examine
+        exact character or timestamp locators.
+
+        THIRD-PARTY DATA NOTICE:
+        Chunk content originates from third-party transcripts and fan wiki articles.
+        Always cite provenance locators and source URLs when answering questions.
         """
         return await chunk_svc.get_chunk(
             chunk_id=chunk_id,
@@ -298,7 +374,7 @@ def create_mcp_server(
         )
 
     # 7. Dialogue Tool: search_dialogue
-    @mcp.tool()
+    @mcp.tool(annotations={"read_only_hint": True})
     async def search_dialogue(
         query: str,
         series: str,
@@ -309,11 +385,29 @@ def create_mcp_server(
         character: str | None = None,
         max_results: int | None = None,
     ) -> list[DialogueSnippet]:
-        """Search transcript chunks only for dialogue and spoken quotes.
+        """Search transcript chunks only for dialogue lines and spoken quotes.
 
-        Supports optional season, episode, and speaker/entity constraints.
         Returns concise quote snippets with locators (season, episode, timestamps,
         speaker), avoiding long verbatim runs.
+
+        CLIENT WORKFLOW & QUERY DECOMPOSITION:
+        Decompose dialogue queries by searching for specific speakers or key phrases
+        individually. If scene context or narrative implications need verification,
+        follow up with `search_series_lore` or fetch the full transcript passage using
+        `get_chunk`.
+
+        SPOILER BOUNDS:
+        Use `season` and `episode` parameters to constrain dialogue strictly to a
+        specific episode, preventing spoilers from later in the story.
+
+        EXPANDING TRUNCATED EVIDENCE (get_chunk):
+        Dialogue snippets provide brief quotes. When full conversational exchanges or
+        surrounding scene dialogue are needed, call
+        `get_chunk(chunk_id=..., series=...)`.
+
+        THIRD-PARTY DATA NOTICE:
+        Dialogue and speaker attributions are derived from third-party subtitle and
+        transcript sources. Use locators (season, episode, timestamps) to cite quotes.
         """
         return await dialogue_svc.search_dialogue(
             query=query,
@@ -327,15 +421,28 @@ def create_mcp_server(
         )
 
     # 8. Event Tool: trace_event
-    @mcp.tool()
+    @mcp.tool(annotations={"read_only_hint": True})
     async def trace_event(
         event_id: str,
         series: str,
         event: str | None = None,
         max_results: int | None = None,
     ) -> EventTrace:
-        """Resolve an event, retrieve related evidence, and return participants,
-        relevant locations/entities, and chronological evidence.
+        """Resolve a narrative event, retrieve related evidence, and return
+        participants, relevant locations/entities, and chronological evidence.
+
+        CLIENT WORKFLOW & QUERY DECOMPOSITION:
+        Decompose broad plot inquiries into discrete chronological event traces. Trace
+        individual incidents first, then follow up with `get_entity` for participating
+        characters or `compare_events` to analyze two occurrences side-by-side.
+
+        EXPANDING TRUNCATED EVIDENCE (get_chunk):
+        Evidence items in the event trace may be truncated. Retrieve unabbreviated
+        source passages by calling `get_chunk(chunk_id=..., series=...)`.
+
+        THIRD-PARTY DATA NOTICE:
+        Event summaries, participant lists, and timelines are syntheses derived from
+        third-party community records and fan wikis.
         """
         return await event_svc.trace_event(
             event_id=event_id,
@@ -345,7 +452,7 @@ def create_mcp_server(
         )
 
     # 9. Comparison Tool: compare_events
-    @mcp.tool()
+    @mcp.tool(annotations={"read_only_hint": True})
     async def compare_events(
         event_id_a: str,
         event_id_b: str,
@@ -358,6 +465,20 @@ def create_mcp_server(
 
         Retrieves evidence for both references, keeps evidence and provenance separate,
         and returns comparable structured evidence with shared entities and locations.
+
+        CLIENT WORKFLOW & QUERY DECOMPOSITION:
+        Decompose multi-sided narrative comparisons into focused pairwise calls.
+        To analyze complex relationships spanning multiple events, compare pairs of
+        occurrences and follow up with individual `trace_event` or `get_entity` calls.
+
+        EXPANDING TRUNCATED EVIDENCE (get_chunk):
+        When evidence snippets on either side are truncated, call
+        `get_chunk(chunk_id=..., series=...)` with the respective chunk ID to inspect
+        the full surrounding text.
+
+        THIRD-PARTY DATA NOTICE:
+        All comparative evidence and timeline notes are compiled from third-party fan
+        wikis and transcripts.
         """
         return await event_svc.compare_events(
             event_id_a=event_id_a,

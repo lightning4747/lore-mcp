@@ -373,3 +373,57 @@ def test_list_series_via_streamable_http(test_settings: Settings) -> None:
         assert data.get("jsonrpc") == "2.0"
         assert "result" in data
         assert "content" in data["result"]
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_tool_descriptions_and_read_only_annotations(
+    test_settings: Settings,
+) -> None:
+    """Verify tool descriptions and annotations across all registered tools."""
+    memory_client = AsyncQdrantClient(":memory:")
+    mcp = create_mcp_server(settings=test_settings, client=memory_client)
+
+    tools = await mcp.list_tools()
+    tool_map = {t.name: t for t in tools}
+
+    expected_tools = [
+        "list_series",
+        "search_series_lore",
+        "get_entity",
+        "get_chunk",
+        "search_dialogue",
+        "trace_event",
+        "compare_events",
+    ]
+    for name in expected_tools:
+        assert name in tool_map, f"Missing expected tool: {name}"
+        tool = tool_map[name]
+        # Verify read-only annotations
+        assert tool.annotations is not None, f"Tool {name} missing annotations"
+        assert tool.annotations.read_only_hint is True, (
+            f"Tool {name} read_only_hint must be True"
+        )
+        assert tool.description is not None, f"Tool {name} missing description"
+
+    # Verify decomposition instructions
+    search_lore_desc = tool_map["search_series_lore"].description or ""
+    assert "Decompose" in search_lore_desc or "decompose" in search_lore_desc
+
+    # Verify spoiler bounds and include_unscoped
+    assert "spoiler" in search_lore_desc.lower()
+    assert "include_unscoped" in search_lore_desc
+
+    # Verify get_chunk for truncated items
+    assert "get_chunk" in search_lore_desc
+    assert "truncated" in search_lore_desc.lower()
+
+    # Verify third-party data notice
+    assert "third-party" in search_lore_desc.lower()
+
+    # Verify server instructions
+    assert mcp.instructions is not None
+    assert "Decompose" in mcp.instructions
+    assert "Spoiler" in mcp.instructions
+    assert "get_chunk" in mcp.instructions
+    assert "Third-Party" in mcp.instructions
