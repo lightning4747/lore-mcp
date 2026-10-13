@@ -11,6 +11,10 @@ from lore_mcp.adapters.qdrant.errors import (
     QdrantMetadataMismatchError,
     QdrantOperationError,
 )
+from lore_mcp.adapters.qdrant.event_registry import (
+    QdrantEventRegistry,
+    to_event_point_id,
+)
 from lore_mcp.adapters.qdrant.filters import (
     build_filter_from_query,
     build_metadata_filter,
@@ -29,6 +33,7 @@ from lore_mcp.adapters.qdrant.registry import (
 __all__ = [
     "QdrantAdapterError",
     "QdrantEntityRegistry",
+    "QdrantEventRegistry",
     "QdrantInitializationError",
     "QdrantInitializer",
     "QdrantMetadataMismatchError",
@@ -40,6 +45,7 @@ __all__ = [
     "create_async_qdrant_client",
     "resolve_embedding_model_name",
     "to_entity_point_id",
+    "to_event_point_id",
     "to_manifest_point_id",
     "to_point_id",
 ]

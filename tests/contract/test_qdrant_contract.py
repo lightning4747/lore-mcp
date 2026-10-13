@@ -7,15 +7,18 @@ import pytest
 from qdrant_client import AsyncQdrantClient, models
 
 from lore_mcp.adapters.qdrant.entity_registry import QdrantEntityRegistry
+from lore_mcp.adapters.qdrant.event_registry import QdrantEventRegistry
 from lore_mcp.adapters.qdrant.index import QdrantVectorIndex
 from lore_mcp.adapters.qdrant.initializer import QdrantInitializer
 from lore_mcp.adapters.qdrant.registry import QdrantSeriesRegistry
 from lore_mcp.config import QdrantSettings
 from lore_mcp.ports.entity_registry import EntityRegistry
+from lore_mcp.ports.event_registry import EventRegistry
 from lore_mcp.ports.series_registry import SeriesRegistry
 from lore_mcp.ports.vector_index import VectorIndex
 from lore_mcp.testing import (
     EntityRegistryContractSuite,
+    EventRegistryContractSuite,
     SeriesRegistryContractSuite,
     VectorIndexContractSuite,
 )
@@ -98,5 +101,17 @@ class TestQdrantEntityRegistryContract(EntityRegistryContractSuite):
             client = AsyncQdrantClient(":memory:")
             await QdrantInitializer.ensure_collections_ready(client, contract_settings)
             return QdrantEntityRegistry(client, contract_settings)
+
+        return asyncio.run(_setup())
+
+
+@pytest.mark.contract
+class TestQdrantEventRegistryContract(EventRegistryContractSuite):
+    @pytest.fixture
+    def registry(self, contract_settings: QdrantSettings) -> EventRegistry:
+        async def _setup() -> EventRegistry:
+            client = AsyncQdrantClient(":memory:")
+            await QdrantInitializer.ensure_collections_ready(client, contract_settings)
+            return QdrantEventRegistry(client, contract_settings)
 
         return asyncio.run(_setup())

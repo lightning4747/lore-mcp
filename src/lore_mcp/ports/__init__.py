@@ -5,6 +5,7 @@ from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock, SystemClock
 from lore_mcp.ports.documents import DocumentSource, DocumentStore
 from lore_mcp.ports.entity_registry import EntityRegistry
+from lore_mcp.ports.event_registry import EventRegistry
 from lore_mcp.ports.series_registry import SeriesRegistry
 from lore_mcp.ports.vector_index import VectorIndex
 from lore_mcp.ports.web_search import WebSearch
@@ -16,6 +17,7 @@ __all__ = [
     "DocumentSource",
     "DocumentStore",
     "EntityRegistry",
+    "EventRegistry",
     "SeriesRegistry",
     "SystemClock",
     "VectorIndex",

@@ -6,7 +6,14 @@ from lore_mcp.domain.documents import (
     NormalizedDocument,
     RawDocument,
 )
-from lore_mcp.domain.entities import Entity, EntityDetails, Event, SeriesManifest
+from lore_mcp.domain.entities import (
+    Entity,
+    EntityDetails,
+    Event,
+    EventDetails,
+    EventTrace,
+    SeriesManifest,
+)
 from lore_mcp.domain.identifiers import (
     LORE_CHUNK_NAMESPACE,
     generate_chunk_id,
@@ -45,7 +52,9 @@ __all__ = [
     "EntityDetails",
     "EntityId",
     "Event",
+    "EventDetails",
     "EventId",
+    "EventTrace",
     "Evidence",
     "EvidenceBundle",
     "NormalizedDocument",

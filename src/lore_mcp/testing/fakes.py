@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 
 from lore_mcp.domain.documents import Chunk, NormalizedDocument, RawDocument
-from lore_mcp.domain.entities import Entity, SeriesManifest
+from lore_mcp.domain.entities import Entity, Event, SeriesManifest
 from lore_mcp.domain.identifiers import slugify
 from lore_mcp.domain.search import (
     SearchHit,
@@ -13,12 +13,13 @@ from lore_mcp.domain.search import (
     WebSearchResult,
     reciprocal_rank_fusion,
 )
-from lore_mcp.domain.types import ChunkId, EntityId, SeriesId
+from lore_mcp.domain.types import ChunkId, EntityId, EventId, SeriesId
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock
 from lore_mcp.ports.documents import DocumentSource, DocumentStore
 from lore_mcp.ports.entity_registry import EntityRegistry
+from lore_mcp.ports.event_registry import EventRegistry
 from lore_mcp.ports.series_registry import SeriesRegistry
 from lore_mcp.ports.vector_index import VectorIndex
 from lore_mcp.ports.web_search import WebSearch
@@ -403,5 +404,56 @@ class FakeEntityRegistry(EntityRegistry):
         for entity in series_entities:
             if any(alias.lower() == clean_lower for alias in entity.aliases):
                 return entity
+
+        return None
+
+
+class FakeEventRegistry(EventRegistry):
+    """In-memory fake implementation of EventRegistry."""
+
+    def __init__(self, events: Sequence[Event] | None = None) -> None:
+        self._events: dict[tuple[str, str], Event] = {}
+        if events:
+            for event in events:
+                self._events[(str(event.series_id), str(event.event_id))] = event
+
+    async def register_event(self, event: Event) -> None:
+        self._events[(str(event.series_id), str(event.event_id))] = event
+
+    async def register_events(self, events: Sequence[Event]) -> None:
+        for event in events:
+            await self.register_event(event)
+
+    async def get_event(self, series_id: SeriesId, event_id: EventId) -> Event | None:
+        return self._events.get((str(series_id), str(event_id)))
+
+    async def list_events(self, series_id: SeriesId) -> list[Event]:
+        return [
+            event for (s_id, _), event in self._events.items() if s_id == str(series_id)
+        ]
+
+    async def resolve_event(self, series_id: SeriesId, name_or_id: str) -> Event | None:
+        clean = name_or_id.strip()
+        if not clean:
+            return None
+
+        direct = self._events.get((str(series_id), clean))
+        if direct is not None:
+            return direct
+
+        slug = slugify(clean)
+        if slug:
+            direct_slug = self._events.get((str(series_id), slug))
+            if direct_slug is not None:
+                return direct_slug
+
+        clean_lower = clean.lower()
+        series_events = await self.list_events(series_id)
+        for event in series_events:
+            if (
+                event.name.lower() == clean_lower
+                or str(event.event_id).lower() == clean_lower
+            ):
+                return event
 
         return None

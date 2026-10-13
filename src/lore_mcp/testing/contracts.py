@@ -15,15 +15,21 @@ from lore_mcp.domain.documents import (
     NormalizedDocument,
     RawDocument,
 )
-from lore_mcp.domain.entities import Entity, SeriesManifest
+from lore_mcp.domain.entities import Entity, Event, SeriesManifest
 from lore_mcp.domain.provenance import Provenance
 from lore_mcp.domain.search import SearchQuery
-from lore_mcp.domain.types import ChunkId, EntityId, SeriesId
+from lore_mcp.domain.types import (
+    ChunkId,
+    EntityId,
+    EventId,
+    SeriesId,
+)
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock
 from lore_mcp.ports.documents import DocumentSource, DocumentStore
 from lore_mcp.ports.entity_registry import EntityRegistry
+from lore_mcp.ports.event_registry import EventRegistry
 from lore_mcp.ports.series_registry import SeriesRegistry
 from lore_mcp.ports.vector_index import VectorIndex
 from lore_mcp.ports.web_search import WebSearch
@@ -542,3 +548,88 @@ class EntityRegistryContractSuite:
 
         # Non-existent
         assert await registry.resolve_entity(SeriesId("loki"), "Thor") is None
+
+
+class EventRegistryContractSuite:
+    """Contract test suite for EventRegistry port implementations."""
+
+    @pytest.mark.asyncio
+    async def test_register_and_get_event(self, registry: EventRegistry) -> None:
+        event = Event(
+            event_id=EventId("loki:s1e1:glorious-purpose"),
+            series_id=SeriesId("loki"),
+            name="Glorious Purpose Trial",
+            description="Loki is tried at the TVA and meets Mobius.",
+            season=1,
+            episode=1,
+            scene_index=3,
+            narrative_order=100,
+            participants=[EntityId("loki"), EntityId("mobius")],
+            location="TVA Courtroom",
+            consequences=["Recruited by Mobius"],
+        )
+        await registry.register_event(event)
+
+        retrieved = await registry.get_event(
+            SeriesId("loki"), EventId("loki:s1e1:glorious-purpose")
+        )
+        assert retrieved is not None
+        assert retrieved.event_id == EventId("loki:s1e1:glorious-purpose")
+        assert retrieved.name == "Glorious Purpose Trial"
+        assert retrieved.season == 1
+        assert retrieved.episode == 1
+        assert retrieved.participants == [EntityId("loki"), EntityId("mobius")]
+        assert retrieved.location == "TVA Courtroom"
+
+        # Non-existent
+        assert (
+            await registry.get_event(SeriesId("loki"), EventId("nonexistent")) is None
+        )
+
+    @pytest.mark.asyncio
+    async def test_list_events(self, registry: EventRegistry) -> None:
+        ev1 = Event(
+            event_id=EventId("ev1"),
+            series_id=SeriesId("loki"),
+            name="Event 1",
+            description="Description 1",
+        )
+        ev2 = Event(
+            event_id=EventId("ev2"),
+            series_id=SeriesId("loki"),
+            name="Event 2",
+            description="Description 2",
+        )
+        await registry.register_events([ev1, ev2])
+
+        events = await registry.list_events(SeriesId("loki"))
+        event_ids = {e.event_id for e in events}
+        assert EventId("ev1") in event_ids
+        assert EventId("ev2") in event_ids
+
+    @pytest.mark.asyncio
+    async def test_resolve_event(self, registry: EventRegistry) -> None:
+        event = Event(
+            event_id=EventId("bombing-timeline"),
+            series_id=SeriesId("loki"),
+            name="Bombing of the Sacred Timeline",
+            description="Reset charges sent across various points in time.",
+            season=1,
+            episode=2,
+        )
+        await registry.register_event(event)
+
+        # By exact event_id
+        r1 = await registry.resolve_event(SeriesId("loki"), "bombing-timeline")
+        assert r1 is not None and r1.event_id == "bombing-timeline"
+
+        # By name (case-insensitive)
+        r2 = await registry.resolve_event(
+            SeriesId("loki"), "bombing of the sacred timeline"
+        )
+        assert r2 is not None and r2.event_id == "bombing-timeline"
+
+        # Non-existent
+        assert (
+            await registry.resolve_event(SeriesId("loki"), "Battle of New York") is None
+        )

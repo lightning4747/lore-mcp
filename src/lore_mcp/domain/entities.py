@@ -124,3 +124,44 @@ class EntityDetails(BaseModel):
         default_factory=list[str],
         description="Operational notices or warnings",
     )
+
+
+class EventTrace(BaseModel):
+    """Resolved event trace containing participants, locations, entities,
+    and chronological evidence.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    event: Event = Field(description="Resolved canonical event metadata")
+    participants: list[EntityId] = Field(
+        default_factory=list[EntityId],
+        description="Entities participating in or affected by the event",
+    )
+    locations: list[str] = Field(
+        default_factory=list[str],
+        description="Relevant locations where the event took place",
+    )
+    entities: list[EntityId] = Field(
+        default_factory=list[EntityId],
+        description="Relevant entities associated with the event and evidence",
+    )
+    evidence: list[Evidence] = Field(
+        default_factory=list[Evidence],
+        description="Related evidence chunks organized in chronological order",
+    )
+    chronology: list[str] = Field(
+        default_factory=list[str],
+        description="Sequential chronological notes or timeline markers",
+    )
+    provenance: list[Provenance] = Field(
+        default_factory=list[Provenance],
+        description="Deduplicated source provenance records for retrieved evidence",
+    )
+    notices: list[str] = Field(
+        default_factory=list[str],
+        description="Operational notices or warnings",
+    )
+
+
+EventDetails = EventTrace
