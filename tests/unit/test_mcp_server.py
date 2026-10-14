@@ -1,18 +1,31 @@
 """Unit tests for FastMCP server, readiness checker, and HTTP endpoints."""
 
+import json
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
 from qdrant_client import AsyncQdrantClient
 from starlette.testclient import TestClient
 
 from lore_mcp.adapters.qdrant.initializer import QdrantInitializer
+from lore_mcp.application.errors import DependencyUnavailable, RateLimited
 from lore_mcp.config import QdrantSettings, Settings
+from lore_mcp.domain.documents import Chunk
+from lore_mcp.domain.entities import Entity, Event, SeriesManifest
+from lore_mcp.domain.provenance import Provenance
+from lore_mcp.domain.types import ChunkId, EntityId, EventId, SeriesId
 from lore_mcp.interfaces.mcp import ReadinessChecker, create_http_app, create_mcp_server
 from lore_mcp.ports.clock import Clock
+from lore_mcp.testing import (
+    FakeEntityRegistry,
+    FakeEventRegistry,
+    FakeSeriesRegistry,
+    FakeVectorIndex,
+)
 
 
 class FakeClock(Clock):
@@ -427,3 +440,435 @@ async def test_tool_descriptions_and_read_only_annotations(
     assert "Spoiler" in mcp.instructions
     assert "get_chunk" in mcp.instructions
     assert "Third-Party" in mcp.instructions
+
+
+@pytest.fixture
+def fake_harness() -> dict[str, Any]:
+    """Test harness with populated fakes for all 4 ports."""
+    series_reg = FakeSeriesRegistry()
+    entity_reg = FakeEntityRegistry()
+    event_reg = FakeEventRegistry()
+    vector_idx = FakeVectorIndex()
+
+    manifest = SeriesManifest(
+        series_id=SeriesId("loki"),
+        display_name="Loki (TV Series)",
+        kind="show",
+        aliases=["MCU Loki"],
+        seasons=[1, 2],
+    )
+    series_reg._manifests[SeriesId("loki")] = manifest
+
+    chunk = Chunk(
+        chunk_id=ChunkId("chunk_1"),
+        series_id=SeriesId("loki"),
+        text="[00:01:23] Loki: I am burdened with glorious purpose.",
+        season=1,
+        episode=1,
+        scene_index=1,
+        narrative_order=1,
+        content_hash="hash_chunk_1",
+        entity_ids=[EntityId("loki")],
+        provenance=Provenance(
+            source_url="https://example.com/loki_s1e1",
+            source_type="transcript",
+            retrieval_timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+        ),
+    )
+    vector_idx._chunks[chunk.chunk_id] = chunk
+
+    entity = Entity(
+        entity_id=EntityId("loki"),
+        series_id=SeriesId("loki"),
+        name="Loki Laufeyson",
+        entity_type="character",
+        aliases=["God of Mischief"],
+        summary="Prince of Asgard and God of Mischief.",
+    )
+    entity_reg._entities[(SeriesId("loki"), EntityId("loki"))] = entity
+
+    event = Event(
+        event_id=EventId("evt_tva"),
+        series_id=SeriesId("loki"),
+        name="Loki arrives at TVA",
+        description="Loki is captured by the Time Variance Authority.",
+        season=1,
+        episode=1,
+        participants=[EntityId("loki")],
+        location="TVA Headquarters",
+    )
+    event_reg._events[(SeriesId("loki"), EventId("evt_tva"))] = event
+
+    return {
+        "series_reg": series_reg,
+        "entity_reg": entity_reg,
+        "event_reg": event_reg,
+        "vector_idx": vector_idx,
+    }
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_tool_discovery_and_schemas(test_settings: Settings) -> None:
+    """Verify tool discovery, schema types, and required parameter definitions."""
+    memory_client = AsyncQdrantClient(":memory:")
+    mcp = create_mcp_server(settings=test_settings, client=memory_client)
+
+    tools = await mcp.list_tools()
+    tool_map = {t.name: t for t in tools}
+
+    expected_tools = {
+        "list_series": [],
+        "search_series_lore": ["query", "series"],
+        "get_entity": ["entity", "series"],
+        "get_chunk": ["chunk_id", "series"],
+        "search_dialogue": ["query", "series"],
+        "trace_event": ["event_id", "series"],
+        "compare_events": ["event_id_a", "event_id_b", "series"],
+    }
+
+    for tool_name, expected_req in expected_tools.items():
+        assert tool_name in tool_map
+        tool = tool_map[tool_name]
+        params = tool.parameters
+        assert params.get("type") == "object"
+        props = params.get("properties", {})
+        for req in expected_req:
+            assert req in props, f"Missing property {req} in {tool_name}"
+        assert set(expected_req).issubset(set(params.get("required", [])))
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_every_mcp_tool_independently(
+    test_settings: Settings, fake_harness: dict[str, Any]
+) -> None:
+    """Execute each MCP tool independently with valid arguments and verify results."""
+    mcp = create_mcp_server(
+        settings=test_settings,
+        client=AsyncQdrantClient(":memory:"),
+        registry=fake_harness["series_reg"],
+        entity_registry=fake_harness["entity_reg"],
+        event_registry=fake_harness["event_reg"],
+        vector_index=fake_harness["vector_idx"],
+    )
+
+    # 1. list_series
+    res_series = await mcp.call_tool("list_series", {})
+    assert res_series.structured_content is not None
+    series_list = res_series.structured_content["result"]
+    assert len(series_list) == 1
+    assert series_list[0]["series_id"] == "loki"
+
+    # 2. search_series_lore
+    res_lore = await mcp.call_tool(
+        "search_series_lore", {"query": "glorious purpose", "series": "loki"}
+    )
+    assert res_lore.structured_content is not None
+    lore_data = res_lore.structured_content
+    assert "evidence" in lore_data
+    assert len(lore_data["evidence"]) >= 1
+
+    # 3. get_entity
+    res_entity = await mcp.call_tool("get_entity", {"entity": "loki", "series": "loki"})
+    assert res_entity.structured_content is not None
+    entity_data = res_entity.structured_content
+    assert entity_data["entity"]["name"] == "Loki Laufeyson"
+
+    # 4. get_chunk
+    res_chunk = await mcp.call_tool(
+        "get_chunk", {"chunk_id": "chunk_1", "series": "loki"}
+    )
+    assert res_chunk.structured_content is not None
+    chunk_data = res_chunk.structured_content
+    assert chunk_data["chunk_id"] == "chunk_1"
+    assert "glorious purpose" in chunk_data["text"]
+
+    # 5. search_dialogue
+    res_dialogue = await mcp.call_tool(
+        "search_dialogue", {"query": "glorious purpose", "series": "loki"}
+    )
+    assert res_dialogue.structured_content is not None
+    snippets = res_dialogue.structured_content["result"]
+    assert len(snippets) >= 1
+    assert snippets[0]["speaker"] == "Loki"
+
+    # 6. trace_event
+    res_event = await mcp.call_tool(
+        "trace_event", {"event_id": "evt_tva", "series": "loki"}
+    )
+    assert res_event.structured_content is not None
+    event_data = res_event.structured_content
+    assert event_data["event"]["event_id"] == "evt_tva"
+    assert "loki" in event_data["participants"]
+
+    # 7. compare_events
+    res_comp = await mcp.call_tool(
+        "compare_events",
+        {"event_id_a": "evt_tva", "event_id_b": "evt_tva", "series": "loki"},
+    )
+    assert res_comp.structured_content is not None
+    comp_data = res_comp.structured_content
+    assert "side_a" in comp_data
+    assert "side_b" in comp_data
+    assert "loki" in comp_data["shared_entities"]
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_invalid_arguments_structured_errors(
+    test_settings: Settings, fake_harness: dict[str, Any]
+) -> None:
+    """Invalid tool arguments raise ToolError with structured INVALID_ARGUMENT JSON."""
+    mcp = create_mcp_server(
+        settings=test_settings,
+        client=AsyncQdrantClient(":memory:"),
+        registry=fake_harness["series_reg"],
+        entity_registry=fake_harness["entity_reg"],
+        event_registry=fake_harness["event_reg"],
+        vector_index=fake_harness["vector_idx"],
+    )
+
+    invalid_cases = [
+        (
+            "search_series_lore",
+            {"query": "   ", "series": "loki"},
+            "query",
+        ),
+        (
+            "search_series_lore",
+            {"query": "valid", "series": "loki", "season": 0},
+            "season",
+        ),
+        (
+            "get_entity",
+            {"entity": "", "series": "loki"},
+            "entity",
+        ),
+        (
+            "get_chunk",
+            {"chunk_id": "", "series": "loki"},
+            "chunk_id",
+        ),
+        (
+            "search_dialogue",
+            {"query": "", "series": "loki"},
+            "query",
+        ),
+        (
+            "search_dialogue",
+            {"query": "valid", "series": "loki", "episode": -1},
+            "episode",
+        ),
+        (
+            "trace_event",
+            {"event_id": "  ", "series": "loki"},
+            "event_id",
+        ),
+        (
+            "compare_events",
+            {"event_id_a": "", "event_id_b": "evt", "series": "loki"},
+            "event_id_a",
+        ),
+        (
+            "search_series_lore",
+            {"query": "valid", "series": ""},
+            "series",
+        ),
+    ]
+
+    for tool_name, args, expected_arg in invalid_cases:
+        with pytest.raises(ToolError) as exc_info:
+            await mcp.call_tool(tool_name, args)
+        payload = json.loads(str(exc_info.value))
+        assert payload["code"] == "INVALID_ARGUMENT"
+        assert payload["error_type"] == "invalid_argument"
+        assert payload["details"].get("argument_name") == expected_arg
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_missing_series_returns_invalid_scope_error(
+    test_settings: Settings, fake_harness: dict[str, Any]
+) -> None:
+    """Missing or unknown series returns structured INVALID_SCOPE error."""
+    mcp = create_mcp_server(
+        settings=test_settings,
+        client=AsyncQdrantClient(":memory:"),
+        registry=fake_harness["series_reg"],
+        entity_registry=fake_harness["entity_reg"],
+        event_registry=fake_harness["event_reg"],
+        vector_index=fake_harness["vector_idx"],
+    )
+
+    # 1. Direct call
+    with pytest.raises(ToolError) as exc_info:
+        await mcp.call_tool(
+            "search_series_lore",
+            {"query": "who is he", "series": "unknown_franchise"},
+        )
+    payload = json.loads(str(exc_info.value))
+    assert payload["code"] == "INVALID_SCOPE"
+    assert payload["error_type"] == "invalid_scope"
+    assert payload["details"]["scope"] == "unknown_franchise"
+
+    # 2. Streamable HTTP call
+    app = create_http_app(mcp)
+    with TestClient(app) as client:
+        res = client.post(
+            "/mcp",
+            json={
+                "jsonrpc": "2.0",
+                "id": 99,
+                "method": "tools/call",
+                "params": {
+                    "name": "search_series_lore",
+                    "arguments": {
+                        "query": "who is he",
+                        "series": "unknown_franchise",
+                    },
+                },
+            },
+            headers={"Accept": "application/json, text/event-stream"},
+        )
+        assert res.status_code == 200
+        text = res.text
+        lines = [line for line in text.splitlines() if line.startswith("data: ")]
+        assert len(lines) >= 1
+        data = json.loads(lines[0].removeprefix("data: ").strip())
+        assert data["result"]["isError"] is True
+        error_json = json.loads(data["result"]["content"][0]["text"])
+        assert error_json["code"] == "INVALID_SCOPE"
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_empty_retrieval_results(
+    test_settings: Settings, fake_harness: dict[str, Any]
+) -> None:
+    """Empty retrieval queries return appropriate empty bundles or DATA_UNAVAILABLE."""
+    # Empty index for this test
+    empty_index = FakeVectorIndex()
+    mcp = create_mcp_server(
+        settings=test_settings,
+        client=AsyncQdrantClient(":memory:"),
+        registry=fake_harness["series_reg"],
+        entity_registry=fake_harness["entity_reg"],
+        event_registry=fake_harness["event_reg"],
+        vector_index=empty_index,
+    )
+
+    # Lore search with no hits
+    res_lore = await mcp.call_tool(
+        "search_series_lore",
+        {"query": "unmatched search term", "series": "loki"},
+    )
+    assert res_lore.structured_content is not None
+    lore_data = res_lore.structured_content
+    assert lore_data["evidence"] == []
+    assert lore_data["status"] == "insufficient"
+
+    # Dialogue search with no hits
+    res_dialogue = await mcp.call_tool(
+        "search_dialogue",
+        {"query": "unmatched speech", "series": "loki"},
+    )
+    assert res_dialogue.structured_content is not None
+    assert res_dialogue.structured_content["result"] == []
+
+    # get_chunk with non-existent chunk
+    with pytest.raises(ToolError) as exc_info:
+        await mcp.call_tool(
+            "get_chunk",
+            {"chunk_id": "nonexistent_chunk_99", "series": "loki"},
+        )
+    chunk_err = json.loads(str(exc_info.value))
+    assert chunk_err["code"] == "DATA_UNAVAILABLE"
+
+    # get_entity with non-existent entity
+    with pytest.raises(ToolError) as exc_info:
+        await mcp.call_tool(
+            "get_entity",
+            {"entity": "nonexistent_character_99", "series": "loki"},
+        )
+    entity_err = json.loads(str(exc_info.value))
+    assert entity_err["code"] == "DATA_UNAVAILABLE"
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_dependency_failures_and_secrets_masking(
+    test_settings: Settings, fake_harness: dict[str, Any]
+) -> None:
+    """Backing dependency failures and unexpected errors mask secrets securely."""
+    failing_index = AsyncMock(spec=FakeVectorIndex)
+    failing_index.search_dense.side_effect = DependencyUnavailable(
+        "qdrant", "connection refused at http://secret-host:6333"
+    )
+
+    mcp = create_mcp_server(
+        settings=test_settings,
+        client=AsyncQdrantClient(":memory:"),
+        registry=fake_harness["series_reg"],
+        entity_registry=fake_harness["entity_reg"],
+        event_registry=fake_harness["event_reg"],
+        vector_index=failing_index,
+    )
+
+    # DependencyUnavailable mapping
+    with pytest.raises(ToolError) as exc_info:
+        await mcp.call_tool(
+            "search_series_lore",
+            {"query": "test query", "series": "loki"},
+        )
+    dep_payload = json.loads(str(exc_info.value))
+    assert dep_payload["code"] == "DEPENDENCY_UNAVAILABLE"
+    assert "secret-host" not in dep_payload["message"]
+    assert dep_payload["details"]["service_name"] == "qdrant"
+
+    # Unexpected internal exception with secrets
+    leaking_index = AsyncMock(spec=FakeVectorIndex)
+    leaking_index.search_dense.side_effect = RuntimeError(
+        "Database crashed: token='SuperSecretToken123'"
+    )
+    mcp_secret = create_mcp_server(
+        settings=test_settings,
+        client=AsyncQdrantClient(":memory:"),
+        registry=fake_harness["series_reg"],
+        entity_registry=fake_harness["entity_reg"],
+        event_registry=fake_harness["event_reg"],
+        vector_index=leaking_index,
+    )
+
+    with pytest.raises(ToolError) as exc_info:
+        await mcp_secret.call_tool(
+            "search_series_lore",
+            {"query": "test query", "series": "loki"},
+        )
+    secret_payload = json.loads(str(exc_info.value))
+    assert secret_payload["code"] == "INTERNAL_ERROR"
+    assert "SuperSecretToken123" not in str(secret_payload)
+    assert "internal error occurred" in secret_payload["message"]
+
+    # RateLimited exception mapping
+    rate_limited_index = AsyncMock(spec=FakeVectorIndex)
+    rate_limited_index.search_dense.side_effect = RateLimited(
+        "Rate limit exceeded", retry_after_seconds=30.0
+    )
+    mcp_rl = create_mcp_server(
+        settings=test_settings,
+        client=AsyncQdrantClient(":memory:"),
+        registry=fake_harness["series_reg"],
+        entity_registry=fake_harness["entity_reg"],
+        event_registry=fake_harness["event_reg"],
+        vector_index=rate_limited_index,
+    )
+
+    with pytest.raises(ToolError) as exc_info:
+        await mcp_rl.call_tool(
+            "search_series_lore",
+            {"query": "test query", "series": "loki"},
+        )
+    rl_payload = json.loads(str(exc_info.value))
+    assert rl_payload["code"] == "RATE_LIMITED"
+    assert rl_payload["details"]["retry_after_seconds"] == 30.0

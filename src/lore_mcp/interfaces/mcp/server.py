@@ -28,6 +28,11 @@ from lore_mcp.application.scope import ScopeResolver
 from lore_mcp.config import Settings, get_settings
 from lore_mcp.domain.documents import Chunk
 from lore_mcp.domain.search import EvidenceBundle
+from lore_mcp.interfaces.mcp.errors import (
+    handle_mcp_errors,
+    validate_non_empty,
+    validate_optional_positive_int,
+)
 from lore_mcp.interfaces.mcp.models import (
     DialogueSnippet,
     EntityDetails,
@@ -214,6 +219,7 @@ def create_mcp_server(
             "5. Read-Only Tools: All tools provided by this server are read-only and "
             "idempotent."
         ),
+        mask_error_details=True,
         lifespan=server_lifespan,
     )
 
@@ -237,6 +243,7 @@ def create_mcp_server(
 
     # 3. Discovery Tool: list_series
     @mcp.tool(annotations={"read_only_hint": True})
+    @handle_mcp_errors
     async def list_series() -> list[SeriesSummary]:
         """List all indexed franchises/series with their canonical IDs, display names,
         aliases, and kind.
@@ -262,6 +269,7 @@ def create_mcp_server(
 
     # 4. Retrieval Tool: search_series_lore
     @mcp.tool(annotations={"read_only_hint": True})
+    @handle_mcp_errors
     async def search_series_lore(
         query: str,
         series: str,
@@ -306,6 +314,16 @@ def create_mcp_server(
         community-edited fan wikis and transcripts, not primary canon source text.
         Evaluate claims in context and cite the provided provenance locators and URLs.
         """
+        validate_non_empty(query, "query")
+        validate_non_empty(series, "series")
+        validate_optional_positive_int(season, "season")
+        validate_optional_positive_int(episode, "episode")
+        validate_optional_positive_int(max_season, "max_season")
+        validate_optional_positive_int(max_episode, "max_episode")
+        validate_optional_positive_int(max_results, "max_results")
+        if entity is not None and not entity.strip():
+            validate_non_empty(entity, "entity")
+
         return await retrieval_orch.search(
             query=query,
             series=series,
@@ -320,6 +338,7 @@ def create_mcp_server(
 
     # 5. Entity Tool: get_entity
     @mcp.tool(annotations={"read_only_hint": True})
+    @handle_mcp_errors
     async def get_entity(
         entity: str,
         series: str,
@@ -342,6 +361,10 @@ def create_mcp_server(
         Entity profiles and descriptions are compiled from third-party fan wikis. Cite
         source URLs and provenance metadata for documented claims.
         """
+        validate_non_empty(entity, "entity")
+        validate_non_empty(series, "series")
+        validate_optional_positive_int(max_results, "max_results")
+
         return await entity_svc.get_entity(
             entity=entity,
             series=series,
@@ -350,6 +373,7 @@ def create_mcp_server(
 
     # 6. Chunk Tool: get_chunk
     @mcp.tool(annotations={"read_only_hint": True})
+    @handle_mcp_errors
     async def get_chunk(
         chunk_id: str,
         series: str,
@@ -368,6 +392,9 @@ def create_mcp_server(
         Chunk content originates from third-party transcripts and fan wiki articles.
         Always cite provenance locators and source URLs when answering questions.
         """
+        validate_non_empty(chunk_id, "chunk_id")
+        validate_non_empty(series, "series")
+
         return await chunk_svc.get_chunk(
             chunk_id=chunk_id,
             series=series,
@@ -375,6 +402,7 @@ def create_mcp_server(
 
     # 7. Dialogue Tool: search_dialogue
     @mcp.tool(annotations={"read_only_hint": True})
+    @handle_mcp_errors
     async def search_dialogue(
         query: str,
         series: str,
@@ -409,6 +437,12 @@ def create_mcp_server(
         Dialogue and speaker attributions are derived from third-party subtitle and
         transcript sources. Use locators (season, episode, timestamps) to cite quotes.
         """
+        validate_non_empty(query, "query")
+        validate_non_empty(series, "series")
+        validate_optional_positive_int(season, "season")
+        validate_optional_positive_int(episode, "episode")
+        validate_optional_positive_int(max_results, "max_results")
+
         return await dialogue_svc.search_dialogue(
             query=query,
             series=series,
@@ -422,6 +456,7 @@ def create_mcp_server(
 
     # 8. Event Tool: trace_event
     @mcp.tool(annotations={"read_only_hint": True})
+    @handle_mcp_errors
     async def trace_event(
         event_id: str,
         series: str,
@@ -444,6 +479,10 @@ def create_mcp_server(
         Event summaries, participant lists, and timelines are syntheses derived from
         third-party community records and fan wikis.
         """
+        validate_non_empty(event_id, "event_id")
+        validate_non_empty(series, "series")
+        validate_optional_positive_int(max_results, "max_results")
+
         return await event_svc.trace_event(
             event_id=event_id,
             series=series,
@@ -453,6 +492,7 @@ def create_mcp_server(
 
     # 9. Comparison Tool: compare_events
     @mcp.tool(annotations={"read_only_hint": True})
+    @handle_mcp_errors
     async def compare_events(
         event_id_a: str,
         event_id_b: str,
@@ -480,6 +520,11 @@ def create_mcp_server(
         All comparative evidence and timeline notes are compiled from third-party fan
         wikis and transcripts.
         """
+        validate_non_empty(event_id_a, "event_id_a")
+        validate_non_empty(event_id_b, "event_id_b")
+        validate_non_empty(series, "series")
+        validate_optional_positive_int(max_results, "max_results")
+
         return await event_svc.compare_events(
             event_id_a=event_id_a,
             event_id_b=event_id_b,
