@@ -190,6 +190,7 @@ async def test_metadata_mismatch_schema_version() -> None:
         chunks_collection="mismatch_ver_chunks",
         meta_collection="mismatch_meta",
         schema_version=1,
+        inference_backend="cloud",
     )
 
     await client.create_collection(

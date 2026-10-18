@@ -95,6 +95,7 @@ class QdrantSeriesRegistry(SeriesRegistry):
 
         point_id = to_manifest_point_id(manifest.series_id)
         payload: dict[str, Any] = {
+            "type": "manifest",
             "series_id": str(manifest.series_id),
             "display_name": manifest.display_name,
             "kind": manifest.kind,
@@ -195,7 +196,9 @@ class QdrantSeriesRegistry(SeriesRegistry):
 
         manifests: list[SeriesManifest] = []
         for r in records:
-            if r.payload:
+            if r.payload and (
+                "_manifest_json" in r.payload or r.payload.get("type") == "manifest"
+            ):
                 manifests.append(self._reconstruct_manifest(r.payload))
         return manifests
 
