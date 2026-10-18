@@ -213,7 +213,9 @@ async def test_compare_two_events(
     populated_entity_registry: FakeEntityRegistry,
     populated_index: FakeVectorIndex,
 ) -> None:
-    """Compare two events, keeping evidence and provenance separate."""
+    """Compare two events with queries and event_id handles, keeping
+    evidence separate.
+    """
     scope_resolver = ScopeResolver(populated_series_registry)
     retriever = HybridRetriever(populated_index)
     service = EventService(
@@ -224,6 +226,8 @@ async def test_compare_two_events(
     )
 
     comparison = await service.compare_events(
+        query_a="Bombing of the Sacred Timeline",
+        query_b="Nexus Event on Lamentis-1",
         event_id_a="bombing-sacred-timeline",
         event_id_b="nexus-lamentis",
         series="loki",
@@ -267,6 +271,36 @@ async def test_compare_two_events(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
+async def test_compare_pure_natural_language_queries(
+    populated_series_registry: FakeSeriesRegistry,
+    populated_event_registry: FakeEventRegistry,
+    populated_entity_registry: FakeEntityRegistry,
+    populated_index: FakeVectorIndex,
+) -> None:
+    """Compare two events using purely natural language queries without event IDs."""
+    scope_resolver = ScopeResolver(populated_series_registry)
+    retriever = HybridRetriever(populated_index)
+    service = EventService(
+        scope_resolver=scope_resolver,
+        retriever=retriever,
+        event_registry=populated_event_registry,
+        entity_registry=populated_entity_registry,
+    )
+
+    comparison = await service.compare_events(
+        query_a="Sylvie executes the Bombing of the Sacred Timeline",
+        query_b="Nexus Event on Lamentis-1",
+        series="loki",
+    )
+
+    assert isinstance(comparison, EventComparison)
+    assert comparison.side_a.event is not None
+    assert comparison.side_b.event is not None
+    assert EntityId("loki") in comparison.shared_entities
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_compare_event_and_entity(
     populated_series_registry: FakeSeriesRegistry,
     populated_event_registry: FakeEventRegistry,
@@ -284,6 +318,8 @@ async def test_compare_event_and_entity(
     )
 
     comparison = await service.compare_events(
+        query_a="Bombing of the Sacred Timeline",
+        query_b="Mobius M. Mobius",
         event_id_a="bombing-sacred-timeline",
         event_id_b="mobius",
         series="loki",
@@ -306,7 +342,7 @@ async def test_compare_events_validation(
     populated_series_registry: FakeSeriesRegistry,
     populated_index: FakeVectorIndex,
 ) -> None:
-    """Validate empty references, invalid limits, and missing scopes."""
+    """Validate empty queries, invalid limits, and missing scopes."""
     scope_resolver = ScopeResolver(populated_series_registry)
     retriever = HybridRetriever(populated_index)
     service = EventService(
@@ -314,27 +350,49 @@ async def test_compare_events_validation(
         retriever=retriever,
     )
 
-    # Empty reference A
-    with pytest.raises(InvalidArgument):
+    # Empty query A
+    with pytest.raises(InvalidArgument) as exc_a:
         await service.compare_events(
-            event_id_a="   ",
-            event_id_b="nexus-lamentis",
+            query_a="   ",
+            query_b="nexus-lamentis",
             series="loki",
         )
+    assert exc_a.value.argument_name == "query_a"
 
-    # Empty reference B
-    with pytest.raises(InvalidArgument):
+    # Empty query B
+    with pytest.raises(InvalidArgument) as exc_b:
         await service.compare_events(
-            event_id_a="bombing-sacred-timeline",
-            event_id_b="",
+            query_a="bombing-sacred-timeline",
+            query_b="",
             series="loki",
         )
+    assert exc_b.value.argument_name == "query_b"
+
+    # Empty event_id_a if provided
+    with pytest.raises(InvalidArgument) as exc_ida:
+        await service.compare_events(
+            query_a="valid",
+            query_b="valid",
+            event_id_a="   ",
+            series="loki",
+        )
+    assert exc_ida.value.argument_name == "event_id_a"
+
+    # Empty event_id_b if provided
+    with pytest.raises(InvalidArgument) as exc_idb:
+        await service.compare_events(
+            query_a="valid",
+            query_b="valid",
+            event_id_b="   ",
+            series="loki",
+        )
+    assert exc_idb.value.argument_name == "event_id_b"
 
     # Invalid max_results
     with pytest.raises(InvalidArgument):
         await service.compare_events(
-            event_id_a="bombing-sacred-timeline",
-            event_id_b="nexus-lamentis",
+            query_a="bombing-sacred-timeline",
+            query_b="nexus-lamentis",
             series="loki",
             max_results=-1,
         )
@@ -342,16 +400,16 @@ async def test_compare_events_validation(
     # Unknown series scope
     with pytest.raises(InvalidScope):
         await service.compare_events(
-            event_id_a="bombing-sacred-timeline",
-            event_id_b="nexus-lamentis",
+            query_a="bombing-sacred-timeline",
+            query_b="nexus-lamentis",
             series="unknown-series",
         )
 
     # Nonexistent reference
     with pytest.raises(DataUnavailable):
         await service.compare_events(
-            event_id_a="Nonexistent Event Alpha",
-            event_id_b="Nonexistent Event Beta",
+            query_a="Nonexistent Event Alpha",
+            query_b="Nonexistent Event Beta",
             series="loki",
         )
 
@@ -381,6 +439,8 @@ async def test_compare_events_fastmcp_call_tool(
     result = await mcp.call_tool(
         "compare_events",
         {
+            "query_a": "Bombing of the Sacred Timeline",
+            "query_b": "Nexus Event on Lamentis-1",
             "event_id_a": "bombing-sacred-timeline",
             "event_id_b": "nexus-lamentis",
             "series": "loki",
@@ -426,6 +486,8 @@ def test_compare_events_streamable_http(
             "params": {
                 "name": "compare_events",
                 "arguments": {
+                    "query_a": "Bombing of the Sacred Timeline",
+                    "query_b": "Nexus Event on Lamentis-1",
                     "event_id_a": "bombing-sacred-timeline",
                     "event_id_b": "nexus-lamentis",
                     "series": "loki",

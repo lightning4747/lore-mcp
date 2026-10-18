@@ -523,8 +523,8 @@ async def test_tool_discovery_and_schemas(test_settings: Settings) -> None:
         "get_entity": ["entity", "series"],
         "get_chunk": ["chunk_id", "series"],
         "search_dialogue": ["query", "series"],
-        "trace_event": ["event_id", "series"],
-        "compare_events": ["event_id_a", "event_id_b", "series"],
+        "trace_event": ["query", "series"],
+        "compare_events": ["query_a", "query_b", "series"],
     }
 
     for tool_name, expected_req in expected_tools.items():
@@ -595,7 +595,7 @@ async def test_every_mcp_tool_independently(
 
     # 6. trace_event
     res_event = await mcp.call_tool(
-        "trace_event", {"event_id": "evt_tva", "series": "loki"}
+        "trace_event", {"query": "Loki arrives at TVA", "series": "loki"}
     )
     assert res_event.structured_content is not None
     event_data = res_event.structured_content
@@ -605,7 +605,11 @@ async def test_every_mcp_tool_independently(
     # 7. compare_events
     res_comp = await mcp.call_tool(
         "compare_events",
-        {"event_id_a": "evt_tva", "event_id_b": "evt_tva", "series": "loki"},
+        {
+            "query_a": "Loki arrives at TVA",
+            "query_b": "Loki arrives at TVA",
+            "series": "loki",
+        },
     )
     assert res_comp.structured_content is not None
     comp_data = res_comp.structured_content
@@ -662,12 +666,32 @@ async def test_invalid_arguments_structured_errors(
         ),
         (
             "trace_event",
-            {"event_id": "  ", "series": "loki"},
+            {"query": "  ", "series": "loki"},
+            "query",
+        ),
+        (
+            "trace_event",
+            {"query": "valid", "event_id": "  ", "series": "loki"},
             "event_id",
         ),
         (
             "compare_events",
-            {"event_id_a": "", "event_id_b": "evt", "series": "loki"},
+            {"query_a": "", "query_b": "evt", "series": "loki"},
+            "query_a",
+        ),
+        (
+            "compare_events",
+            {"query_a": "valid", "query_b": "  ", "series": "loki"},
+            "query_b",
+        ),
+        (
+            "compare_events",
+            {
+                "query_a": "valid",
+                "query_b": "valid",
+                "event_id_a": "  ",
+                "series": "loki",
+            },
             "event_id_a",
         ),
         (

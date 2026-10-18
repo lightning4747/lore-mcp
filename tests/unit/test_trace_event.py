@@ -189,9 +189,7 @@ async def test_trace_event_from_registry_by_id(
     populated_event_registry: FakeEventRegistry,
     populated_index: FakeVectorIndex,
 ) -> None:
-    """Resolve an event by exact ID, retrieving participants and
-    chronological evidence.
-    """
+    """Resolve an event by direct event_id fast-path with query."""
     scope_resolver = ScopeResolver(populated_series_registry)
     retriever = HybridRetriever(populated_index)
     service = EventService(
@@ -201,6 +199,7 @@ async def test_trace_event_from_registry_by_id(
     )
 
     trace = await service.trace_event(
+        query="Bombing of the Sacred Timeline",
         event_id="bombing-sacred-timeline",
         series="loki",
     )
@@ -245,12 +244,12 @@ async def test_trace_event_from_registry_by_id(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_trace_event_from_registry_by_name(
+async def test_trace_event_pure_natural_language_query(
     populated_series_registry: FakeSeriesRegistry,
     populated_event_registry: FakeEventRegistry,
     populated_index: FakeVectorIndex,
 ) -> None:
-    """Resolve an event by case-insensitive name match."""
+    """Resolve an event using pure natural language without event_id."""
     scope_resolver = ScopeResolver(populated_series_registry)
     retriever = HybridRetriever(populated_index)
     service = EventService(
@@ -260,7 +259,33 @@ async def test_trace_event_from_registry_by_name(
     )
 
     trace = await service.trace_event(
-        event_id="nexus event on lamentis-1",
+        query="Sylvie executes the Bombing of the Sacred Timeline",
+        series="loki",
+    )
+
+    assert isinstance(trace, EventTrace)
+    assert trace.event.event_id is not None
+    assert len(trace.evidence) >= 1
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_trace_event_from_registry_by_name(
+    populated_series_registry: FakeSeriesRegistry,
+    populated_event_registry: FakeEventRegistry,
+    populated_index: FakeVectorIndex,
+) -> None:
+    """Resolve an event by case-insensitive name match via query."""
+    scope_resolver = ScopeResolver(populated_series_registry)
+    retriever = HybridRetriever(populated_index)
+    service = EventService(
+        scope_resolver=scope_resolver,
+        retriever=retriever,
+        event_registry=populated_event_registry,
+    )
+
+    trace = await service.trace_event(
+        query="nexus event on lamentis-1",
         series="mcu loki",  # Alias resolution
     )
 
@@ -286,11 +311,12 @@ async def test_trace_event_fallback_from_chunks(
     )
 
     trace = await service.trace_event(
-        event_id="Temporal Loom destruction",
+        query="Temporal Loom destruction",
         series="loki",
     )
 
     assert trace.event.name == "Temporal Loom Destruction"
+    assert trace.event.event_id is not None
     assert trace.event.season == 2
     assert trace.event.episode == 6
     assert EntityId("loki") in trace.participants
@@ -313,7 +339,7 @@ async def test_trace_event_not_found_raises_data_unavailable(
 
     with pytest.raises(DataUnavailable) as exc:
         await service.trace_event(
-            event_id="Nonexistent Alien Invasion",
+            query="Nonexistent Alien Invasion",
             series="loki",
         )
     assert "Nonexistent Alien Invasion" in str(exc.value)
@@ -325,7 +351,9 @@ async def test_trace_event_validation_errors(
     populated_series_registry: FakeSeriesRegistry,
     populated_index: FakeVectorIndex,
 ) -> None:
-    """Validation errors for empty event_id, invalid limit, or unknown scope."""
+    """Validation errors for empty query, empty event_id, invalid limit,
+    or unknown scope.
+    """
     scope_resolver = ScopeResolver(populated_series_registry)
     retriever = HybridRetriever(populated_index)
     service = EventService(
@@ -333,14 +361,24 @@ async def test_trace_event_validation_errors(
         retriever=retriever,
     )
 
-    # Empty event_id
-    with pytest.raises(InvalidArgument):
-        await service.trace_event(event_id="   ", series="loki")
+    # Empty query
+    with pytest.raises(InvalidArgument) as exc_q:
+        await service.trace_event(query="   ", series="loki")
+    assert exc_q.value.argument_name == "query"
+
+    # Empty event_id if provided
+    with pytest.raises(InvalidArgument) as exc_id:
+        await service.trace_event(
+            query="valid",
+            event_id="   ",
+            series="loki",
+        )
+    assert exc_id.value.argument_name == "event_id"
 
     # Invalid max_results
     with pytest.raises(InvalidArgument):
         await service.trace_event(
-            event_id="bombing-sacred-timeline",
+            query="bombing-sacred-timeline",
             series="loki",
             max_results=0,
         )
@@ -348,7 +386,7 @@ async def test_trace_event_validation_errors(
     # Unknown series scope
     with pytest.raises(InvalidScope):
         await service.trace_event(
-            event_id="bombing-sacred-timeline",
+            query="bombing-sacred-timeline",
             series="unknown-series",
         )
 
@@ -376,6 +414,7 @@ async def test_trace_event_fastmcp_call_tool(
     result = await mcp.call_tool(
         "trace_event",
         {
+            "query": "Bombing of the Sacred Timeline",
             "event_id": "bombing-sacred-timeline",
             "series": "loki",
         },
@@ -417,6 +456,7 @@ def test_trace_event_streamable_http(
             "params": {
                 "name": "trace_event",
                 "arguments": {
+                    "query": "Bombing of the Sacred Timeline",
                     "event_id": "bombing-sacred-timeline",
                     "series": "loki",
                 },

@@ -67,21 +67,28 @@ class EventService:
 
     async def trace_event(
         self,
-        event_id: str,
+        query: str,
         series: str,
-        event: str | None = None,
+        event_id: str | None = None,
         max_results: int | None = None,
     ) -> EventTrace:
         """Resolve a narrative event, retrieve related evidence, and return
         participants, relevant locations/entities, and chronological evidence.
         """
         # 0. Input validation
-        target_event = (event or event_id).strip()
-        if not target_event:
+        clean_query = query.strip() if query else ""
+        if not clean_query:
             raise InvalidArgument(
-                "Event identifier or name must not be empty.",
+                "Event search query must not be empty.",
+                argument_name="query",
+            )
+
+        if event_id is not None and not event_id.strip():
+            raise InvalidArgument(
+                "Event identifier must not be empty if provided.",
                 argument_name="event_id",
             )
+        clean_event_id = event_id.strip() if event_id else None
 
         limit = (
             max_results
@@ -103,21 +110,29 @@ class EventService:
         canonical_event: Event | None = None
         hits: list[SearchHit] = []
 
-        if self._event_registry is not None:
+        # Fast path: check event_id in registry first if provided
+        if clean_event_id and self._event_registry is not None:
             canonical_event = await self._event_registry.resolve_event(
                 series_id=series_id,
-                name_or_id=target_event,
+                name_or_id=clean_event_id,
+            )
+
+        # If not resolved via event_id, check registry by query
+        if canonical_event is None and self._event_registry is not None:
+            canonical_event = await self._event_registry.resolve_event(
+                series_id=series_id,
+                name_or_id=clean_query,
             )
 
         # Fallback resolution from indexed lore chunks if not in registry
         if canonical_event is None:
             candidate_query = SearchQuery(
                 series_id=series_id,
-                query=target_event,
+                query=clean_query,
                 max_results=limit,
             )
             raw_hits = await self._retriever.retrieve(candidate_query)
-            target_terms = _extract_significant_terms(target_event)
+            target_terms = _extract_significant_terms(clean_query)
             hits = [
                 h
                 for h in raw_hits
@@ -125,7 +140,7 @@ class EventService:
             ]
             if hits:
                 best_hit = hits[0]
-                event_slug = slugify(target_event) or f"event-{best_hit.chunk.chunk_id}"
+                event_slug = slugify(clean_query) or f"event-{best_hit.chunk.chunk_id}"
                 canonical_event = Event(
                     event_id=generate_event_id(
                         series_id=series_id,
@@ -134,7 +149,7 @@ class EventService:
                         season=best_hit.chunk.season,
                     ),
                     series_id=series_id,
-                    name=target_event.title(),
+                    name=clean_query.title(),
                     description=best_hit.chunk.text,
                     season=best_hit.chunk.season,
                     episode=best_hit.chunk.episode,
@@ -146,8 +161,8 @@ class EventService:
 
         if canonical_event is None:
             raise DataUnavailable(
-                f"Event '{target_event}' not found in series '{series_id}'.",
-                resource_id=target_event,
+                f"Event '{clean_query}' not found in series '{series_id}'.",
+                resource_id=clean_query,
             )
 
         # 3. Retrieve event-associated evidence if not already fetched
@@ -284,11 +299,11 @@ class EventService:
 
     async def compare_events(
         self,
-        event_id_a: str,
-        event_id_b: str,
+        query_a: str,
+        query_b: str,
         series: str,
-        event_a: str | None = None,
-        event_b: str | None = None,
+        event_id_a: str | None = None,
+        event_id_b: str | None = None,
         max_results: int | None = None,
     ) -> EventComparison:
         """Compare two event or entity references, retrieving evidence for both,
@@ -296,16 +311,27 @@ class EventService:
         structured evidence.
         """
         # 0. Input validation
-        ref_a = (event_a or event_id_a).strip()
-        ref_b = (event_b or event_id_b).strip()
-        if not ref_a:
+        clean_query_a = query_a.strip() if query_a else ""
+        clean_query_b = query_b.strip() if query_b else ""
+        if not clean_query_a:
             raise InvalidArgument(
-                "First event or entity reference must not be empty.",
+                "First event query must not be empty.",
+                argument_name="query_a",
+            )
+        if not clean_query_b:
+            raise InvalidArgument(
+                "Second event query must not be empty.",
+                argument_name="query_b",
+            )
+
+        if event_id_a is not None and not event_id_a.strip():
+            raise InvalidArgument(
+                "First event identifier must not be empty if provided.",
                 argument_name="event_id_a",
             )
-        if not ref_b:
+        if event_id_b is not None and not event_id_b.strip():
             raise InvalidArgument(
-                "Second event or entity reference must not be empty.",
+                "Second event identifier must not be empty if provided.",
                 argument_name="event_id_b",
             )
 
@@ -326,8 +352,18 @@ class EventService:
         series_id = resolved_scope.series_id
 
         # 2. Resolve both sides independently
-        side_a = await self._resolve_reference_side(series_id, ref_a, limit)
-        side_b = await self._resolve_reference_side(series_id, ref_b, limit)
+        side_a = await self._resolve_reference_side(
+            series_id=series_id,
+            query=clean_query_a,
+            limit=limit,
+            event_id=event_id_a.strip() if event_id_a else None,
+        )
+        side_b = await self._resolve_reference_side(
+            series_id=series_id,
+            query=clean_query_b,
+            limit=limit,
+            event_id=event_id_b.strip() if event_id_b else None,
+        )
 
         # 3. Compute shared entities and locations
         side_b_entity_set = {str(e) for e in side_b.entities}
@@ -352,24 +388,44 @@ class EventService:
     async def _resolve_reference_side(
         self,
         series_id: ValidatedSeriesId,
-        reference: str,
+        query: str,
         limit: int,
+        event_id: str | None = None,
     ) -> EventComparisonSide:
         """Resolve an event or entity reference and build its evidence side."""
-        # 1. Check event registry
         canonical_event: Event | None = None
-        if self._event_registry is not None:
+        canonical_entity: Entity | None = None
+
+        # 1. Fast path: check event_id in registries if provided
+        if event_id and self._event_registry is not None:
             canonical_event = await self._event_registry.resolve_event(
                 series_id=series_id,
-                name_or_id=reference,
+                name_or_id=event_id,
             )
-
-        # 2. Check entity registry if not an event
-        canonical_entity: Entity | None = None
-        if canonical_event is None and self._entity_registry is not None:
+        if event_id and canonical_event is None and self._entity_registry is not None:
             canonical_entity = await self._entity_registry.resolve_entity(
                 series_id=series_id,
-                name_or_alias=reference,
+                name_or_alias=event_id,
+            )
+
+        # 2. Check registries by natural language query
+        if (
+            canonical_event is None
+            and canonical_entity is None
+            and self._event_registry is not None
+        ):
+            canonical_event = await self._event_registry.resolve_event(
+                series_id=series_id,
+                name_or_id=query,
+            )
+        if (
+            canonical_event is None
+            and canonical_entity is None
+            and self._entity_registry is not None
+        ):
+            canonical_entity = await self._entity_registry.resolve_entity(
+                series_id=series_id,
+                name_or_alias=query,
             )
 
         hits: list[SearchHit] = []
@@ -378,11 +434,11 @@ class EventService:
         if canonical_event is None and canonical_entity is None:
             candidate_query = SearchQuery(
                 series_id=series_id,
-                query=reference,
+                query=query,
                 max_results=limit,
             )
             raw_hits = await self._retriever.retrieve(candidate_query)
-            target_terms = _extract_significant_terms(reference)
+            target_terms = _extract_significant_terms(query)
             hits = [
                 h
                 for h in raw_hits
@@ -390,7 +446,7 @@ class EventService:
             ]
             if hits:
                 best_hit = hits[0]
-                event_slug = slugify(reference) or f"event-{best_hit.chunk.chunk_id}"
+                event_slug = slugify(query) or f"event-{best_hit.chunk.chunk_id}"
                 canonical_event = Event(
                     event_id=generate_event_id(
                         series_id=series_id,
@@ -399,7 +455,7 @@ class EventService:
                         season=best_hit.chunk.season,
                     ),
                     series_id=series_id,
-                    name=reference.title(),
+                    name=query.title(),
                     description=best_hit.chunk.text,
                     season=best_hit.chunk.season,
                     episode=best_hit.chunk.episode,
@@ -411,8 +467,8 @@ class EventService:
 
         if canonical_event is None and canonical_entity is None:
             raise DataUnavailable(
-                f"Event or entity '{reference}' not found in series '{series_id}'.",
-                resource_id=reference,
+                f"Event or entity '{query}' not found in series '{series_id}'.",
+                resource_id=query,
             )
 
         # 4. Retrieve evidence chunks
@@ -559,7 +615,7 @@ class EventService:
                 provenance_list.append(ev.provenance)
 
         return EventComparisonSide(
-            reference=reference,
+            reference=event_id if event_id else query,
             target_type=target_type,
             event=canonical_event,
             entity=canonical_entity,

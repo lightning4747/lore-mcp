@@ -458,13 +458,25 @@ def create_mcp_server(
     @mcp.tool(annotations={"read_only_hint": True})
     @handle_mcp_errors
     async def trace_event(
-        event_id: str,
+        query: str,
         series: str,
-        event: str | None = None,
+        event_id: str | None = None,
         max_results: int | None = None,
     ) -> EventTrace:
         """Resolve a narrative event, retrieve related evidence, and return
         participants, relevant locations/entities, and chronological evidence.
+
+        QUERY INSTRUCTIONS & EVENT RESOLUTION:
+        Provide a plain English description of the incident or plot point in `query`
+        (e.g., 'Sylvie bombing the sacred timeline at Roxxcart' or
+        'Loki arriving at the TVA').
+        The server resolves the event using hybrid search and registry lookups.
+
+        EVENT_ID PARAMETER:
+        `event_id` is an optional handle used strictly for fast-path deduplication,
+        caching, or referencing an event resolved in a previous tool call.
+        Do NOT guess or fabricate an event_id. Only pass an event_id if it was
+        previously returned in an EventTrace or EventComparison response.
 
         CLIENT WORKFLOW & QUERY DECOMPOSITION:
         Decompose broad plot inquiries into discrete chronological event traces. Trace
@@ -479,14 +491,16 @@ def create_mcp_server(
         Event summaries, participant lists, and timelines are syntheses derived from
         third-party community records and fan wikis.
         """
-        validate_non_empty(event_id, "event_id")
+        validate_non_empty(query, "query")
         validate_non_empty(series, "series")
+        if event_id is not None and not event_id.strip():
+            validate_non_empty(event_id, "event_id")
         validate_optional_positive_int(max_results, "max_results")
 
         return await event_svc.trace_event(
-            event_id=event_id,
+            query=query,
             series=series,
-            event=event,
+            event_id=event_id,
             max_results=max_results,
         )
 
@@ -494,17 +508,28 @@ def create_mcp_server(
     @mcp.tool(annotations={"read_only_hint": True})
     @handle_mcp_errors
     async def compare_events(
-        event_id_a: str,
-        event_id_b: str,
+        query_a: str,
+        query_b: str,
         series: str,
-        event_a: str | None = None,
-        event_b: str | None = None,
+        event_id_a: str | None = None,
+        event_id_b: str | None = None,
         max_results: int | None = None,
     ) -> EventComparison:
         """Construct comparative context between two narrative occurrences or entities.
 
         Retrieves evidence for both references, keeps evidence and provenance separate,
         and returns comparable structured evidence with shared entities and locations.
+
+        QUERY INSTRUCTIONS & COMPARISON:
+        Provide descriptive, plain English queries for each side in `query_a` and
+        `query_b` (e.g., query_a='Loki arriving at the TVA',
+        query_b='Nexus event on Lamentis').
+
+        EVENT_ID PARAMETERS:
+        `event_id_a` and `event_id_b` are optional handles for fast-path lookup if the
+        events were already resolved in prior tool calls.
+        Do NOT guess or fabricate event IDs. Only provide them if obtained from
+        a previous tool result.
 
         CLIENT WORKFLOW & QUERY DECOMPOSITION:
         Decompose multi-sided narrative comparisons into focused pairwise calls.
@@ -520,17 +545,21 @@ def create_mcp_server(
         All comparative evidence and timeline notes are compiled from third-party fan
         wikis and transcripts.
         """
-        validate_non_empty(event_id_a, "event_id_a")
-        validate_non_empty(event_id_b, "event_id_b")
+        validate_non_empty(query_a, "query_a")
+        validate_non_empty(query_b, "query_b")
         validate_non_empty(series, "series")
+        if event_id_a is not None and not event_id_a.strip():
+            validate_non_empty(event_id_a, "event_id_a")
+        if event_id_b is not None and not event_id_b.strip():
+            validate_non_empty(event_id_b, "event_id_b")
         validate_optional_positive_int(max_results, "max_results")
 
         return await event_svc.compare_events(
+            query_a=query_a,
+            query_b=query_b,
+            series=series,
             event_id_a=event_id_a,
             event_id_b=event_id_b,
-            series=series,
-            event_a=event_a,
-            event_b=event_b,
             max_results=max_results,
         )
 

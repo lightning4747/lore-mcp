@@ -33,8 +33,8 @@ The server exposes standard MCP tools to any compatible client (Claude Desktop, 
 * `search_series_lore(query, series, season?, episode?, entity?)`: Primary hybrid search endpoint.
 * `get_entity(entity_id, series)`: Retrieves structured metadata, relationships, and history for a specific character, device, location, or concept.
 * `search_dialogue(query, series, character?)`: Queries raw transcript and subtitle indices for exact quotes and scene chronology.
-* `trace_event(event_id, series)`: Returns the causal and temporal sequence of a specific plot point.
-* `compare_events(event_id_a, event_id_b, series)`: Constructs comparative context between two narrative occurrences.
+* `trace_event(query, series, event_id?)`: Returns the causal and temporal sequence of a specific plot point.
+* `compare_events(query_a, query_b, series, event_id_a?, event_id_b?)`: Constructs comparative context between two narrative occurrences.
 
 Complex queries requiring multi-step reasoning are intended to be decomposed by the client LLM into multiple discrete tool calls.
 
