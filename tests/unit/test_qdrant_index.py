@@ -330,32 +330,47 @@ async def test_search_filters_series(
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_operation_error_wrapping(base_settings: QdrantSettings) -> None:
-    mock_client = AsyncMock(spec=AsyncQdrantClient)
-    mock_client.upsert.side_effect = RuntimeError("Qdrant connection dropped")
-    mock_client.retrieve.side_effect = RuntimeError("Qdrant read timeout")
-    mock_client.delete.side_effect = RuntimeError("Qdrant write timeout")
-    mock_client.count.side_effect = RuntimeError("Qdrant count failure")
-    mock_client.query_points.side_effect = RuntimeError("Qdrant search error")
+    from lore_mcp.adapters.qdrant.errors import QdrantConnectionError
+    from lore_mcp.application.errors import ApplicationError
 
-    index = QdrantVectorIndex(mock_client, base_settings)
+    # 1. Connection errors -> QdrantConnectionError (DependencyUnavailable)
+    mock_conn_client = AsyncMock(spec=AsyncQdrantClient)
+    mock_conn_client.upsert.side_effect = ConnectionError("Qdrant connection dropped")
+    mock_conn_client.retrieve.side_effect = TimeoutError("Qdrant read timeout")
+    mock_conn_client.delete.side_effect = ConnectionError("Qdrant write timeout")
+    mock_conn_client.count.side_effect = TimeoutError("Qdrant count failure")
+    mock_conn_client.query_points.side_effect = ConnectionError("Qdrant search error")
+
+    index_conn = QdrantVectorIndex(mock_conn_client, base_settings)
     chunk = make_chunk("c1", "loki")
 
-    with pytest.raises(QdrantOperationError) as exc_upsert:
-        await index.upsert([chunk])
+    with pytest.raises(QdrantConnectionError) as exc_upsert:
+        await index_conn.upsert([chunk])
     assert isinstance(exc_upsert.value, DependencyUnavailable)
 
-    with pytest.raises(QdrantOperationError) as exc_get:
-        await index.get_by_id(ChunkId("c1"))
+    with pytest.raises(QdrantConnectionError) as exc_get:
+        await index_conn.get_by_id(ChunkId("c1"))
     assert isinstance(exc_get.value, DependencyUnavailable)
 
-    with pytest.raises(QdrantOperationError) as exc_del:
-        await index.delete_series(SeriesId("loki"))
+    with pytest.raises(QdrantConnectionError) as exc_del:
+        await index_conn.delete_series(SeriesId("loki"))
     assert isinstance(exc_del.value, DependencyUnavailable)
 
-    with pytest.raises(QdrantOperationError) as exc_count:
-        await index.count(SeriesId("loki"))
+    with pytest.raises(QdrantConnectionError) as exc_count:
+        await index_conn.count(SeriesId("loki"))
     assert isinstance(exc_count.value, DependencyUnavailable)
 
-    with pytest.raises(QdrantOperationError) as exc_search:
-        await index.search(SearchQuery(series_id=SeriesId("loki"), query="test"))
+    with pytest.raises(QdrantConnectionError) as exc_search:
+        await index_conn.search(SearchQuery(series_id=SeriesId("loki"), query="test"))
     assert isinstance(exc_search.value, DependencyUnavailable)
+
+    # 2. Operational errors -> QdrantOperationError (ApplicationError,
+    # NOT DependencyUnavailable)
+    mock_op_client = AsyncMock(spec=AsyncQdrantClient)
+    mock_op_client.query_points.side_effect = ValueError("Invalid embedding query")
+    index_op = QdrantVectorIndex(mock_op_client, base_settings)
+
+    with pytest.raises(QdrantOperationError) as exc_op:
+        await index_op.search(SearchQuery(series_id=SeriesId("loki"), query="test"))
+    assert isinstance(exc_op.value, ApplicationError)
+    assert not isinstance(exc_op.value, DependencyUnavailable)

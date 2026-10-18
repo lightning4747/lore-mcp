@@ -7,7 +7,7 @@ from typing import Any
 
 from qdrant_client import AsyncQdrantClient, models
 
-from lore_mcp.adapters.qdrant.errors import QdrantOperationError
+from lore_mcp.adapters.qdrant.errors import wrap_qdrant_error
 from lore_mcp.config import QdrantSettings
 from lore_mcp.domain.entities import Event
 from lore_mcp.domain.identifiers import LORE_CHUNK_NAMESPACE, slugify
@@ -97,9 +97,10 @@ class QdrantEventRegistry(EventRegistry):
                 wait=True,
             )
         except Exception as err:
-            raise QdrantOperationError(
-                f"Failed to register events in "
-                f"'{self._settings.meta_collection}': {err}"
+            raise wrap_qdrant_error(
+                err,
+                f"Failed to register events in '{self._settings.meta_collection}'",
+                logger,
             ) from err
 
     async def get_event(self, series_id: SeriesId, event_id: EventId) -> Event | None:
@@ -113,9 +114,11 @@ class QdrantEventRegistry(EventRegistry):
                 with_vectors=False,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to retrieve event '{event_id}' from "
-                f"'{self._settings.meta_collection}': {err}"
+                f"'{self._settings.meta_collection}'",
+                logger,
             ) from err
 
         if not records:
@@ -146,9 +149,11 @@ class QdrantEventRegistry(EventRegistry):
                 with_vectors=False,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to list events for series '{series_id}' from "
-                f"'{self._settings.meta_collection}': {err}"
+                f"'{self._settings.meta_collection}'",
+                logger,
             ) from err
 
         events: list[Event] = []

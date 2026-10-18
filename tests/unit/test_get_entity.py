@@ -515,3 +515,86 @@ def test_get_entity_via_streamable_http(
         parsed_entity_res = json.loads(data["result"]["content"][0]["text"])
         assert parsed_entity_res["entity"]["entity_id"] == "loki"
         assert parsed_entity_res["entity"]["name"] == "Loki Laufeyson"
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_get_entity_missing_in_registry_and_chunks_raises_data_unavailable(
+    populated_index: FakeVectorIndex,
+    populated_registry: FakeSeriesRegistry,
+    populated_entity_registry: FakeEntityRegistry,
+) -> None:
+    """When entity is absent in registry and has 0 chunk matches, DataUnavailable
+    is raised.
+    """
+    scope_resolver = ScopeResolver(registry=populated_registry)
+    retriever = HybridRetriever(index=populated_index)
+    service = EntityService(
+        scope_resolver=scope_resolver,
+        retriever=retriever,
+        entity_registry=populated_entity_registry,
+    )
+
+    with pytest.raises(DataUnavailable) as exc_info:
+        await service.get_entity(entity="thor", series="loki")
+    assert "thor" in str(exc_info.value)
+    assert exc_info.value.resource_id == "thor"
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_get_entity_retrieval_operational_error_falls_back_to_data_unavailable(
+    populated_registry: FakeSeriesRegistry,
+    populated_entity_registry: FakeEntityRegistry,
+) -> None:
+    """Non-dependency error during fallback chunk search results in DataUnavailable."""
+    from unittest.mock import AsyncMock
+
+    from lore_mcp.ports.vector_index import VectorIndex
+
+    mock_index = AsyncMock(spec=VectorIndex)
+    mock_index.search.side_effect = RuntimeError("Vector embedding inference error")
+
+    scope_resolver = ScopeResolver(registry=populated_registry)
+    retriever = HybridRetriever(index=mock_index)
+    service = EntityService(
+        scope_resolver=scope_resolver,
+        retriever=retriever,
+        entity_registry=populated_entity_registry,
+    )
+
+    with pytest.raises(DataUnavailable) as exc_info:
+        await service.get_entity(entity="thor", series="loki")
+    assert "thor" in str(exc_info.value)
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_get_entity_connection_error_propagates_dependency_unavailable(
+    populated_registry: FakeSeriesRegistry,
+    populated_entity_registry: FakeEntityRegistry,
+) -> None:
+    """Genuine connectivity failure propagates DependencyUnavailable."""
+    from unittest.mock import AsyncMock
+
+    from lore_mcp.application.errors import DependencyUnavailable
+    from lore_mcp.ports.vector_index import VectorIndex
+
+    mock_index = AsyncMock(spec=VectorIndex)
+    mock_index.search_dense.side_effect = DependencyUnavailable(
+        "qdrant", "connection refused"
+    )
+    mock_index.search_sparse.side_effect = DependencyUnavailable(
+        "qdrant", "connection refused"
+    )
+
+    scope_resolver = ScopeResolver(registry=populated_registry)
+    retriever = HybridRetriever(index=mock_index)
+    service = EntityService(
+        scope_resolver=scope_resolver,
+        retriever=retriever,
+        entity_registry=populated_entity_registry,
+    )
+
+    with pytest.raises(DependencyUnavailable):
+        await service.get_entity(entity="thor", series="loki")

@@ -7,7 +7,7 @@ from typing import Any
 
 from qdrant_client import AsyncQdrantClient, models
 
-from lore_mcp.adapters.qdrant.errors import QdrantOperationError
+from lore_mcp.adapters.qdrant.errors import wrap_qdrant_error
 from lore_mcp.config import QdrantSettings
 from lore_mcp.domain.entities import Entity
 from lore_mcp.domain.identifiers import LORE_CHUNK_NAMESPACE, slugify
@@ -97,9 +97,10 @@ class QdrantEntityRegistry(EntityRegistry):
                 wait=True,
             )
         except Exception as err:
-            raise QdrantOperationError(
-                f"Failed to register entities in "
-                f"'{self._settings.meta_collection}': {err}"
+            raise wrap_qdrant_error(
+                err,
+                f"Failed to register entities in '{self._settings.meta_collection}'",
+                logger,
             ) from err
 
     async def get_entity(
@@ -115,9 +116,11 @@ class QdrantEntityRegistry(EntityRegistry):
                 with_vectors=False,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to retrieve entity '{entity_id}' from "
-                f"'{self._settings.meta_collection}': {err}"
+                f"'{self._settings.meta_collection}'",
+                logger,
             ) from err
 
         if not records:
@@ -148,9 +151,11 @@ class QdrantEntityRegistry(EntityRegistry):
                 with_vectors=False,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to list entities for series '{series_id}' from "
-                f"'{self._settings.meta_collection}': {err}"
+                f"'{self._settings.meta_collection}'",
+                logger,
             ) from err
 
         entities: list[Entity] = []

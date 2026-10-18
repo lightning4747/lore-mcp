@@ -1,19 +1,23 @@
-"""Exceptions for Qdrant vector store adapter."""
-
+import logging
 from typing import Any
 
-from lore_mcp.application.errors import DependencyUnavailable, IncompatibleData
+import httpx
+from qdrant_client.http.exceptions import ResponseHandlingException, UnexpectedResponse
+
+from lore_mcp.application.errors import (
+    ApplicationError,
+    DependencyUnavailable,
+    IncompatibleData,
+)
+
+logger = logging.getLogger(__name__)
 
 
-class QdrantAdapterError(Exception):
+class QdrantAdapterError(ApplicationError):
     """Base exception for all Qdrant adapter errors."""
 
     def __init__(self, message: str) -> None:
         super().__init__(message)
-        self.message: str = message
-
-    def __str__(self) -> str:
-        return self.message
 
 
 class QdrantMetadataMismatchError(IncompatibleData):
@@ -56,8 +60,70 @@ class QdrantInitializationError(DependencyUnavailable):
         super().__init__(service_name="qdrant", message=message)
 
 
-class QdrantOperationError(DependencyUnavailable):
-    """Raised when an operation against Qdrant fails."""
+class QdrantConnectionError(DependencyUnavailable):
+    """Raised when connection or network communication with Qdrant fails."""
 
     def __init__(self, message: str) -> None:
         super().__init__(service_name="qdrant", message=message)
+
+
+class QdrantOperationError(QdrantAdapterError):
+    """Raised when an operation against Qdrant fails due to operational or query
+    errors.
+    """
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+
+def is_qdrant_connection_error(exc: BaseException) -> bool:
+    """Determine whether an exception is a genuine connectivity or timeout failure."""
+    if isinstance(
+        exc,
+        (
+            httpx.ConnectError,
+            httpx.ConnectTimeout,
+            httpx.ReadTimeout,
+            httpx.WriteTimeout,
+            httpx.TimeoutException,
+            httpx.NetworkError,
+            ConnectionError,
+            TimeoutError,
+            ResponseHandlingException,
+        ),
+    ):
+        return True
+
+    if isinstance(exc, UnexpectedResponse) and exc.status_code in (502, 503, 504):
+        return True
+
+    cause = exc.__cause__ or exc.__context__
+    if cause is not None and is_qdrant_connection_error(cause):
+        return True
+
+    return False
+
+
+def wrap_qdrant_error(
+    err: Exception,
+    context_msg: str,
+    log: logging.Logger | None = None,
+) -> QdrantConnectionError | QdrantOperationError:
+    """Classify and log a Qdrant exception, returning domain exception.
+
+    Genuine connection or timeout failures produce QdrantConnectionError
+    (a DependencyUnavailable). Operational, query, or validation failures
+    produce QdrantOperationError (an ApplicationError) and are logged at
+    ERROR level with stack trace.
+    """
+    active_logger = log or logger
+    if is_qdrant_connection_error(err):
+        active_logger.warning(
+            "Qdrant connectivity failure during %s: %s", context_msg, err
+        )
+        return QdrantConnectionError(f"{context_msg}: {err}")
+
+    active_logger.error(
+        "Qdrant operational failure during %s: %s", context_msg, err, exc_info=True
+    )
+    return QdrantOperationError(f"{context_msg}: {err}")

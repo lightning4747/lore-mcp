@@ -168,7 +168,7 @@ class QdrantInitializer:
         client: AsyncQdrantClient,
         settings: QdrantSettings,
     ) -> None:
-        """Create payload-only metadata collection for series manifests."""
+        """Create payload-only metadata collection for series manifests and entities."""
         try:
             await client.create_collection(
                 collection_name=settings.meta_collection,
@@ -179,6 +179,38 @@ class QdrantInitializer:
             raise QdrantInitializationError(
                 f"Failed to create meta collection '{settings.meta_collection}': {err}"
             ) from err
+
+        await cls.ensure_meta_payload_indexes(client, settings)
+
+    @classmethod
+    async def ensure_meta_payload_indexes(
+        cls,
+        client: AsyncQdrantClient,
+        settings: QdrantSettings,
+    ) -> None:
+        """Ensure required payload indexes (type, series_id) exist on
+        meta collection.
+        """
+        try:
+            await client.create_payload_index(
+                collection_name=settings.meta_collection,
+                field_name="type",
+                field_schema=models.PayloadSchemaType.KEYWORD,
+            )
+            await client.create_payload_index(
+                collection_name=settings.meta_collection,
+                field_name="series_id",
+                field_schema=models.KeywordIndexParams(
+                    type=models.KeywordIndexType.KEYWORD,
+                    is_tenant=True,
+                ),
+            )
+        except Exception as err:
+            logger.debug(
+                "Failed or redundant payload index creation on '%s': %s",
+                settings.meta_collection,
+                err,
+            )
 
     @classmethod
     async def ensure_collections_ready(
@@ -218,3 +250,4 @@ class QdrantInitializer:
             await cls.create_meta_collection(client, settings)
         else:
             await cls.validate_meta_metadata(client, settings)
+            await cls.ensure_meta_payload_indexes(client, settings)

@@ -6,7 +6,7 @@ from typing import Any
 
 from qdrant_client import AsyncQdrantClient, models
 
-from lore_mcp.adapters.qdrant.errors import QdrantOperationError
+from lore_mcp.adapters.qdrant.errors import wrap_qdrant_error
 from lore_mcp.application.errors import IncompatibleData
 from lore_mcp.config import QdrantSettings
 from lore_mcp.domain.entities import SeriesManifest
@@ -121,9 +121,11 @@ class QdrantSeriesRegistry(SeriesRegistry):
                 wait=True,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to register series '{manifest.series_id}' in "
-                f"'{self._settings.meta_collection}': {err}"
+                f"'{self._settings.meta_collection}'",
+                logger,
             ) from err
 
     async def get_series(self, series_id: SeriesId) -> SeriesManifest | None:
@@ -137,9 +139,11 @@ class QdrantSeriesRegistry(SeriesRegistry):
                 with_vectors=False,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to retrieve series '{series_id}' from "
-                f"'{self._settings.meta_collection}': {err}"
+                f"'{self._settings.meta_collection}'",
+                logger,
             ) from err
 
         if not records:
@@ -174,9 +178,11 @@ class QdrantSeriesRegistry(SeriesRegistry):
             )
             return True
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to delete series '{series_id}' from "
-                f"'{self._settings.meta_collection}': {err}"
+                f"'{self._settings.meta_collection}'",
+                logger,
             ) from err
 
     async def get_manifests(self) -> list[SeriesManifest]:
@@ -189,9 +195,11 @@ class QdrantSeriesRegistry(SeriesRegistry):
                 with_vectors=False,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to list series manifests from "
-                f"'{self._settings.meta_collection}': {err}"
+                f"'{self._settings.meta_collection}'",
+                logger,
             ) from err
 
         manifests: list[SeriesManifest] = []

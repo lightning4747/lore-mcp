@@ -8,7 +8,7 @@ from typing import Any
 
 from qdrant_client import AsyncQdrantClient, models
 
-from lore_mcp.adapters.qdrant.errors import QdrantOperationError
+from lore_mcp.adapters.qdrant.errors import wrap_qdrant_error
 from lore_mcp.adapters.qdrant.filters import build_filter_from_query
 from lore_mcp.config import QdrantSettings
 from lore_mcp.domain.documents import Chunk
@@ -163,9 +163,11 @@ class QdrantVectorIndex(VectorIndex):
                     wait=True,
                 )
             except Exception as err:
-                raise QdrantOperationError(
+                raise wrap_qdrant_error(
+                    err,
                     f"Failed to upsert chunk batch [{i}:{i + len(batch)}] into "
-                    f"'{self._settings.chunks_collection}': {err}"
+                    f"'{self._settings.chunks_collection}'",
+                    logger,
                 ) from err
 
     async def get_by_id(self, chunk_id: ChunkId) -> Chunk | None:
@@ -179,9 +181,11 @@ class QdrantVectorIndex(VectorIndex):
                 with_vectors=False,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to retrieve chunk '{chunk_id}' from "
-                f"'{self._settings.chunks_collection}': {err}"
+                f"'{self._settings.chunks_collection}'",
+                logger,
             ) from err
 
         if not records:
@@ -217,9 +221,11 @@ class QdrantVectorIndex(VectorIndex):
                     with_vectors=False,
                 )
             except Exception as err:
-                raise QdrantOperationError(
+                raise wrap_qdrant_error(
+                    err,
                     f"Failed to check existing chunk IDs in "
-                    f"'{self._settings.chunks_collection}': {err}"
+                    f"'{self._settings.chunks_collection}'",
+                    logger,
                 ) from err
 
             for r in records:
@@ -246,9 +252,11 @@ class QdrantVectorIndex(VectorIndex):
                 wait=True,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to delete chunks for series '{series_id}' from "
-                f"'{self._settings.chunks_collection}': {err}"
+                f"'{self._settings.chunks_collection}'",
+                logger,
             ) from err
 
     async def count(self, series_id: SeriesId | None = None) -> int:
@@ -271,8 +279,10 @@ class QdrantVectorIndex(VectorIndex):
             )
             return res.count
         except Exception as err:
-            raise QdrantOperationError(
-                f"Failed to count chunks in '{self._settings.chunks_collection}': {err}"
+            raise wrap_qdrant_error(
+                err,
+                f"Failed to count chunks in '{self._settings.chunks_collection}'",
+                logger,
             ) from err
 
     async def prune_older_versions(
@@ -298,9 +308,11 @@ class QdrantVectorIndex(VectorIndex):
                 wait=True,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 f"Failed to prune older versions (<{active_version}) for series "
-                f"'{series_id}' from '{self._settings.chunks_collection}': {err}"
+                f"'{series_id}' from '{self._settings.chunks_collection}'",
+                logger,
             ) from err
 
     async def search_dense(self, query: SearchQuery) -> list[SearchHit]:
@@ -321,8 +333,10 @@ class QdrantVectorIndex(VectorIndex):
                 with_vectors=False,
             )
         except Exception as err:
-            raise QdrantOperationError(
-                f"Failed to query chunks in '{self._settings.chunks_collection}': {err}"
+            raise wrap_qdrant_error(
+                err,
+                f"Failed to query chunks in '{self._settings.chunks_collection}'",
+                logger,
             ) from err
 
         hits: list[SearchHit] = []
@@ -363,9 +377,11 @@ class QdrantVectorIndex(VectorIndex):
                 with_vectors=False,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 "Failed to query sparse chunks in "
-                f"'{self._settings.chunks_collection}': {err}"
+                f"'{self._settings.chunks_collection}'",
+                logger,
             ) from err
 
         hits: list[SearchHit] = []
@@ -425,9 +441,11 @@ class QdrantVectorIndex(VectorIndex):
                 with_vectors=False,
             )
         except Exception as err:
-            raise QdrantOperationError(
+            raise wrap_qdrant_error(
+                err,
                 "Failed to execute server-side fusion query in "
-                f"'{self._settings.chunks_collection}': {err}"
+                f"'{self._settings.chunks_collection}'",
+                logger,
             ) from err
 
         hits: list[SearchHit] = []

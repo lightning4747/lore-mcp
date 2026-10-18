@@ -181,22 +181,37 @@ async def test_alias_resolution(
 async def test_registry_error_wrapping(
     registry_settings: QdrantSettings,
 ) -> None:
-    mock_client = AsyncMock(spec=AsyncQdrantClient)
-    mock_client.upsert.side_effect = RuntimeError("Upsert network error")
-    mock_client.retrieve.side_effect = RuntimeError("Retrieve network error")
-    mock_client.scroll.side_effect = RuntimeError("Scroll network error")
+    from lore_mcp.adapters.qdrant.errors import QdrantConnectionError
+    from lore_mcp.application.errors import ApplicationError
 
-    registry = QdrantSeriesRegistry(mock_client, registry_settings)
+    # 1. Connectivity errors -> QdrantConnectionError (DependencyUnavailable)
+    mock_conn_client = AsyncMock(spec=AsyncQdrantClient)
+    mock_conn_client.upsert.side_effect = ConnectionError("Upsert network error")
+    mock_conn_client.retrieve.side_effect = TimeoutError("Retrieve timeout error")
+    mock_conn_client.scroll.side_effect = ConnectionError("Scroll network error")
+
+    registry_conn = QdrantSeriesRegistry(mock_conn_client, registry_settings)
     manifest = SeriesManifest(series_id=SeriesId("loki"), display_name="Loki")
 
-    with pytest.raises(QdrantOperationError) as exc_upsert:
-        await registry.register_series(manifest)
+    with pytest.raises(QdrantConnectionError) as exc_upsert:
+        await registry_conn.register_series(manifest)
     assert isinstance(exc_upsert.value, DependencyUnavailable)
 
-    with pytest.raises(QdrantOperationError) as exc_get:
-        await registry.get_series(SeriesId("loki"))
+    with pytest.raises(QdrantConnectionError) as exc_get:
+        await registry_conn.get_series(SeriesId("loki"))
     assert isinstance(exc_get.value, DependencyUnavailable)
 
-    with pytest.raises(QdrantOperationError) as exc_list:
-        await registry.list_series()
+    with pytest.raises(QdrantConnectionError) as exc_list:
+        await registry_conn.list_series()
     assert isinstance(exc_list.value, DependencyUnavailable)
+
+    # 2. Operational errors -> QdrantOperationError (ApplicationError,
+    # NOT DependencyUnavailable)
+    mock_op_client = AsyncMock(spec=AsyncQdrantClient)
+    mock_op_client.scroll.side_effect = ValueError("Malformed schema query")
+    registry_op = QdrantSeriesRegistry(mock_op_client, registry_settings)
+
+    with pytest.raises(QdrantOperationError) as exc_op:
+        await registry_op.list_series()
+    assert isinstance(exc_op.value, ApplicationError)
+    assert not isinstance(exc_op.value, DependencyUnavailable)

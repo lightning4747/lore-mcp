@@ -2,7 +2,11 @@
 
 import logging
 
-from lore_mcp.application.errors import DataUnavailable, InvalidArgument
+from lore_mcp.application.errors import (
+    DataUnavailable,
+    DependencyUnavailable,
+    InvalidArgument,
+)
 from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.scope import ScopeResolver
 from lore_mcp.config import RequestLimitsSettings
@@ -69,10 +73,21 @@ class EntityService:
         hits: list[SearchHit] = []
 
         if self._entity_registry is not None:
-            canonical_entity = await self._entity_registry.resolve_entity(
-                series_id=series_id,
-                name_or_alias=cleaned_entity,
-            )
+            try:
+                canonical_entity = await self._entity_registry.resolve_entity(
+                    series_id=series_id,
+                    name_or_alias=cleaned_entity,
+                )
+            except DependencyUnavailable:
+                raise
+            except Exception as exc:
+                logger.warning(
+                    "Entity registry lookup for '%s' in series '%s' failed: %s",
+                    cleaned_entity,
+                    series_id,
+                    exc,
+                )
+                canonical_entity = None
 
         # Fallback resolution from indexed chunks if not in registry
         if canonical_entity is None:
@@ -84,7 +99,19 @@ class EntityService:
                     entity=query_slug,
                     max_results=limit,
                 )
-                hits = await self._retriever.retrieve(candidate_query)
+                try:
+                    hits = await self._retriever.retrieve(candidate_query)
+                except DependencyUnavailable:
+                    raise
+                except Exception as exc:
+                    logger.warning(
+                        "Fallback chunk retrieval for entity '%s' in series '%s' "
+                        "failed: %s",
+                        cleaned_entity,
+                        series_id,
+                        exc,
+                    )
+                    hits = []
                 if hits:
                     canonical_entity = Entity(
                         entity_id=EntityId(query_slug),
