@@ -92,8 +92,13 @@ class QdrantSettings(BaseSettings):
         validation_alias=AliasChoices("QDRANT_RRF_K", "RRF_K"),
         description="Reciprocal rank fusion smoothing parameter k [S3]",
     )
+    timeout: int = Field(
+        default=30,
+        validation_alias=AliasChoices("QDRANT_TIMEOUT", "QDRANT_TIMEOUT_SECONDS"),
+        description="Timeout in seconds for Qdrant client requests",
+    )
 
-    @field_validator("dimension", "schema_version", "batch_size", "rrf_k")
+    @field_validator("dimension", "schema_version", "batch_size", "rrf_k", "timeout")
     @classmethod
     def validate_positive_int(cls, value: int) -> int:
         if value <= 0:
