@@ -77,7 +77,7 @@ strict = [
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 markers = [
     "unit: Unit tests (fast, no external I/O)",
     "contract: Contract tests for port abstractions",

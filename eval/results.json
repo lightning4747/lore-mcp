@@ -1,0 +1,2737 @@
+{
+  "timestamp": "2026-10-22T17:31:29.868700+00:00",
+  "dataset_path": "eval/golden_dataset.json",
+  "total_benchmark_questions": 30,
+  "pipelines": {
+    "Dense": {
+      "pipeline_name": "Dense",
+      "total_queries": 30,
+      "positive_queries": 24,
+      "negative_queries": 6,
+      "hit_rate_at_1": 0.75,
+      "hit_rate_at_3": 0.9583,
+      "hit_rate_at_5": 0.9583,
+      "mrr": 0.8333,
+      "negative_scope_precision": 1.0,
+      "category_breakdown": {
+        "event": {
+          "count": 8.0,
+          "hit_at_1": 0.5,
+          "hit_at_3": 0.875,
+          "hit_at_5": 0.875,
+          "mrr": 0.6458
+        },
+        "dialogue": {
+          "count": 8.0,
+          "hit_at_1": 0.875,
+          "hit_at_3": 1.0,
+          "hit_at_5": 1.0,
+          "mrr": 0.9167
+        },
+        "entity": {
+          "count": 8.0,
+          "hit_at_1": 0.875,
+          "hit_at_3": 1.0,
+          "hit_at_5": 1.0,
+          "mrr": 0.9375
+        }
+      }
+    },
+    "Sparse": {
+      "pipeline_name": "Sparse",
+      "total_queries": 30,
+      "positive_queries": 24,
+      "negative_queries": 6,
+      "hit_rate_at_1": 0.8333,
+      "hit_rate_at_3": 0.875,
+      "hit_rate_at_5": 0.9583,
+      "mrr": 0.8708,
+      "negative_scope_precision": 1.0,
+      "category_breakdown": {
+        "event": {
+          "count": 8.0,
+          "hit_at_1": 0.5,
+          "hit_at_3": 0.625,
+          "hit_at_5": 0.875,
+          "mrr": 0.6125
+        },
+        "dialogue": {
+          "count": 8.0,
+          "hit_at_1": 1.0,
+          "hit_at_3": 1.0,
+          "hit_at_5": 1.0,
+          "mrr": 1.0
+        },
+        "entity": {
+          "count": 8.0,
+          "hit_at_1": 1.0,
+          "hit_at_3": 1.0,
+          "hit_at_5": 1.0,
+          "mrr": 1.0
+        }
+      }
+    },
+    "Hybrid": {
+      "pipeline_name": "Hybrid",
+      "total_queries": 30,
+      "positive_queries": 24,
+      "negative_queries": 6,
+      "hit_rate_at_1": 0.6667,
+      "hit_rate_at_3": 0.875,
+      "hit_rate_at_5": 0.9583,
+      "mrr": 0.7847,
+      "negative_scope_precision": 1.0,
+      "category_breakdown": {
+        "event": {
+          "count": 8.0,
+          "hit_at_1": 0.5,
+          "hit_at_3": 0.875,
+          "hit_at_5": 0.875,
+          "mrr": 0.6875
+        },
+        "dialogue": {
+          "count": 8.0,
+          "hit_at_1": 1.0,
+          "hit_at_3": 1.0,
+          "hit_at_5": 1.0,
+          "mrr": 1.0
+        },
+        "entity": {
+          "count": 8.0,
+          "hit_at_1": 0.5,
+          "hit_at_3": 0.75,
+          "hit_at_5": 1.0,
+          "mrr": 0.6667
+        }
+      }
+    }
+  },
+  "failures": [
+    {
+      "query_id": "gold-evt-001",
+      "category": "event",
+      "query": "Where was Loki arrested by the TVA after taking the Tesseract?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "scores": [
+        0.54934,
+        0.4821,
+        0.47557,
+        0.47018,
+        0.44493
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-001",
+      "category": "event",
+      "query": "Where was Loki arrested by the TVA after taking the Tesseract?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-lore-character-ravonna-background",
+        "chunk-lore-character-sylvie-background",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "scores": [
+        6.84077,
+        5.03567,
+        4.70174,
+        1.98238,
+        1.93221
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-001",
+      "category": "event",
+      "query": "Where was Loki arrested by the TVA after taking the Tesseract?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e03-asgardian-drinking-song"
+      ],
+      "scores": [
+        0.03352,
+        0.0322,
+        0.03145,
+        0.01649,
+        0.01597
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": false,
+      "negative_rejected": false
+    }
+  ],
+  "detailed_results": [
+    {
+      "query_id": "gold-ent-001",
+      "category": "entity",
+      "query": "Who is the female Loki variant and what is her alias?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-lore-character-sylvie-background",
+        "chunk-loki-sylvie-backstory"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-sylvie-background",
+        "chunk-loki-sylvie-backstory",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-dialogue-s01e03-asgardian-drinking-song"
+      ],
+      "scores": [
+        0.58948,
+        0.5515,
+        0.54431,
+        0.43556,
+        0.41757
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-002",
+      "category": "entity",
+      "query": "What was Agent Mobius's real name and passion before joining the TVA?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-lore-character-mobius-background"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-mobius-background",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e02-salvation",
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e04-sif-time-cell"
+      ],
+      "scores": [
+        0.60348,
+        0.40736,
+        0.38868,
+        0.37601,
+        0.36192
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-003",
+      "category": "entity",
+      "query": "Who created the TVA and what is his origin?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e06-multiversal-war-origins"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-loki-tva-intro",
+        "chunk-lore-s01e06-multiversal-war-origins",
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-lore-location-citadel-end-of-time"
+      ],
+      "scores": [
+        0.50182,
+        0.4701,
+        0.29918,
+        0.15271,
+        0.03884
+      ],
+      "first_relevant_rank": 2,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.5,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-004",
+      "category": "entity",
+      "query": "What was Judge Ravonna Renslayer's former hunter designation and human identity?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-lore-character-ravonna-background"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-ravonna-background",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-lore-character-sylvie-background",
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "scores": [
+        0.65665,
+        0.35568,
+        0.27151,
+        0.17489
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-005",
+      "category": "entity",
+      "query": "How did Classic Loki survive Thanos in his timeline?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e05-classic-loki-survival"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice"
+      ],
+      "scores": [
+        0.72223,
+        0.48993
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-006",
+      "category": "entity",
+      "query": "What creature guards The Void and consumes pruned realities?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e05-the-void-and-alioth"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-s01e05-the-void-and-alioth",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-lore-location-citadel-end-of-time",
+        "chunk-lore-s01e06-multiversal-war-origins"
+      ],
+      "scores": [
+        0.53602,
+        0.27188,
+        0.21071,
+        0.12809
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-007",
+      "category": "entity",
+      "query": "What is the role of Miss Minutes in the Time Variance Authority?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-lore-tva-miss-minutes-sacred-timeline"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-tva-miss-minutes-sacred-timeline"
+      ],
+      "scores": [
+        0.4098
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-008",
+      "category": "entity",
+      "query": "What is Alligator Loki and what did he do to President Loki?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e05-president-loki-brawl"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-president-loki-brawl"
+      ],
+      "scores": [
+        0.63666
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-001",
+      "category": "event",
+      "query": "Where was Loki arrested by the TVA after taking the Tesseract?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "scores": [
+        0.54934,
+        0.4821,
+        0.47557,
+        0.47018,
+        0.44493
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-002",
+      "category": "event",
+      "query": "How did Loki and Mobius test whether apocalypses hide timeline variance?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e02-apocalypse-theory"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-s01e02-apocalypse-theory",
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-lore-tva-miss-minutes-sacred-timeline",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-loki-tva-intro"
+      ],
+      "scores": [
+        0.72764,
+        0.54664,
+        0.43542,
+        0.41214,
+        0.39463
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-003",
+      "category": "event",
+      "query": "What happened during Sylvie's ambush at the Roxxcart supermarket in 2050?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e02-bombing-the-timeline",
+        "chunk-dialogue-s01e02-roxxcart-confrontation"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-loki-sylvie-backstory",
+        "chunk-lore-character-sylvie-background",
+        "chunk-lore-s01e02-bombing-the-timeline",
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains"
+      ],
+      "scores": [
+        0.5807,
+        0.57461,
+        0.44767,
+        0.42209,
+        0.41932
+      ],
+      "first_relevant_rank": 3,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-004",
+      "category": "event",
+      "query": "Why did a massive Nexus Event spike occur on the doomed moon Lamentis-1?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e04-lamentis-nexus-anomaly"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-concept-nexus-event",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-lore-tech-reset-charge",
+        "chunk-lore-s01e02-bombing-the-timeline",
+        "chunk-lore-s01e06-multiversal-war-origins"
+      ],
+      "scores": [
+        0.5028,
+        0.47665,
+        0.28289,
+        0.2767,
+        0.23482
+      ],
+      "first_relevant_rank": 2,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.5,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-005",
+      "category": "event",
+      "query": "What did Sylvie discover when she decapitated the central Time-Keeper?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-loki-sylvie-backstory",
+        "chunk-lore-character-sylvie-background",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-lore-s01e03-tva-workers-are-variants"
+      ],
+      "scores": [
+        0.67723,
+        0.59119,
+        0.57072,
+        0.56756,
+        0.44153
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-006",
+      "category": "event",
+      "query": "How did Classic Loki help Loki and Sylvie enchant the storm beast Alioth?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-loki-sylvie-backstory",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-lore-character-sylvie-background"
+      ],
+      "scores": [
+        0.64502,
+        0.52267,
+        0.49076,
+        0.4844,
+        0.46051
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-007",
+      "category": "event",
+      "query": "What occurred when Sylvie killed He Who Remains at the Citadel at the End of Time?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-loki-sylvie-backstory",
+        "chunk-lore-character-sylvie-background",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "scores": [
+        0.61746,
+        0.58976,
+        0.50692,
+        0.50546,
+        0.48665
+      ],
+      "first_relevant_rank": 3,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-008",
+      "category": "event",
+      "query": "What chilling discovery did Loki make upon returning to the TVA after He Who Remains was killed?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice"
+      ],
+      "scores": [
+        0.64336,
+        0.58959,
+        0.5534,
+        0.55006,
+        0.54072
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-001",
+      "category": "dialogue",
+      "query": "I am Loki of Asgard, and I am burdened with glorious purpose",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e03-asgardian-drinking-song"
+      ],
+      "scores": [
+        0.81624,
+        0.64453,
+        0.55068,
+        0.5431,
+        0.49238
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-002",
+      "category": "dialogue",
+      "query": "Some of the guys use them as paperweights",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-infinity-stones"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-infinity-stones",
+        "chunk-dialogue-s01e05-president-loki-brawl",
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-lore-tech-tempad",
+        "chunk-lore-tech-reset-charge"
+      ],
+      "scores": [
+        0.45969,
+        0.08068,
+        0.06191,
+        0.05081,
+        0.05024
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-003",
+      "category": "dialogue",
+      "query": "No one bad is ever truly bad, and no one good is ever truly good",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e02-salvation"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e02-salvation",
+        "chunk-dialogue-s01e01-villain-interrogation",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-lore-tva-miss-minutes-sacred-timeline"
+      ],
+      "scores": [
+        0.55089,
+        0.27737,
+        0.19434,
+        0.18803,
+        0.18343
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-004",
+      "category": "dialogue",
+      "query": "Love is a dagger. It's a weapon to be wielded far away or up close",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e03-love-is-a-dagger"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e03-love-is-a-dagger",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "scores": [
+        0.72404,
+        0.28617,
+        0.27761,
+        0.21015,
+        0.20097
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-005",
+      "category": "dialogue",
+      "query": "You're going to die alone, Loki. You will always be alone.",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e04-sif-time-cell"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "scores": [
+        0.60376,
+        0.59302,
+        0.52768,
+        0.5146,
+        0.49247
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-006",
+      "category": "dialogue",
+      "query": "Mindless androids. It's all a lie.",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-lore-tech-tempad",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e04-sif-time-cell"
+      ],
+      "scores": [
+        0.35574,
+        0.22231,
+        0.21144,
+        0.20357,
+        0.20083
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-007",
+      "category": "dialogue",
+      "query": "I don't want a throne. I just want you to be okay.",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-confrontation"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-dialogue-s01e01-glorious-purpose",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e01-villain-interrogation",
+        "chunk-dialogue-s01e02-salvation"
+      ],
+      "scores": [
+        0.47944,
+        0.28559,
+        0.271,
+        0.23743,
+        0.22408
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-008",
+      "category": "dialogue",
+      "query": "Calm down, take a breath. What division are you from? Who are you?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e02-salvation",
+        "chunk-dialogue-s01e01-villain-interrogation"
+      ],
+      "scores": [
+        0.19186,
+        0.18979,
+        0.17638,
+        0.14099,
+        0.13599
+      ],
+      "first_relevant_rank": 3,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-neg-001",
+      "category": "negative",
+      "query": "How did Bruce Wayne become Batman after his parents died?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-villain-interrogation",
+        "chunk-lore-character-ravonna-background",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e06-confrontation"
+      ],
+      "scores": [
+        0.18668,
+        0.14163,
+        0.13501,
+        0.13088,
+        0.12761
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-002",
+      "category": "negative",
+      "query": "How did Frodo Baggins destroy the One Ring in the fires of Mount Doom?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e01-infinity-stones",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-lore-location-citadel-end-of-time"
+      ],
+      "scores": [
+        0.22617,
+        0.22517,
+        0.21733,
+        0.21409,
+        0.20862
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-003",
+      "category": "negative",
+      "query": "Where did Luke Skywalker hide on the planet Ahch-To in the galaxy?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-lore-s01e05-the-void-and-alioth",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-lore-location-citadel-end-of-time",
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger"
+      ],
+      "scores": [
+        0.27321,
+        0.23662,
+        0.21076,
+        0.21034,
+        0.20589
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-004",
+      "category": "negative",
+      "query": "How did Captain America crash the Valkyrie plane in the Arctic during World War II?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-sylvie-background",
+        "chunk-loki-sylvie-backstory",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-lore-character-mobius-background",
+        "chunk-lore-s01e06-multiversal-war-origins"
+      ],
+      "scores": [
+        0.25954,
+        0.25548,
+        0.22844,
+        0.22313,
+        0.19898
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-005",
+      "category": "negative",
+      "query": "Who designed the Batmobile and the Tumbler tank in Gotham City?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-mobius-background",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-lore-s01e03-tva-workers-are-variants",
+        "chunk-dialogue-s01e01-infinity-stones"
+      ],
+      "scores": [
+        0.27834,
+        0.1721,
+        0.14389,
+        0.13789,
+        0.13205
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-006",
+      "category": "negative",
+      "query": "How did Tony Stark build the Nano Gauntlet using Vibranium in Avengers Endgame?",
+      "pipeline": "dense",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-infinity-stones",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e05-president-loki-brawl"
+      ],
+      "scores": [
+        0.2894,
+        0.21398,
+        0.2081,
+        0.17647,
+        0.16333
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-ent-001",
+      "category": "entity",
+      "query": "Who is the female Loki variant and what is her alias?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-lore-character-sylvie-background",
+        "chunk-loki-sylvie-backstory"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-sylvie-background",
+        "chunk-loki-sylvie-backstory",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-lore-character-ravonna-background",
+        "chunk-lore-s01e03-tva-workers-are-variants"
+      ],
+      "scores": [
+        7.10928,
+        2.42565,
+        2.34257,
+        1.6217,
+        1.61376
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-002",
+      "category": "entity",
+      "query": "What was Agent Mobius's real name and passion before joining the TVA?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-lore-character-mobius-background"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-mobius-background",
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-dialogue-s01e04-mobius-pruned"
+      ],
+      "scores": [
+        3.49955,
+        3.47948,
+        2.98193,
+        2.96734,
+        2.4133
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-003",
+      "category": "entity",
+      "query": "Who created the TVA and what is his origin?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e06-multiversal-war-origins"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-s01e06-multiversal-war-origins",
+        "chunk-loki-tva-intro",
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains"
+      ],
+      "scores": [
+        5.70923,
+        4.22491,
+        1.24424,
+        1.06371
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-004",
+      "category": "entity",
+      "query": "What was Judge Ravonna Renslayer's former hunter designation and human identity?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-lore-character-ravonna-background"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-ravonna-background",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-lore-character-sylvie-background"
+      ],
+      "scores": [
+        19.37978,
+        8.38736,
+        3.46023,
+        2.7564
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-005",
+      "category": "entity",
+      "query": "How did Classic Loki survive Thanos in his timeline?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e05-classic-loki-survival"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice"
+      ],
+      "scores": [
+        13.82412,
+        4.95156
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-006",
+      "category": "entity",
+      "query": "What creature guards The Void and consumes pruned realities?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e05-the-void-and-alioth"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-s01e05-the-void-and-alioth",
+        "chunk-lore-s01e06-multiversal-war-origins",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-lore-location-citadel-end-of-time"
+      ],
+      "scores": [
+        12.13118,
+        5.61277,
+        3.9307,
+        3.08025
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-007",
+      "category": "entity",
+      "query": "What is the role of Miss Minutes in the Time Variance Authority?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-lore-tva-miss-minutes-sacred-timeline"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-tva-miss-minutes-sacred-timeline"
+      ],
+      "scores": [
+        8.88823
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-008",
+      "category": "entity",
+      "query": "What is Alligator Loki and what did he do to President Loki?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e05-president-loki-brawl"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-president-loki-brawl"
+      ],
+      "scores": [
+        10.67998
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-001",
+      "category": "event",
+      "query": "Where was Loki arrested by the TVA after taking the Tesseract?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-lore-character-ravonna-background",
+        "chunk-lore-character-sylvie-background",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "scores": [
+        6.84077,
+        5.03567,
+        4.70174,
+        1.98238,
+        1.93221
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-002",
+      "category": "event",
+      "query": "How did Loki and Mobius test whether apocalypses hide timeline variance?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e02-apocalypse-theory"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-s01e02-apocalypse-theory",
+        "chunk-loki-sylvie-backstory",
+        "chunk-dialogue-s01e02-salvation",
+        "chunk-loki-tva-intro",
+        "chunk-lore-tva-miss-minutes-sacred-timeline"
+      ],
+      "scores": [
+        15.61902,
+        8.66742,
+        6.63451,
+        4.52075,
+        4.48335
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-003",
+      "category": "event",
+      "query": "What happened during Sylvie's ambush at the Roxxcart supermarket in 2050?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e02-bombing-the-timeline",
+        "chunk-dialogue-s01e02-roxxcart-confrontation"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-s01e02-bombing-the-timeline",
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e03-love-is-a-dagger",
+        "chunk-dialogue-s01e06-confrontation"
+      ],
+      "scores": [
+        10.73978,
+        1.86984,
+        1.81011,
+        1.78092,
+        1.77831
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-004",
+      "category": "event",
+      "query": "Why did a massive Nexus Event spike occur on the doomed moon Lamentis-1?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e04-lamentis-nexus-anomaly"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-lore-concept-nexus-event",
+        "chunk-loki-tva-intro",
+        "chunk-lore-character-sylvie-background",
+        "chunk-lore-s01e05-the-void-and-alioth"
+      ],
+      "scores": [
+        19.17014,
+        9.8022,
+        5.11192,
+        4.99882,
+        4.02877
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-005",
+      "category": "event",
+      "query": "What did Sylvie discover when she decapitated the central Time-Keeper?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-lore-s01e03-tva-workers-are-variants",
+        "chunk-lore-character-ravonna-background",
+        "chunk-lore-s01e06-multiversal-war-origins"
+      ],
+      "scores": [
+        15.18565,
+        5.77788,
+        5.50689,
+        5.26612,
+        4.66347
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-006",
+      "category": "event",
+      "query": "How did Classic Loki help Loki and Sylvie enchant the storm beast Alioth?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-location-citadel-end-of-time",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-lore-s01e06-multiversal-war-origins",
+        "chunk-lore-s01e03-tva-workers-are-variants",
+        "chunk-dialogue-s01e05-classic-loki-survival"
+      ],
+      "scores": [
+        11.32772,
+        10.01726,
+        7.66947,
+        6.48459,
+        4.31374
+      ],
+      "first_relevant_rank": 2,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.5,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-007",
+      "category": "event",
+      "query": "What occurred when Sylvie killed He Who Remains at the Citadel at the End of Time?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-location-citadel-end-of-time",
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-lore-s01e05-the-void-and-alioth",
+        "chunk-lore-concept-nexus-event",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains"
+      ],
+      "scores": [
+        13.61453,
+        9.17845,
+        5.54455,
+        4.77869,
+        4.6927
+      ],
+      "first_relevant_rank": 5,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.2,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-008",
+      "category": "event",
+      "query": "What chilling discovery did Loki make upon returning to the TVA after He Who Remains was killed?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-dialogue-s01e05-president-loki-brawl",
+        "chunk-dialogue-s01e03-love-is-a-dagger",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger"
+      ],
+      "scores": [
+        8.14722,
+        4.93641,
+        4.93254,
+        4.73182,
+        4.61778
+      ],
+      "first_relevant_rank": 5,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.2,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-001",
+      "category": "dialogue",
+      "query": "I am Loki of Asgard, and I am burdened with glorious purpose",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-dialogue-s01e03-love-is-a-dagger",
+        "chunk-loki-sylvie-backstory",
+        "chunk-lore-character-sylvie-background"
+      ],
+      "scores": [
+        16.34601,
+        11.03078,
+        3.20422,
+        3.10321,
+        3.01166
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-002",
+      "category": "dialogue",
+      "query": "Some of the guys use them as paperweights",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-infinity-stones"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-infinity-stones"
+      ],
+      "scores": [
+        14.88776
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-003",
+      "category": "dialogue",
+      "query": "No one bad is ever truly bad, and no one good is ever truly good",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e02-salvation"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e02-salvation",
+        "chunk-dialogue-s01e04-mobius-pruned"
+      ],
+      "scores": [
+        27.94006,
+        4.03885
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-004",
+      "category": "dialogue",
+      "query": "Love is a dagger. It's a weapon to be wielded far away or up close",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e03-love-is-a-dagger"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e03-love-is-a-dagger",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-lore-s01e06-multiversal-war-origins"
+      ],
+      "scores": [
+        33.25471,
+        3.95961,
+        3.94993,
+        3.89279
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-005",
+      "category": "dialogue",
+      "query": "You're going to die alone, Loki. You will always be alone.",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e04-sif-time-cell"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e01-glorious-purpose",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-dialogue-s01e05-president-loki-brawl",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice"
+      ],
+      "scores": [
+        19.20671,
+        4.97893,
+        4.67874,
+        0.97679,
+        0.91232
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-006",
+      "category": "dialogue",
+      "query": "Mindless androids. It's all a lie.",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-dialogue-s01e04-mobius-pruned"
+      ],
+      "scores": [
+        13.51295,
+        4.03885
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-007",
+      "category": "dialogue",
+      "query": "I don't want a throne. I just want you to be okay.",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-confrontation"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-lore-character-sylvie-background"
+      ],
+      "scores": [
+        12.48175,
+        3.63021,
+        3.51216,
+        3.46023,
+        3.45173
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-008",
+      "category": "dialogue",
+      "query": "Calm down, take a breath. What division are you from? Who are you?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains"
+      ],
+      "scores": [
+        17.96986,
+        3.95961
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-neg-001",
+      "category": "negative",
+      "query": "How did Bruce Wayne become Batman after his parents died?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly"
+      ],
+      "scores": [
+        3.96935,
+        3.94993
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-002",
+      "category": "negative",
+      "query": "How did Frodo Baggins destroy the One Ring in the fires of Mount Doom?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e02-salvation",
+        "chunk-lore-location-citadel-end-of-time"
+      ],
+      "scores": [
+        6.03423,
+        4.77869
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-003",
+      "category": "negative",
+      "query": "Where did Luke Skywalker hide on the planet Ahch-To in the galaxy?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e02-salvation",
+        "chunk-loki-sylvie-backstory",
+        "chunk-lore-s01e02-apocalypse-theory"
+      ],
+      "scores": [
+        5.59677,
+        3.57476,
+        3.55665,
+        3.41811
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-004",
+      "category": "negative",
+      "query": "How did Captain America crash the Valkyrie plane in the Arctic during World War II?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-sylvie-background",
+        "chunk-lore-s01e06-multiversal-war-origins",
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-lore-concept-nexus-event",
+        "chunk-lore-tva-miss-minutes-sacred-timeline"
+      ],
+      "scores": [
+        4.75519,
+        3.5663,
+        3.1266,
+        3.08025,
+        3.03526
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-005",
+      "category": "negative",
+      "query": "Who designed the Batmobile and the Tumbler tank in Gotham City?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-lore-s01e02-bombing-the-timeline"
+      ],
+      "scores": [
+        4.70889,
+        4.6411
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-006",
+      "category": "negative",
+      "query": "How did Tony Stark build the Nano Gauntlet using Vibranium in Avengers Endgame?",
+      "pipeline": "sparse",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-infinity-stones"
+      ],
+      "scores": [
+        4.96259
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-ent-001",
+      "category": "entity",
+      "query": "Who is the female Loki variant and what is her alias?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-lore-character-sylvie-background",
+        "chunk-loki-sylvie-backstory"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-sylvie-background",
+        "chunk-loki-sylvie-backstory",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-dialogue-s01e03-asgardian-drinking-song"
+      ],
+      "scores": [
+        0.03541,
+        0.03484,
+        0.01905,
+        0.01875,
+        0.01846
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-002",
+      "category": "entity",
+      "query": "What was Agent Mobius's real name and passion before joining the TVA?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-lore-character-mobius-background"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-lore-character-mobius-background",
+        "chunk-dialogue-s01e02-salvation"
+      ],
+      "scores": [
+        0.0381,
+        0.03782,
+        0.03751,
+        0.03541,
+        0.01905
+      ],
+      "first_relevant_rank": 4,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.25,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-003",
+      "category": "entity",
+      "query": "Who created the TVA and what is his origin?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e06-multiversal-war-origins"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-loki-tva-intro",
+        "chunk-lore-s01e06-multiversal-war-origins",
+        "chunk-lore-location-citadel-end-of-time"
+      ],
+      "scores": [
+        0.0381,
+        0.0375,
+        0.03512,
+        0.03512,
+        0.01662
+      ],
+      "first_relevant_rank": 4,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.25,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-004",
+      "category": "entity",
+      "query": "What was Judge Ravonna Renslayer's former hunter designation and human identity?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-lore-character-ravonna-background"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-lore-character-ravonna-background",
+        "chunk-lore-character-sylvie-background"
+      ],
+      "scores": [
+        0.03871,
+        0.0378,
+        0.03541,
+        0.03402
+      ],
+      "first_relevant_rank": 3,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-005",
+      "category": "entity",
+      "query": "How did Classic Loki survive Thanos in his timeline?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e05-classic-loki-survival"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice"
+      ],
+      "scores": [
+        0.03934,
+        0.03871
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-006",
+      "category": "entity",
+      "query": "What creature guards The Void and consumes pruned realities?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e05-the-void-and-alioth"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-lore-s01e05-the-void-and-alioth",
+        "chunk-lore-s01e06-multiversal-war-origins",
+        "chunk-lore-location-citadel-end-of-time"
+      ],
+      "scores": [
+        0.0384,
+        0.03541,
+        0.03429,
+        0.03402
+      ],
+      "first_relevant_rank": 2,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.5,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-007",
+      "category": "entity",
+      "query": "What is the role of Miss Minutes in the Time Variance Authority?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-lore-tva-miss-minutes-sacred-timeline"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-tva-miss-minutes-sacred-timeline"
+      ],
+      "scores": [
+        0.03541
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-ent-008",
+      "category": "entity",
+      "query": "What is Alligator Loki and what did he do to President Loki?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e05-president-loki-brawl"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-president-loki-brawl"
+      ],
+      "scores": [
+        0.03934
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-001",
+      "category": "event",
+      "query": "Where was Loki arrested by the TVA after taking the Tesseract?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e03-asgardian-drinking-song"
+      ],
+      "scores": [
+        0.03352,
+        0.0322,
+        0.03145,
+        0.01649,
+        0.01597
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-002",
+      "category": "event",
+      "query": "How did Loki and Mobius test whether apocalypses hide timeline variance?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e02-apocalypse-theory"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-s01e02-apocalypse-theory",
+        "chunk-lore-tva-miss-minutes-sacred-timeline",
+        "chunk-loki-tva-intro",
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e02-salvation"
+      ],
+      "scores": [
+        0.03058,
+        0.02813,
+        0.02791,
+        0.01672,
+        0.01645
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-003",
+      "category": "event",
+      "query": "What happened during Sylvie's ambush at the Roxxcart supermarket in 2050?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e02-bombing-the-timeline",
+        "chunk-dialogue-s01e02-roxxcart-confrontation"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-lore-s01e02-bombing-the-timeline",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e03-love-is-a-dagger",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains"
+      ],
+      "scores": [
+        0.03175,
+        0.02904,
+        0.01587,
+        0.01562,
+        0.01538
+      ],
+      "first_relevant_rank": 2,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.5,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-004",
+      "category": "event",
+      "query": "Why did a massive Nexus Event spike occur on the doomed moon Lamentis-1?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-lore-s01e04-lamentis-nexus-anomaly"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-lore-concept-nexus-event",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-lore-tech-reset-charge",
+        "chunk-loki-tva-intro",
+        "chunk-lore-s01e02-bombing-the-timeline"
+      ],
+      "scores": [
+        0.02927,
+        0.02927,
+        0.01429,
+        0.01429,
+        0.01406
+      ],
+      "first_relevant_rank": 2,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.5,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-005",
+      "category": "event",
+      "query": "What did Sylvie discover when she decapitated the central Time-Keeper?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-lore-s01e03-tva-workers-are-variants",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-loki-sylvie-backstory"
+      ],
+      "scores": [
+        0.03338,
+        0.02864,
+        0.01642,
+        0.01591,
+        0.01478
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-006",
+      "category": "event",
+      "query": "How did Classic Loki help Loki and Sylvie enchant the storm beast Alioth?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-loki-sylvie-backstory"
+      ],
+      "scores": [
+        0.03361,
+        0.0164,
+        0.01615,
+        0.01564,
+        0.015
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-007",
+      "category": "event",
+      "query": "What occurred when Sylvie killed He Who Remains at the Citadel at the End of Time?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-loki-sylvie-backstory",
+        "chunk-lore-character-sylvie-background"
+      ],
+      "scores": [
+        0.03233,
+        0.03183,
+        0.01566,
+        0.01502,
+        0.01478
+      ],
+      "first_relevant_rank": 2,
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 0.5,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-evt-008",
+      "category": "event",
+      "query": "What chilling discovery did Loki make upon returning to the TVA after He Who Remains was killed?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e05-president-loki-brawl",
+        "chunk-dialogue-s01e03-love-is-a-dagger"
+      ],
+      "scores": [
+        0.0322,
+        0.01661,
+        0.01634,
+        0.01634,
+        0.01608
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-001",
+      "category": "dialogue",
+      "query": "I am Loki of Asgard, and I am burdened with glorious purpose",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-glorious-purpose",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-dialogue-s01e03-love-is-a-dagger",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e02-roxxcart-confrontation"
+      ],
+      "scores": [
+        0.03372,
+        0.03318,
+        0.01633,
+        0.01633,
+        0.01607
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-002",
+      "category": "dialogue",
+      "query": "Some of the guys use them as paperweights",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e01-infinity-stones"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-infinity-stones",
+        "chunk-dialogue-s01e05-president-loki-brawl",
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-lore-tech-tempad",
+        "chunk-lore-tech-reset-charge"
+      ],
+      "scores": [
+        0.03279,
+        0.01613,
+        0.01587,
+        0.01406,
+        0.01385
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-003",
+      "category": "dialogue",
+      "query": "No one bad is ever truly bad, and no one good is ever truly good",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e02-salvation"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e02-salvation",
+        "chunk-dialogue-s01e01-villain-interrogation",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e06-confrontation"
+      ],
+      "scores": [
+        0.03279,
+        0.01613,
+        0.01613,
+        0.01587,
+        0.01562
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-004",
+      "category": "dialogue",
+      "query": "Love is a dagger. It's a weapon to be wielded far away or up close",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e03-love-is-a-dagger"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e03-love-is-a-dagger",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e01-glorious-purpose"
+      ],
+      "scores": [
+        0.03279,
+        0.032,
+        0.0288,
+        0.01562,
+        0.01538
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-005",
+      "category": "dialogue",
+      "query": "You're going to die alone, Loki. You will always be alone.",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e04-sif-time-cell"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e01-glorious-purpose",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-dialogue-s01e05-classic-loki-survival"
+      ],
+      "scores": [
+        0.03279,
+        0.03151,
+        0.01613,
+        0.01587,
+        0.01562
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-006",
+      "category": "dialogue",
+      "query": "Mindless androids. It's all a lie.",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-android-timekeepers",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-lore-s01e04-lamentis-nexus-anomaly"
+      ],
+      "scores": [
+        0.03279,
+        0.01613,
+        0.01562,
+        0.01538,
+        0.01452
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-007",
+      "category": "dialogue",
+      "query": "I don't want a throne. I just want you to be okay.",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-confrontation"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-dialogue-s01e02-roxxcart-confrontation",
+        "chunk-dialogue-s01e01-glorious-purpose",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e01-villain-interrogation"
+      ],
+      "scores": [
+        0.03279,
+        0.032,
+        0.01613,
+        0.01587,
+        0.01562
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-dia-008",
+      "category": "dialogue",
+      "query": "Calm down, take a breath. What division are you from? Who are you?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger"
+      ],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-dialogue-s01e01-glorious-purpose",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e06-sylvie-kills-he-who-remains",
+        "chunk-dialogue-s01e02-salvation"
+      ],
+      "scores": [
+        0.03227,
+        0.01639,
+        0.01613,
+        0.01613,
+        0.01562
+      ],
+      "first_relevant_rank": 1,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "is_negative": false,
+      "negative_rejected": false
+    },
+    {
+      "query_id": "gold-neg-001",
+      "category": "negative",
+      "query": "How did Bruce Wayne become Batman after his parents died?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e04-sif-time-cell",
+        "chunk-dialogue-s01e01-villain-interrogation",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-lore-character-ravonna-background"
+      ],
+      "scores": [
+        0.03202,
+        0.01639,
+        0.01587,
+        0.01538,
+        0.01452
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-002",
+      "category": "negative",
+      "query": "How did Frodo Baggins destroy the One Ring in the fires of Mount Doom?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-lore-location-citadel-end-of-time",
+        "chunk-dialogue-s01e02-salvation",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e01-infinity-stones",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice"
+      ],
+      "scores": [
+        0.02836,
+        0.01639,
+        0.01639,
+        0.01613,
+        0.01587
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-003",
+      "category": "negative",
+      "query": "Where did Luke Skywalker hide on the planet Ahch-To in the galaxy?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e02-salvation",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-dialogue-s01e06-rewritten-tva-cliffhanger",
+        "chunk-lore-s01e05-the-void-and-alioth"
+      ],
+      "scores": [
+        0.03279,
+        0.01613,
+        0.01587,
+        0.01538,
+        0.01452
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-004",
+      "category": "negative",
+      "query": "How did Captain America crash the Valkyrie plane in the Arctic during World War II?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-lore-character-sylvie-background",
+        "chunk-lore-s01e06-multiversal-war-origins",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e06-confrontation",
+        "chunk-loki-sylvie-backstory"
+      ],
+      "scores": [
+        0.02951,
+        0.02836,
+        0.01587,
+        0.01587,
+        0.01452
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-005",
+      "category": "negative",
+      "query": "Who designed the Batmobile and the Tumbler tank in Gotham City?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-dialogue-s01e04-mobius-pruned",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-dialogue-s01e01-infinity-stones",
+        "chunk-lore-character-mobius-background"
+      ],
+      "scores": [
+        0.01639,
+        0.01613,
+        0.01587,
+        0.01538,
+        0.01475
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    },
+    {
+      "query_id": "gold-neg-006",
+      "category": "negative",
+      "query": "How did Tony Stark build the Nano Gauntlet using Vibranium in Avengers Endgame?",
+      "pipeline": "hybrid",
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": [
+        "chunk-dialogue-s01e01-infinity-stones",
+        "chunk-dialogue-s01e03-asgardian-drinking-song",
+        "chunk-dialogue-s01e05-glorious-purpose-sacrifice",
+        "chunk-dialogue-s01e05-classic-loki-survival",
+        "chunk-dialogue-s01e05-president-loki-brawl"
+      ],
+      "scores": [
+        0.03279,
+        0.01613,
+        0.01587,
+        0.01562,
+        0.01538
+      ],
+      "first_relevant_rank": null,
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "is_negative": true,
+      "negative_rejected": true
+    }
+  ]
+}
