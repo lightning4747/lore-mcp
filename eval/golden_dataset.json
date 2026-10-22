@@ -1,0 +1,362 @@
+[
+  {
+    "id": "gold-ent-001",
+    "category": "entity",
+    "query": "Who is the female Loki variant and what is her alias?",
+    "series": "loki",
+    "target_tool": "get_entity",
+    "target_entity": "sylvie",
+    "expected_chunk_ids": [
+      "chunk-lore-character-sylvie-background",
+      "chunk-loki-sylvie-backstory"
+    ],
+    "expected_keywords": ["Sylvie", "Laufeydottir", "Variant", "Lady Loki"]
+  },
+  {
+    "id": "gold-ent-002",
+    "category": "entity",
+    "query": "What was Agent Mobius's real name and passion before joining the TVA?",
+    "series": "loki",
+    "target_tool": "get_entity",
+    "target_entity": "mobius",
+    "expected_chunk_ids": [
+      "chunk-lore-character-mobius-background"
+    ],
+    "expected_keywords": ["Mobius", "Don", "jet ski", "Palo Alto"]
+  },
+  {
+    "id": "gold-ent-003",
+    "category": "entity",
+    "query": "Who created the TVA and what is his origin?",
+    "series": "loki",
+    "target_tool": "get_entity",
+    "target_entity": "he-who-remains",
+    "expected_chunk_ids": [
+      "chunk-lore-s01e06-multiversal-war-origins"
+    ],
+    "expected_keywords": ["He Who Remains", "31st century", "scientist", "Multiversal War", "Alioth"]
+  },
+  {
+    "id": "gold-ent-004",
+    "category": "entity",
+    "query": "What was Judge Ravonna Renslayer's former hunter designation and human identity?",
+    "series": "loki",
+    "target_tool": "get_entity",
+    "target_entity": "ravonna-renslayer",
+    "expected_chunk_ids": [
+      "chunk-lore-character-ravonna-background"
+    ],
+    "expected_keywords": ["Ravonna", "Hunter A-20", "Rebecca Tourminet", "Ohio"]
+  },
+  {
+    "id": "gold-ent-005",
+    "category": "entity",
+    "query": "How did Classic Loki survive Thanos in his timeline?",
+    "series": "loki",
+    "target_tool": "get_entity",
+    "target_entity": "classic-loki",
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e05-classic-loki-survival"
+    ],
+    "expected_keywords": ["Classic Loki", "Thanos", "projection", "illusion"]
+  },
+  {
+    "id": "gold-ent-006",
+    "category": "entity",
+    "query": "What creature guards The Void and consumes pruned realities?",
+    "series": "loki",
+    "target_tool": "get_entity",
+    "target_entity": "alioth",
+    "expected_chunk_ids": [
+      "chunk-lore-s01e05-the-void-and-alioth"
+    ],
+    "expected_keywords": ["Alioth", "tempest", "Void", "consumes"]
+  },
+  {
+    "id": "gold-ent-007",
+    "category": "entity",
+    "query": "What is the role of Miss Minutes in the Time Variance Authority?",
+    "series": "loki",
+    "target_tool": "get_entity",
+    "target_entity": "miss-minutes",
+    "expected_chunk_ids": [
+      "chunk-lore-tva-miss-minutes-sacred-timeline"
+    ],
+    "expected_keywords": ["Miss Minutes", "clock", "Sacred Timeline", "Time-Keepers"]
+  },
+  {
+    "id": "gold-ent-008",
+    "category": "entity",
+    "query": "What is Alligator Loki and what did he do to President Loki?",
+    "series": "loki",
+    "target_tool": "get_entity",
+    "target_entity": "alligator-loki",
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e05-president-loki-brawl"
+    ],
+    "expected_keywords": ["Alligator Loki", "President Loki", "hand", "wrist"]
+  },
+  {
+    "id": "gold-evt-001",
+    "category": "event",
+    "query": "Where was Loki arrested by the TVA after taking the Tesseract?",
+    "series": "loki",
+    "target_tool": "trace_event",
+    "target_event": "loki-s01e01-arrest",
+    "expected_episode": 1,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e01-glorious-purpose"
+    ],
+    "expected_keywords": ["Gobi Desert", "Mongolia", "Hunter B-15", "Tesseract"]
+  },
+  {
+    "id": "gold-evt-002",
+    "category": "event",
+    "query": "How did Loki and Mobius test whether apocalypses hide timeline variance?",
+    "series": "loki",
+    "target_tool": "trace_event",
+    "target_event": "loki-s01e02-pompeii-test",
+    "expected_episode": 2,
+    "expected_chunk_ids": [
+      "chunk-lore-s01e02-apocalypse-theory"
+    ],
+    "expected_keywords": ["Pompeii", "Vesuvius", "79 AD", "apocalypse", "variance"]
+  },
+  {
+    "id": "gold-evt-003",
+    "category": "event",
+    "query": "What happened during Sylvie's ambush at the Roxxcart supermarket in 2050?",
+    "series": "loki",
+    "target_tool": "trace_event",
+    "target_event": "loki-s01e02-roxxcart-ambush",
+    "expected_episode": 2,
+    "expected_chunk_ids": [
+      "chunk-lore-s01e02-bombing-the-timeline",
+      "chunk-dialogue-s01e02-roxxcart-confrontation"
+    ],
+    "expected_keywords": ["Roxxcart", "Haven Hills", "reset charges", "bombing", "Sacred Timeline"]
+  },
+  {
+    "id": "gold-evt-004",
+    "category": "event",
+    "query": "Why did a massive Nexus Event spike occur on the doomed moon Lamentis-1?",
+    "series": "loki",
+    "target_tool": "trace_event",
+    "target_event": "loki-s01e04-nexus-spike",
+    "expected_episode": 4,
+    "expected_chunk_ids": [
+      "chunk-lore-s01e04-lamentis-nexus-anomaly"
+    ],
+    "expected_keywords": ["Lamentis-1", "holding hands", "spike", "redline", "love"]
+  },
+  {
+    "id": "gold-evt-005",
+    "category": "event",
+    "query": "What did Sylvie discover when she decapitated the central Time-Keeper?",
+    "series": "loki",
+    "target_tool": "trace_event",
+    "target_event": "loki-s01e04-time-keepers-unmasking",
+    "expected_episode": 4,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e04-android-timekeepers"
+    ],
+    "expected_keywords": ["Time-Keeper", "androids", "robotic", "decapitates", "fake"]
+  },
+  {
+    "id": "gold-evt-006",
+    "category": "event",
+    "query": "How did Classic Loki help Loki and Sylvie enchant the storm beast Alioth?",
+    "series": "loki",
+    "target_tool": "trace_event",
+    "target_event": "loki-s01e05-alioth-enchantment",
+    "expected_episode": 5,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e05-glorious-purpose-sacrifice"
+    ],
+    "expected_keywords": ["Classic Loki", "Asgard", "illusion", "Glorious purpose", "Alioth"]
+  },
+  {
+    "id": "gold-evt-007",
+    "category": "event",
+    "query": "What occurred when Sylvie killed He Who Remains at the Citadel at the End of Time?",
+    "series": "loki",
+    "target_tool": "trace_event",
+    "target_event": "loki-s01e06-citadel-climax",
+    "expected_episode": 6,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e06-sylvie-kills-he-who-remains"
+    ],
+    "expected_keywords": ["Sylvie", "He Who Remains", "dagger", "See you soon", "multiverse"]
+  },
+  {
+    "id": "gold-evt-008",
+    "category": "event",
+    "query": "What chilling discovery did Loki make upon returning to the TVA after He Who Remains was killed?",
+    "series": "loki",
+    "target_tool": "trace_event",
+    "target_event": "loki-s01e06-tva-rewritten",
+    "expected_episode": 6,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e06-rewritten-tva-cliffhanger"
+    ],
+    "expected_keywords": ["Mobius", "Hunter B-15", "Who are you", "statue", "Kang"]
+  },
+  {
+    "id": "gold-dia-001",
+    "category": "dialogue",
+    "query": "I am Loki of Asgard, and I am burdened with glorious purpose",
+    "series": "loki",
+    "target_tool": "search_dialogue",
+    "expected_speaker": "Loki",
+    "expected_episode": 1,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e01-glorious-purpose"
+    ],
+    "expected_keywords": ["burdened with glorious purpose", "paperwork"]
+  },
+  {
+    "id": "gold-dia-002",
+    "category": "dialogue",
+    "query": "Some of the guys use them as paperweights",
+    "series": "loki",
+    "target_tool": "search_dialogue",
+    "expected_speaker": "Casey",
+    "expected_episode": 1,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e01-infinity-stones"
+    ],
+    "expected_keywords": ["Infinity Stones", "paperweights", "greatest power in the universe"]
+  },
+  {
+    "id": "gold-dia-003",
+    "category": "dialogue",
+    "query": "No one bad is ever truly bad, and no one good is ever truly good",
+    "series": "loki",
+    "target_tool": "search_dialogue",
+    "expected_speaker": "Loki",
+    "expected_episode": 2,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e02-salvation"
+    ],
+    "expected_keywords": ["No one bad is ever truly bad", "philosopher king"]
+  },
+  {
+    "id": "gold-dia-004",
+    "category": "dialogue",
+    "query": "Love is a dagger. It's a weapon to be wielded far away or up close",
+    "series": "loki",
+    "target_tool": "search_dialogue",
+    "expected_speaker": "Loki",
+    "expected_episode": 3,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e03-love-is-a-dagger"
+    ],
+    "expected_keywords": ["Love is a dagger", "imaginary dagger", "makes you bleed"]
+  },
+  {
+    "id": "gold-dia-005",
+    "category": "dialogue",
+    "query": "You're going to die alone, Loki. You will always be alone.",
+    "series": "loki",
+    "target_tool": "search_dialogue",
+    "expected_speaker": "Lady Sif",
+    "expected_episode": 4,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e04-sif-time-cell"
+    ],
+    "expected_keywords": ["die alone", "cut my hair", "arrogant pig"]
+  },
+  {
+    "id": "gold-dia-006",
+    "category": "dialogue",
+    "query": "Mindless androids. It's all a lie.",
+    "series": "loki",
+    "target_tool": "search_dialogue",
+    "expected_speaker": "Sylvie",
+    "expected_episode": 4,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e04-android-timekeepers"
+    ],
+    "expected_keywords": ["Mindless androids", "all a lie", "Who created them"]
+  },
+  {
+    "id": "gold-dia-007",
+    "category": "dialogue",
+    "query": "I don't want a throne. I just want you to be okay.",
+    "series": "loki",
+    "target_tool": "search_dialogue",
+    "expected_speaker": "Loki",
+    "expected_episode": 6,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e06-confrontation"
+    ],
+    "expected_keywords": ["don't want a throne", "want you to be okay", "felt what you feel"]
+  },
+  {
+    "id": "gold-dia-008",
+    "category": "dialogue",
+    "query": "Calm down, take a breath. What division are you from? Who are you?",
+    "series": "loki",
+    "target_tool": "search_dialogue",
+    "expected_speaker": "Mobius",
+    "expected_episode": 6,
+    "expected_chunk_ids": [
+      "chunk-dialogue-s01e06-rewritten-tva-cliffhanger"
+    ],
+    "expected_keywords": ["What division are you from", "Who are you", "statue of Kang"]
+  },
+  {
+    "id": "gold-neg-001",
+    "category": "negative",
+    "query": "How did Bruce Wayne become Batman after his parents died?",
+    "series": "loki",
+    "target_tool": "search_series_lore",
+    "expected_chunk_ids": [],
+    "expected_keywords": []
+  },
+  {
+    "id": "gold-neg-002",
+    "category": "negative",
+    "query": "How did Frodo Baggins destroy the One Ring in the fires of Mount Doom?",
+    "series": "loki",
+    "target_tool": "search_series_lore",
+    "expected_chunk_ids": [],
+    "expected_keywords": []
+  },
+  {
+    "id": "gold-neg-003",
+    "category": "negative",
+    "query": "Where did Luke Skywalker hide on the planet Ahch-To in the galaxy?",
+    "series": "loki",
+    "target_tool": "search_series_lore",
+    "expected_chunk_ids": [],
+    "expected_keywords": []
+  },
+  {
+    "id": "gold-neg-004",
+    "category": "negative",
+    "query": "How did Captain America crash the Valkyrie plane in the Arctic during World War II?",
+    "series": "loki",
+    "target_tool": "search_series_lore",
+    "expected_chunk_ids": [],
+    "expected_keywords": []
+  },
+  {
+    "id": "gold-neg-005",
+    "category": "negative",
+    "query": "Who designed the Batmobile and the Tumbler tank in Gotham City?",
+    "series": "loki",
+    "target_tool": "search_series_lore",
+    "expected_chunk_ids": [],
+    "expected_keywords": []
+  },
+  {
+    "id": "gold-neg-006",
+    "category": "negative",
+    "query": "How did Tony Stark build the Nano Gauntlet using Vibranium in Avengers Endgame?",
+    "series": "loki",
+    "target_tool": "search_series_lore",
+    "expected_chunk_ids": [],
+    "expected_keywords": []
+  }
+]
