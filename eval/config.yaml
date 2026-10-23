@@ -1,0 +1,9 @@
+# Lore MCP Retrieval Evaluation Configuration (Phase 11)
+pipeline: hybrid
+fusion_mode: client
+enable_rerank: true
+rrf_k: 60
+max_results: 10
+dataset_path: eval/golden/loki.yaml
+series: loki
+tolerance: 0.05
