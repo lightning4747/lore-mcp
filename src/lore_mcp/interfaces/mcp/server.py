@@ -13,19 +13,13 @@ from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from lore_mcp.adapters.qdrant.client import create_async_qdrant_client
-from lore_mcp.adapters.qdrant.entity_registry import QdrantEntityRegistry
-from lore_mcp.adapters.qdrant.event_registry import QdrantEventRegistry
-from lore_mcp.adapters.qdrant.index import QdrantVectorIndex
-from lore_mcp.adapters.qdrant.registry import QdrantSeriesRegistry
 from lore_mcp.application.chunk_service import ChunkService
 from lore_mcp.application.dialogue_service import DialogueService
 from lore_mcp.application.entity_service import EntityService
 from lore_mcp.application.event_service import EventService
-from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.retrieval_service import LoreRetrievalService
-from lore_mcp.application.scope import ScopeResolver
-from lore_mcp.config import Settings, get_settings
+from lore_mcp.composition import build_application_services
+from lore_mcp.config import Settings
 from lore_mcp.domain.documents import Chunk
 from lore_mcp.domain.search import EvidenceBundle
 from lore_mcp.interfaces.mcp.errors import (
@@ -95,83 +89,36 @@ def create_mcp_server(
       occurrences or entities, keeping evidence and provenance separate.
     """
 
-    app_settings = settings or get_settings()
-    owns_client = client is None
-    qdrant_client = client or create_async_qdrant_client(app_settings.qdrant)
-
-    series_registry = registry or QdrantSeriesRegistry(
-        client=qdrant_client,
-        settings=app_settings.qdrant,
-    )
-
-    entity_reg = entity_registry or QdrantEntityRegistry(
-        client=qdrant_client,
-        settings=app_settings.qdrant,
-    )
-
-    event_reg = event_registry or QdrantEventRegistry(
-        client=qdrant_client,
-        settings=app_settings.qdrant,
-    )
-
-    index = vector_index or QdrantVectorIndex(
-        client=qdrant_client,
-        settings=app_settings.qdrant,
-    )
-
-    scope_resolver = ScopeResolver(
-        registry=series_registry,
-        clock=clock,
-    )
-
-    hybrid_retriever = HybridRetriever(
-        index=index,
-        rrf_k=app_settings.qdrant.rrf_k,
-    )
-
-    retrieval_orch = retrieval_service or LoreRetrievalService(
-        scope_resolver=scope_resolver,
-        retriever=hybrid_retriever,
+    services = build_application_services(
+        settings=settings,
+        client=client,
+        registry=registry,
+        entity_registry=entity_registry,
+        event_registry=event_registry,
+        vector_index=vector_index,
+        retrieval_service=retrieval_service,
+        entity_service=entity_service,
+        event_service=event_service,
+        chunk_service=chunk_service,
+        dialogue_service=dialogue_service,
         cache=cache,
         web_search=web_search,
         budget_counter=budget_counter,
         clock=clock,
-        web_search_settings=app_settings.web_search,
-        limits_settings=app_settings.limits,
+        readiness_checker=readiness_checker,
     )
 
-    entity_svc = entity_service or EntityService(
-        scope_resolver=scope_resolver,
-        retriever=hybrid_retriever,
-        entity_registry=entity_reg,
-        limits_settings=app_settings.limits,
-    )
-
-    event_svc = event_service or EventService(
-        scope_resolver=scope_resolver,
-        retriever=hybrid_retriever,
-        event_registry=event_reg,
-        entity_registry=entity_reg,
-        limits_settings=app_settings.limits,
-    )
-
-    chunk_svc = chunk_service or ChunkService(
-        scope_resolver=scope_resolver,
-        vector_index=index,
-    )
-
-    dialogue_svc = dialogue_service or DialogueService(
-        scope_resolver=scope_resolver,
-        retriever=hybrid_retriever,
-        limits_settings=app_settings.limits,
-    )
-
-    checker = readiness_checker or ReadinessChecker(
-        client=qdrant_client,
-        settings=app_settings.qdrant,
-        clock=clock,
-        ttl_seconds=30.0,
-    )
+    app_settings = services.settings
+    owns_client = services.owns_client
+    qdrant_client = services.qdrant_client
+    series_registry = services.series_registry
+    entity_reg = services.entity_registry
+    retrieval_orch = services.retrieval_service
+    entity_svc = services.entity_service
+    event_svc = services.event_service
+    chunk_svc = services.chunk_service
+    dialogue_svc = services.dialogue_service
+    checker = services.readiness_checker
 
     @asynccontextmanager
     async def server_lifespan(server: FastMCP) -> AsyncIterator[dict[str, Any]]:
