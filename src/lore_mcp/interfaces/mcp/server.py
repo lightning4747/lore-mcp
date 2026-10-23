@@ -105,7 +105,6 @@ def create_mcp_server(
         web_search=web_search,
         budget_counter=budget_counter,
         clock=clock,
-        readiness_checker=readiness_checker,
     )
 
     app_settings = services.settings
@@ -118,7 +117,12 @@ def create_mcp_server(
     event_svc = services.event_service
     chunk_svc = services.chunk_service
     dialogue_svc = services.dialogue_service
-    checker = services.readiness_checker
+    checker = readiness_checker or ReadinessChecker(
+        client=qdrant_client,
+        settings=app_settings.qdrant,
+        clock=clock,
+        ttl_seconds=30.0,
+    )
 
     @asynccontextmanager
     async def server_lifespan(server: FastMCP) -> AsyncIterator[dict[str, Any]]:

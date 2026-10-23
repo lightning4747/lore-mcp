@@ -1,5 +1,7 @@
 """Application composition root assembling domain, ports, adapters, and services."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from qdrant_client import AsyncQdrantClient
@@ -18,7 +20,6 @@ from lore_mcp.application.retrieval_service import LoreRetrievalService
 from lore_mcp.application.scope import ScopeResolver
 from lore_mcp.config import Settings, get_settings
 from lore_mcp.domain.evaluation import EvaluationConfig
-from lore_mcp.interfaces.mcp.readiness import ReadinessChecker
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
 from lore_mcp.ports.clock import Clock
@@ -46,7 +47,6 @@ class ApplicationServices:
     event_service: EventService
     chunk_service: ChunkService
     dialogue_service: DialogueService
-    readiness_checker: ReadinessChecker
     owns_client: bool
 
 
@@ -66,7 +66,6 @@ def build_application_services(
     web_search: WebSearch | None = None,
     budget_counter: BudgetCounter | None = None,
     clock: Clock | None = None,
-    readiness_checker: ReadinessChecker | None = None,
     overrides: EvaluationConfig | None = None,
 ) -> ApplicationServices:
     """Build and wire all application services from configuration and adapters."""
@@ -142,13 +141,6 @@ def build_application_services(
         limits_settings=app_settings.limits,
     )
 
-    checker = readiness_checker or ReadinessChecker(
-        client=qdrant_client,
-        settings=app_settings.qdrant,
-        clock=clock,
-        ttl_seconds=30.0,
-    )
-
     return ApplicationServices(
         settings=app_settings,
         qdrant_client=qdrant_client,
@@ -163,6 +155,5 @@ def build_application_services(
         event_service=event_svc,
         chunk_service=chunk_svc,
         dialogue_service=dialogue_svc,
-        readiness_checker=checker,
         owns_client=owns_client,
     )
