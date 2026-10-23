@@ -126,13 +126,9 @@ async def ingest(corpus_path: Path | None = None) -> None:
 
     print("Verification complete!")
     print(
-        f"  -> '{settings.qdrant.chunks_collection}' points: "
-        f"{chunks_info.points_count}"
+        f"  -> '{settings.qdrant.chunks_collection}' points: {chunks_info.points_count}"
     )
-    print(
-        f"  -> '{settings.qdrant.meta_collection}' points: "
-        f"{meta_info.points_count}"
-    )
+    print(f"  -> '{settings.qdrant.meta_collection}' points: {meta_info.points_count}")
 
     await client.close()
 

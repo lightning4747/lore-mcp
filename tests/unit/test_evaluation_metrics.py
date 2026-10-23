@@ -162,9 +162,7 @@ def test_detect_spoiler_leaks() -> None:
     assert detect_spoiler_leaks([e_s1e1, e_s1e2], season_bound=1, episode_bound=2) == 0
     assert detect_spoiler_leaks([e_s1e1, e_s1e4], season_bound=1, episode_bound=2) == 1
     assert (
-        detect_spoiler_leaks(
-            [e_s1e1, e_s1e4, e_s2e1], season_bound=1, episode_bound=2
-        )
+        detect_spoiler_leaks([e_s1e1, e_s1e4, e_s2e1], season_bound=1, episode_bound=2)
         == 2
     )
 

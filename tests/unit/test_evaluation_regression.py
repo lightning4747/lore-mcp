@@ -406,3 +406,19 @@ def test_cli_main_eval_run_dispatch(tmp_path: Path) -> None:
             series_override="test_series",
             output_path="eval/results.json",
         )
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "help_args",
+    [
+        ["--help"],
+        ["eval", "--help"],
+        ["eval", "run", "--help"],
+        ["eval", "diff", "--help"],
+    ],
+)
+def test_cli_help_options(help_args: list[str]) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        main(help_args)
+    assert exc_info.value.code == 0

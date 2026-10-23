@@ -57,9 +57,9 @@ def test_golden_loki_cases_valid() -> None:
 
         # Specific constraints per type
         if case.case_type == "spoiler_bound":
-            assert (
-                case.season_bound is not None or case.episode_bound is not None
-            ), f"Spoiler case {case.case_id} must specify season_bound or episode_bound"
+            assert case.season_bound is not None or case.episode_bound is not None, (
+                f"Spoiler case {case.case_id} must specify season/episode bound"
+            )
 
         if case.case_type == "unanswerable":
             assert len(case.expected_evidence.entity_ids) == 0

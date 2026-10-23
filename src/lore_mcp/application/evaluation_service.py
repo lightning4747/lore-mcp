@@ -125,9 +125,7 @@ def detect_spoiler_leaks(
 
     leaks = 0
     for item in items:
-        item_season = (
-            item.season if isinstance(item, Evidence) else item.chunk.season
-        )
+        item_season = item.season if isinstance(item, Evidence) else item.chunk.season
         item_episode = (
             item.episode if isinstance(item, Evidence) else item.chunk.episode
         )
@@ -342,9 +340,7 @@ def evaluate_single_case(
         )
     else:
         # System returns positive status and relevant hits
-        fallback_correct = (
-            status in ("ok", "cached") and len(items) > 0 and hit_at_10
-        )
+        fallback_correct = status in ("ok", "cached") and len(items) > 0 and hit_at_10
 
     return CaseEvaluationResult(
         case_id=case.case_id,
@@ -425,9 +421,7 @@ def compute_aggregate_metrics(
     total_spoiler_leaks = sum(r.spoiler_leaks for r in case_results)
 
     # Chronology Kendall's tau
-    tau_vals = [
-        r.chronology_tau for r in case_results if r.chronology_tau is not None
-    ]
+    tau_vals = [r.chronology_tau for r in case_results if r.chronology_tau is not None]
     mean_tau = sum(tau_vals) / len(tau_vals) if tau_vals else None
 
     # Fallback and Cache

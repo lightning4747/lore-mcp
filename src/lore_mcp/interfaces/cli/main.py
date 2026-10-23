@@ -49,12 +49,8 @@ def print_evaluation_summary(report: EvaluationReport) -> None:
     print(f"  nDCG@10     : {m.ndcg_at_10:.4f}")
     print("-" * 70)
     print(" LEAK DETECTION & SAFETY (ZERO TOLERANCE):")
-    leak_status = (
-        "PASS" if m.total_cross_series_leaks == 0 else "FAIL (LEAKS DETECTED)"
-    )
-    spoil_status = (
-        "PASS" if m.total_spoiler_leaks == 0 else "FAIL (SPOILERS DETECTED)"
-    )
+    leak_status = "PASS" if m.total_cross_series_leaks == 0 else "FAIL (LEAKS DETECTED)"
+    spoil_status = "PASS" if m.total_spoiler_leaks == 0 else "FAIL (SPOILERS DETECTED)"
     print(f"  Cross-series leaks : {m.total_cross_series_leaks} [{leak_status}]")
     print(f"  Spoiler leaks      : {m.total_spoiler_leaks} [{spoil_status}]")
     print("-" * 70)
@@ -82,8 +78,8 @@ def print_evaluation_summary(report: EvaluationReport) -> None:
             leaks = int(cross_l + spoil_l)
             print(
                 f"  {cat:<16} {int(stats.get('total_cases', 0)):<6} "
-                f"{stats.get('recall_at_5', 0)*100:6.1f}%    "
-                f"{stats.get('recall_at_10', 0)*100:6.1f}%    "
+                f"{stats.get('recall_at_5', 0) * 100:6.1f}%    "
+                f"{stats.get('recall_at_10', 0) * 100:6.1f}%    "
                 f"{stats.get('mrr', 0):6.4f} "
                 f"{stats.get('ndcg_at_10', 0):6.4f} "
                 f"{leaks:<6}"
@@ -161,8 +157,7 @@ def diff_reports(
     print(f" Allowed tolerance: -{tolerance * 100:.1f}%")
     print("-" * 70)
     print(
-        f" {'Metric':<22} {'Baseline':<12} {'Current':<12} "
-        f"{'Delta':<10} {'Status':<10}"
+        f" {'Metric':<22} {'Baseline':<12} {'Current':<12} {'Delta':<10} {'Status':<10}"
     )
 
     regressions: list[str] = []
@@ -189,9 +184,7 @@ def diff_reports(
             regressions.append(
                 f"{name} dropped from {b_val:.4f} to {c_val:.4f} (delta {delta:+.4f})"
             )
-        print(
-            f" {name:<22} {b_val:<12.4f} {c_val:<12.4f} {delta:<+10.4f} {status:<10}"
-        )
+        print(f" {name:<22} {b_val:<12.4f} {c_val:<12.4f} {delta:<+10.4f} {status:<10}")
 
     print("-" * 70)
     # Check leak regressions
@@ -276,7 +269,7 @@ def main(argv: list[str] | None = None) -> None:
         "--tolerance",
         type=float,
         default=0.05,
-        help="Maximum allowable metric regression (e.g. 0.05 for 5%)",
+        help="Maximum allowable metric regression (e.g. 0.05 for 5%%)",
     )
 
     args = parser.parse_args(argv)

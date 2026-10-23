@@ -315,9 +315,7 @@ async def run_evaluation(
             )
             pipe_results: list[QueryEvaluationResult] = []
             for query in golden_queries:
-                res = await evaluate_single_query(
-                    query, name.lower(), search_fn, k=5
-                )
+                res = await evaluate_single_query(query, name.lower(), search_fn, k=5)
                 pipe_results.append(res)
                 all_results.append(res)
 
