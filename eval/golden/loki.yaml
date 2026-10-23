@@ -1,0 +1,509 @@
+# Golden Benchmark Dataset for Series 'loki' (Phase 11)
+# Total cases: 42 (6 cases per category across 7 required categories)
+# Expected evidence is specified by canonical entity_id, (season, episode, scene) locators,
+# dialogue quotations, or chronological steps — NEVER by volatile chunk IDs.
+
+- case_id: loki-fact-001
+  case_type: simple_fact
+  series: loki
+  query: "Who created the TVA and what is his origin?"
+  expected_evidence:
+    entity_ids: ["he-who-remains"]
+    scenes:
+      - season: 1
+        episode: 6
+    dialogue_quotes: ["31st century", "Multiversal War", "scientist"]
+
+- case_id: loki-fact-002
+  case_type: simple_fact
+  series: loki
+  query: "What is the role of Miss Minutes in the Time Variance Authority?"
+  expected_evidence:
+    entity_ids: ["miss-minutes"]
+    scenes:
+      - season: 1
+        episode: 1
+    dialogue_quotes: ["Sacred Timeline", "Time-Keepers"]
+
+- case_id: loki-fact-003
+  case_type: simple_fact
+  series: loki
+  query: "What do TVA reset charges do to branched timelines?"
+  expected_evidence:
+    entity_ids: ["tva"]
+    scenes:
+      - season: 1
+        episode: 1
+      - season: 1
+        episode: 2
+    dialogue_quotes: ["reset charge", "prune the branch"]
+
+- case_id: loki-fact-004
+  case_type: simple_fact
+  series: loki
+  query: "What creature guards The Void and consumes pruned realities?"
+  expected_evidence:
+    entity_ids: ["alioth"]
+    scenes:
+      - season: 1
+        episode: 5
+    dialogue_quotes: ["living tempest", "consumes matter and energy"]
+
+- case_id: loki-fact-005
+  case_type: simple_fact
+  series: loki
+  query: "Why does Casey keep Infinity Stones in his desk drawer?"
+  expected_evidence:
+    entity_ids: ["casey"]
+    scenes:
+      - season: 1
+        episode: 1
+    dialogue_quotes: ["paperweights", "magic doesn't work"]
+
+- case_id: loki-fact-006
+  case_type: simple_fact
+  series: loki
+  query: "What was Hunter B-15's role and how did she discover the truth about TVA variants?"
+  expected_evidence:
+    entity_ids: ["hunter-b-15"]
+    scenes:
+      - season: 1
+        episode: 4
+    dialogue_quotes: ["enchanted", "past life", "variant"]
+
+- case_id: loki-alias-001
+  case_type: alias_entity
+  series: loki
+  query: "Who is the female Loki variant and what is her alias?"
+  expected_evidence:
+    entity_ids: ["sylvie"]
+    scenes:
+      - season: 1
+        episode: 2
+    dialogue_quotes: ["Sylvie", "Lady Loki", "Laufeydottir"]
+
+- case_id: loki-alias-002
+  case_type: alias_entity
+  series: loki
+  query: "What was Agent Mobius's real identity and human life on Earth before the TVA?"
+  expected_evidence:
+    entity_ids: ["mobius"]
+    scenes:
+      - season: 1
+        episode: 4
+      - season: 1
+        episode: 5
+    dialogue_quotes: ["Don", "jet ski", "California", "Palo Alto"]
+
+- case_id: loki-alias-003
+  case_type: alias_entity
+  series: loki
+  query: "What was Judge Ravonna Renslayer's former hunter designation and human Earth identity?"
+  expected_evidence:
+    entity_ids: ["ravonna-renslayer"]
+    scenes:
+      - season: 1
+        episode: 4
+    dialogue_quotes: ["Hunter A-20", "Rebecca Tourminet", "Franklin D. Roosevelt High School"]
+
+- case_id: loki-alias-004
+  case_type: alias_entity
+  series: loki
+  query: "Who is Classic Loki and how did he survive his encounter with Thanos?"
+  expected_evidence:
+    entity_ids: ["classic-loki"]
+    scenes:
+      - season: 1
+        episode: 5
+    dialogue_quotes: ["Classic Loki", "Thanos", "projection", "illusion"]
+
+- case_id: loki-alias-005
+  case_type: alias_entity
+  series: loki
+  query: "Who is Kid Loki and why was he respected by the other variants in the Void?"
+  expected_evidence:
+    entity_ids: ["kid-loki"]
+    scenes:
+      - season: 1
+        episode: 5
+    dialogue_quotes: ["Kid Loki", "killed Thor", "King of the Void"]
+
+- case_id: loki-alias-006
+  case_type: alias_entity
+  series: loki
+  query: "What is Alligator Loki and what did he do to President Loki?"
+  expected_evidence:
+    entity_ids: ["alligator-loki", "president-loki"]
+    scenes:
+      - season: 1
+        episode: 5
+    dialogue_quotes: ["Alligator Loki", "bites off hand", "President Loki"]
+
+- case_id: loki-dia-001
+  case_type: dialogue
+  series: loki
+  query: "I am Loki of Asgard, and I am burdened with glorious purpose"
+  expected_evidence:
+    entity_ids: ["loki"]
+    scenes:
+      - season: 1
+        episode: 1
+    dialogue_quotes: ["burdened with glorious purpose"]
+
+- case_id: loki-dia-002
+  case_type: dialogue
+  series: loki
+  query: "Some of the guys use them as paperweights"
+  expected_evidence:
+    entity_ids: ["casey", "loki"]
+    scenes:
+      - season: 1
+        episode: 1
+    dialogue_quotes: ["paperweights", "Infinity Stones"]
+
+- case_id: loki-dia-003
+  case_type: dialogue
+  series: loki
+  query: "No one bad is ever truly bad, and no one good is ever truly good"
+  expected_evidence:
+    entity_ids: ["loki", "mobius"]
+    scenes:
+      - season: 1
+        episode: 2
+    dialogue_quotes: ["No one bad is ever truly bad", "ever truly good"]
+
+- case_id: loki-dia-004
+  case_type: dialogue
+  series: loki
+  query: "Love is a dagger. It's a weapon to be wielded far away or up close"
+  expected_evidence:
+    entity_ids: ["loki", "sylvie"]
+    scenes:
+      - season: 1
+        episode: 3
+    dialogue_quotes: ["Love is a dagger", "terrible metaphor"]
+
+- case_id: loki-dia-005
+  case_type: dialogue
+  series: loki
+  query: "Mindless androids. It's all a lie."
+  expected_evidence:
+    entity_ids: ["sylvie", "loki"]
+    scenes:
+      - season: 1
+        episode: 4
+    dialogue_quotes: ["Mindless androids", "all a lie"]
+
+- case_id: loki-dia-006
+  case_type: dialogue
+  series: loki
+  query: "Calm down, take a breath. What division are you from? Who are you?"
+  expected_evidence:
+    entity_ids: ["mobius", "loki"]
+    scenes:
+      - season: 1
+        episode: 6
+    dialogue_quotes: ["What division are you from", "Who are you"]
+
+- case_id: loki-multi-001
+  case_type: multi_part
+  series: loki
+  query: "How did Loki and Sylvie enchant the storm creature Alioth, and what role did Classic Loki play?"
+  expected_evidence:
+    entity_ids: ["loki", "sylvie", "alioth", "classic-loki"]
+    scenes:
+      - season: 1
+        episode: 5
+    dialogue_quotes: ["enchant", "Asgard illusion", "Glorious purpose", "Alioth"]
+
+- case_id: loki-multi-002
+  case_type: multi_part
+  series: loki
+  query: "Explain Sylvie's bombing of the Sacred Timeline using reset charges stolen from Roxxcart."
+  expected_evidence:
+    entity_ids: ["sylvie", "tva"]
+    scenes:
+      - season: 1
+        episode: 2
+    dialogue_quotes: ["Roxxcart", "reset charges", "bombing the timeline", "Haven Hills"]
+
+- case_id: loki-multi-003
+  case_type: multi_part
+  series: loki
+  query: "How did Mobius discover that TVA agents were variants and what happened when Renslayer confronted him?"
+  expected_evidence:
+    entity_ids: ["mobius", "ravonna-renslayer"]
+    scenes:
+      - season: 1
+        episode: 4
+    dialogue_quotes: ["pruned", "variants", "TemPad", "C-20"]
+
+- case_id: loki-multi-004
+  case_type: multi_part
+  series: loki
+  query: "Describe Loki and Sylvie's attempt to board the Ark evacuation vessel on Lamentis-1 and its outcome."
+  expected_evidence:
+    entity_ids: ["loki", "sylvie"]
+    scenes:
+      - season: 1
+        episode: 3
+    dialogue_quotes: ["Lamentis-1", "Shuroo", "Ark destroyed", "meteor"]
+
+- case_id: loki-multi-005
+  case_type: multi_part
+  series: loki
+  query: "What offer did He Who Remains present to Loki and Sylvie at the Citadel, and why did they disagree?"
+  expected_evidence:
+    entity_ids: ["he-who-remains", "loki", "sylvie"]
+    scenes:
+      - season: 1
+        episode: 6
+    dialogue_quotes: ["Citadel at the End of Time", "multiverse", "infinite devils", "free will"]
+
+- case_id: loki-multi-006
+  case_type: multi_part
+  series: loki
+  query: "How did Hunter B-15 help Mobius and prove Renslayer's secret identity in Ohio?"
+  expected_evidence:
+    entity_ids: ["hunter-b-15", "ravonna-renslayer", "mobius"]
+    scenes:
+      - season: 1
+        episode: 5
+      - season: 1
+        episode: 6
+    dialogue_quotes: ["Franklin D. Roosevelt High School", "Rebecca Tourminet", "variants"]
+
+- case_id: loki-chrono-001
+  case_type: chronology
+  series: loki
+  query: "Trace Loki's journey from being arrested in the Gobi Desert to standing trial at the TVA."
+  expected_evidence:
+    entity_ids: ["loki", "hunter-b-15", "ravonna-renslayer"]
+    scenes:
+      - season: 1
+        episode: 1
+    chronological_order:
+      - "Loki escapes with the Tesseract to the Gobi Desert"
+      - "Minutemen led by Hunter B-15 arrest Loki with a time collar"
+      - "Loki processes through TVA intake and signs his life ledger"
+      - "Loki appears before Judge Ravonna Renslayer for trial"
+      - "Mobius steps in and recruits Loki for the investigation"
+
+- case_id: loki-chrono-002
+  case_type: chronology
+  series: loki
+  query: "Sequence the investigation from the Pompeii test to the Roxxcart ambush in 2050."
+  expected_evidence:
+    entity_ids: ["loki", "mobius", "sylvie"]
+    scenes:
+      - season: 1
+        episode: 2
+    chronological_order:
+      - "Loki reviews TVA apocalypse case files in the library"
+      - "Loki and Mobius test timeline variance during the Pompeii eruption"
+      - "Mobius and Loki pinpoint Haven Hills, Alabama in 2050"
+      - "TVA squad investigates Roxxcart supermarket during the hurricane"
+      - "Sylvie reveals herself and activates reset charges across time"
+
+- case_id: loki-chrono-003
+  case_type: chronology
+  series: loki
+  query: "Outline the key events on the doomed moon Lamentis-1 from train ride to the Ark destruction."
+  expected_evidence:
+    entity_ids: ["loki", "sylvie"]
+    scenes:
+      - season: 1
+        episode: 3
+    chronological_order:
+      - "Loki and Sylvie escape through a Timedoor to Lamentis-1"
+      - "TemPad battery is drained and requires a massive power source"
+      - "They disguise themselves to board the Shuroo evacuation train"
+      - "Loki gets drunk and is thrown off the train, breaking the TemPad"
+      - "They journey on foot to the Ark only to watch meteor fire destroy it"
+
+- case_id: loki-chrono-004
+  case_type: chronology
+  series: loki
+  query: "Detail the sequence in the Time-Keepers' chamber from the elevator to Renslayer pruning Loki."
+  expected_evidence:
+    entity_ids: ["loki", "sylvie", "ravonna-renslayer", "hunter-b-15"]
+    scenes:
+      - season: 1
+        episode: 4
+    chronological_order:
+      - "Loki and Sylvie are captured and escorted to the Time-Keepers by Renslayer"
+      - "Hunter B-15 frees Loki and Sylvie inside the chamber"
+      - "Sylvie decapitates the central Time-Keeper revealing robotic androids"
+      - "Loki attempts to express his feelings to Sylvie"
+      - "Renslayer prunes Loki from behind with a pruning baton"
+
+- case_id: loki-chrono-005
+  case_type: chronology
+  series: loki
+  query: "Trace Loki's arrival in the Void through meeting the variant council to fighting Alioth."
+  expected_evidence:
+    entity_ids: ["loki", "classic-loki", "kid-loki", "alioth", "sylvie"]
+    scenes:
+      - season: 1
+        episode: 5
+    chronological_order:
+      - "Loki awakens in the Void surrounded by variant Lokis"
+      - "Variants retreat to their underground bunker"
+      - "President Loki attacks the bunker leading to a chaotic brawl"
+      - "Sylvie reunites with Loki in the Void"
+      - "Classic Loki conjures Asgard to distract Alioth as Loki and Sylvie enchant it"
+
+- case_id: loki-chrono-006
+  case_type: chronology
+  series: loki
+  query: "Trace what happened at the Citadel at the End of Time from meeting He Who Remains to the multiversal branching."
+  expected_evidence:
+    entity_ids: ["he-who-remains", "sylvie", "loki"]
+    scenes:
+      - season: 1
+        episode: 6
+    chronological_order:
+      - "Loki and Sylvie cross the threshold into the Citadel"
+      - "Miss Minutes offers them everything they ever wanted"
+      - "He Who Remains explains the 31st century Multiversal War"
+      - "Sylvie and Loki fight over whether to believe him"
+      - "Sylvie pushes Loki through a Timedoor and kills He Who Remains"
+      - "The Sacred Timeline branches uncontrollably into the multiverse"
+
+- case_id: loki-spoil-001
+  case_type: spoiler_bound
+  series: loki
+  season_bound: 1
+  episode_bound: 1
+  query: "What does Loki learn about the Sacred Timeline and the Time-Keepers in his intake at the TVA?"
+  expected_evidence:
+    entity_ids: ["miss-minutes", "loki", "tva"]
+    scenes:
+      - season: 1
+        episode: 1
+    dialogue_quotes: ["Sacred Timeline", "Time-Keepers", "Nexus event"]
+
+- case_id: loki-spoil-002
+  case_type: spoiler_bound
+  series: loki
+  season_bound: 1
+  episode_bound: 2
+  query: "Who is the hooded variant ambushing TVA Minutemen at Roxxcart?"
+  expected_evidence:
+    entity_ids: ["sylvie", "loki", "mobius"]
+    scenes:
+      - season: 1
+        episode: 2
+    dialogue_quotes: ["Roxxcart", "Haven Hills", "Lady Loki"]
+
+- case_id: loki-spoil-003
+  case_type: spoiler_bound
+  series: loki
+  season_bound: 1
+  episode_bound: 3
+  query: "How do Loki and Sylvie interact and survive on the doomed moon Lamentis-1?"
+  expected_evidence:
+    entity_ids: ["loki", "sylvie"]
+    scenes:
+      - season: 1
+        episode: 3
+    dialogue_quotes: ["Love is a dagger", "Shuroo", "Lamentis-1"]
+
+- case_id: loki-spoil-004
+  case_type: spoiler_bound
+  series: loki
+  season_bound: 1
+  episode_bound: 4
+  query: "What happens when Loki and Sylvie are brought before the Time-Keepers by Renslayer?"
+  expected_evidence:
+    entity_ids: ["sylvie", "loki", "ravonna-renslayer"]
+    scenes:
+      - season: 1
+        episode: 4
+    dialogue_quotes: ["Mindless androids", "Time-Keepers"]
+
+- case_id: loki-spoil-005
+  case_type: spoiler_bound
+  series: loki
+  season_bound: 1
+  episode_bound: 5
+  query: "What does Loki encounter after being pruned to the Void?"
+  expected_evidence:
+    entity_ids: ["classic-loki", "kid-loki", "alioth", "loki"]
+    scenes:
+      - season: 1
+        episode: 5
+    dialogue_quotes: ["Alioth", "Classic Loki", "Void"]
+
+- case_id: loki-spoil-006
+  case_type: spoiler_bound
+  series: loki
+  season_bound: 1
+  episode_bound: 2
+  query: "What was Sylvie's objective when detonating stolen reset charges at Roxxcart?"
+  expected_evidence:
+    entity_ids: ["sylvie", "tva"]
+    scenes:
+      - season: 1
+        episode: 2
+    dialogue_quotes: ["bombing the timeline", "Sacred Timeline", "reset charges"]
+
+- case_id: loki-unans-001
+  case_type: unanswerable
+  series: loki
+  query: "How did Bruce Wayne become Batman after his parents died in Crime Alley?"
+  expected_evidence:
+    entity_ids: []
+    scenes: []
+    dialogue_quotes: []
+    chronological_order: []
+
+- case_id: loki-unans-002
+  case_type: unanswerable
+  series: loki
+  query: "How did Frodo Baggins destroy the One Ring in the fires of Mount Doom?"
+  expected_evidence:
+    entity_ids: []
+    scenes: []
+    dialogue_quotes: []
+    chronological_order: []
+
+- case_id: loki-unans-003
+  case_type: unanswerable
+  series: loki
+  query: "Where did Luke Skywalker hide on the planet Ahch-To in the Star Wars galaxy?"
+  expected_evidence:
+    entity_ids: []
+    scenes: []
+    dialogue_quotes: []
+    chronological_order: []
+
+- case_id: loki-unans-004
+  case_type: unanswerable
+  series: loki
+  query: "How did Captain America crash the Valkyrie plane in the Arctic during World War II?"
+  expected_evidence:
+    entity_ids: []
+    scenes: []
+    dialogue_quotes: []
+    chronological_order: []
+
+- case_id: loki-unans-005
+  case_type: unanswerable
+  series: loki
+  query: "Who designed the Batmobile and the Tumbler tank in Gotham City?"
+  expected_evidence:
+    entity_ids: []
+    scenes: []
+    dialogue_quotes: []
+    chronological_order: []
+
+- case_id: loki-unans-006
+  case_type: unanswerable
+  series: loki
+  query: "How did Tony Stark build the Nano Gauntlet using Vibranium in Avengers Endgame?"
+  expected_evidence:
+    entity_ids: []
+    scenes: []
+    dialogue_quotes: []
+    chronological_order: []
