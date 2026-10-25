@@ -4,6 +4,7 @@ chronological evidence.
 
 import logging
 
+from lore_mcp.application.chronology import DefaultChronologyBuilder
 from lore_mcp.application.errors import DataUnavailable, InvalidArgument
 from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.scope import ScopeResolver
@@ -19,6 +20,7 @@ from lore_mcp.domain.identifiers import generate_event_id, slugify
 from lore_mcp.domain.provenance import Provenance
 from lore_mcp.domain.search import Evidence, SearchHit, SearchQuery
 from lore_mcp.domain.types import EntityId, ValidatedSeriesId
+from lore_mcp.ports.chronology import ChronologyBuilder
 from lore_mcp.ports.entity_registry import EntityRegistry
 from lore_mcp.ports.event_registry import EventRegistry
 
@@ -57,12 +59,16 @@ class EventService:
         retriever: HybridRetriever,
         event_registry: EventRegistry | None = None,
         entity_registry: EntityRegistry | None = None,
+        chronology_builder: ChronologyBuilder | None = None,
         limits_settings: RequestLimitsSettings | None = None,
     ) -> None:
         self._scope_resolver = scope_resolver
         self._retriever = retriever
         self._event_registry = event_registry
         self._entity_registry = entity_registry
+        self._chronology_builder: ChronologyBuilder = (
+            chronology_builder or DefaultChronologyBuilder()
+        )
         self._limits_settings = limits_settings or RequestLimitsSettings()
 
     async def trace_event(
@@ -205,6 +211,7 @@ class EventService:
                 episode=hit.chunk.episode,
                 scene_index=hit.chunk.scene_index,
                 narrative_order=hit.chunk.narrative_order,
+                narrative_confidence=hit.chunk.narrative_confidence,
                 score=hit.score,
                 dense_score=hit.dense_score,
                 sparse_score=hit.sparse_score,
@@ -244,8 +251,8 @@ class EventService:
                 seen_entities.add(str(ev.entity_id))
                 entities.append(ev.entity_id)
 
-        # 7. Build chronological notes
-        chronology_notes = self._build_chronology(evidence_list)
+        # 7. Build chronological context
+        temporal_ctx = self._chronology_builder.build_context(evidence_list)
 
         # 8. Deduplicate provenance records
         seen_urls: set[str] = set()
@@ -261,7 +268,8 @@ class EventService:
             locations=locations,
             entities=entities,
             evidence=evidence_list,
-            chronology=chronology_notes,
+            chronology=temporal_ctx.timeline_notes,
+            temporal_context=temporal_ctx,
             provenance=provenance_list,
             notices=[],
         )
@@ -277,25 +285,9 @@ class EventService:
         scene_val = ev.scene_index if ev.scene_index is not None else 0
         return (season_val, episode_val, order_val, scene_val)
 
-    @staticmethod
-    def _build_chronology(evidence_list: list[Evidence]) -> list[str]:
+    def _build_chronology(self, evidence_list: list[Evidence]) -> list[str]:
         """Construct chronological timeline markers from evidence."""
-        notes: list[str] = []
-        for ev in evidence_list:
-            loc: list[str] = []
-            if ev.season is not None:
-                loc.append(f"S{ev.season}")
-            if ev.episode is not None:
-                loc.append(f"E{ev.episode}")
-            if ev.scene_index is not None:
-                loc.append(f"scene {ev.scene_index}")
-            if ev.narrative_order is not None:
-                loc.append(f"order {ev.narrative_order}")
-            loc_str = " ".join(loc) if loc else "timeline"
-
-            snippet = ev.content[:80] + ("..." if len(ev.content) > 80 else "")
-            notes.append(f"[{loc_str}] {snippet}")
-        return notes
+        return self._chronology_builder.build_context(evidence_list).timeline_notes
 
     async def compare_events(
         self,
@@ -508,6 +500,7 @@ class EventService:
                     episode=hit.chunk.episode,
                     scene_index=hit.chunk.scene_index,
                     narrative_order=hit.chunk.narrative_order,
+                    narrative_confidence=hit.chunk.narrative_confidence,
                     score=hit.score,
                     dense_score=hit.dense_score,
                     sparse_score=hit.sparse_score,
@@ -574,6 +567,7 @@ class EventService:
                     episode=hit.chunk.episode,
                     scene_index=hit.chunk.scene_index,
                     narrative_order=hit.chunk.narrative_order,
+                    narrative_confidence=hit.chunk.narrative_confidence,
                     score=hit.score,
                     dense_score=hit.dense_score,
                     sparse_score=hit.sparse_score,
@@ -605,7 +599,7 @@ class EventService:
 
             target_type = "entity"
 
-        chronology_notes = self._build_chronology(evidence_list)
+        temporal_ctx = self._chronology_builder.build_context(evidence_list)
 
         seen_urls: set[str] = set()
         provenance_list: list[Provenance] = []
@@ -623,6 +617,7 @@ class EventService:
             locations=locations,
             entities=entities,
             evidence=evidence_list,
-            chronology=chronology_notes,
+            chronology=temporal_ctx.timeline_notes,
+            temporal_context=temporal_ctx,
             provenance=provenance_list,
         )

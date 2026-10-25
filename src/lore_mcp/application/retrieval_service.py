@@ -5,6 +5,7 @@ import json
 import logging
 from typing import Any
 
+from lore_mcp.application.chronology import DefaultChronologyBuilder
 from lore_mcp.application.classifier import QueryClassifier
 from lore_mcp.application.errors import InvalidArgument
 from lore_mcp.application.hybrid import HybridRetriever
@@ -20,6 +21,7 @@ from lore_mcp.domain.search import (
 from lore_mcp.domain.types import ChunkId, ValidatedSeriesId
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
+from lore_mcp.ports.chronology import ChronologyBuilder
 from lore_mcp.ports.clock import Clock, SystemClock
 from lore_mcp.ports.web_search import WebSearch
 
@@ -76,6 +78,7 @@ class LoreRetrievalService:
         web_search: WebSearch | None = None,
         budget_counter: BudgetCounter | None = None,
         classifier: QueryClassifier | None = None,
+        chronology_builder: ChronologyBuilder | None = None,
         clock: Clock | None = None,
         web_search_settings: WebSearchSettings | None = None,
         limits_settings: RequestLimitsSettings | None = None,
@@ -87,6 +90,9 @@ class LoreRetrievalService:
         self._web_search = web_search
         self._budget_counter = budget_counter
         self._classifier = classifier or QueryClassifier()
+        self._chronology_builder: ChronologyBuilder = (
+            chronology_builder or DefaultChronologyBuilder()
+        )
         self._clock: Clock = clock or SystemClock()
         self._web_search_settings = web_search_settings or WebSearchSettings()
         self._limits_settings = limits_settings or RequestLimitsSettings()
@@ -240,7 +246,7 @@ class LoreRetrievalService:
                     notices.append("Retrieved from external web search fallback")
 
         # 7. Build Chronological Context
-        chronology = self._build_chronology(evidence_list)
+        temporal_ctx = self._chronology_builder.build_context(evidence_list)
 
         bundle = EvidenceBundle(
             query=cleaned_query,
@@ -248,7 +254,8 @@ class LoreRetrievalService:
             status=status,
             evidence=evidence_list,
             truncated=False,
-            chronology=chronology,
+            chronology=temporal_ctx.timeline_notes,
+            temporal_context=temporal_ctx,
             notices=notices,
         )
 
@@ -277,6 +284,7 @@ class LoreRetrievalService:
             episode=hit.chunk.episode,
             scene_index=hit.chunk.scene_index,
             narrative_order=hit.chunk.narrative_order,
+            narrative_confidence=hit.chunk.narrative_confidence,
             score=hit.score,
             dense_score=hit.dense_score,
             sparse_score=hit.sparse_score,
@@ -339,37 +347,4 @@ class LoreRetrievalService:
 
     def _build_chronology(self, evidence_list: list[Evidence]) -> list[str]:
         """Construct sequential chronological notes from retrieved evidence items."""
-        # Filter evidence items having timeline markers
-        timeline_items = [
-            ev
-            for ev in evidence_list
-            if ev.season is not None or ev.narrative_order is not None
-        ]
-        if not timeline_items:
-            return []
-
-        # Sort chronologically by season, episode, narrative_order, scene_index
-        timeline_items.sort(
-            key=lambda ev: (
-                ev.season if ev.season is not None else 0,
-                ev.episode if ev.episode is not None else 0,
-                ev.narrative_order if ev.narrative_order is not None else 0,
-                ev.scene_index if ev.scene_index is not None else 0,
-            )
-        )
-
-        chronology_notes: list[str] = []
-        for ev in timeline_items:
-            loc: list[str] = []
-            if ev.season is not None:
-                loc.append(f"S{ev.season}")
-            if ev.episode is not None:
-                loc.append(f"E{ev.episode}")
-            if ev.scene_index is not None:
-                loc.append(f"scene {ev.scene_index}")
-            loc_str = " ".join(loc) if loc else "unscoped"
-
-            snippet = ev.content[:60] + ("..." if len(ev.content) > 60 else "")
-            chronology_notes.append(f"[{loc_str}] {snippet}")
-
-        return chronology_notes
+        return self._chronology_builder.build_context(evidence_list).timeline_notes
