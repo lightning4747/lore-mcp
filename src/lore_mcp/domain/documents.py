@@ -17,6 +17,36 @@ class DocumentSection(BaseModel):
     content: str = Field(description="Body content of the section")
 
 
+class DialogueCue(BaseModel):
+    """A single clean dialogue cue with timestamps, speaker, and speech text."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    start_ms: int = Field(description="Start time in milliseconds from episode start")
+    end_ms: int = Field(description="End time in milliseconds from episode start")
+    start_time: str = Field(description="Formatted start timestamp (HH:MM:SS,mmm)")
+    end_time: str = Field(description="Formatted end timestamp (HH:MM:SS,mmm)")
+    speaker: str | None = Field(default=None, description="Identified speaker name")
+    text: str = Field(description="Normalized spoken dialogue text")
+
+
+class DialogueSegment(BaseModel):
+    """A scene-like temporal cluster of dialogue cues within an episode."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    scene_index: int = Field(description="1-indexed sequential scene order")
+    start_ms: int = Field(description="Earliest cue start time in milliseconds")
+    end_ms: int = Field(description="Latest cue end time in milliseconds")
+    start_time: str = Field(description="Formatted start timestamp")
+    end_time: str = Field(description="Formatted end timestamp")
+    cues: list[DialogueCue] = Field(
+        default_factory=list[DialogueCue],
+        description="Chronologically ordered dialogue cues in this scene",
+    )
+    text: str = Field(description="Formatted scene dialogue transcript")
+
+
 class RawDocument(BaseModel):
     """Raw unmodified source document fetched from an external source."""
 

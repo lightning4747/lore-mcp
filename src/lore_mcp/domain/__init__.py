@@ -2,6 +2,8 @@
 
 from lore_mcp.domain.documents import (
     Chunk,
+    DialogueCue,
+    DialogueSegment,
     DocumentSection,
     NormalizedDocument,
     RawDocument,
@@ -22,6 +24,11 @@ from lore_mcp.domain.identifiers import (
     generate_entity_id,
     generate_event_id,
     slugify,
+)
+from lore_mcp.domain.normalization import (
+    DeduplicationReport,
+    DialogueNormalizationOptions,
+    DocumentNormalizationOptions,
 )
 from lore_mcp.domain.provenance import Provenance
 from lore_mcp.domain.search import (
@@ -48,7 +55,12 @@ __all__ = [
     "LORE_CHUNK_NAMESPACE",
     "Chunk",
     "ChunkId",
+    "DeduplicationReport",
+    "DialogueCue",
+    "DialogueNormalizationOptions",
+    "DialogueSegment",
     "DialogueSnippet",
+    "DocumentNormalizationOptions",
     "DocumentSection",
     "Entity",
     "EntityDetails",
