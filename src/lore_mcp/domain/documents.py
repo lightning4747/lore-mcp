@@ -127,6 +127,18 @@ class Chunk(BaseModel):
         default_factory=list[EntityId],
         description="Associated canonical entity identifiers",
     )
+    entity_type: str = Field(
+        default="",
+        description="Entity category (e.g. character, location, event, dialogue)",
+    )
+    primary_concept: str = Field(
+        default="",
+        description="Primary entity name or concept this chunk describes",
+    )
+    related_entities: list[EntityId] = Field(
+        default_factory=list[EntityId],
+        description="Entities related to but not the primary subject of this chunk",
+    )
     provenance: Provenance = Field(
         description="Source provenance for attribution and traceability"
     )
