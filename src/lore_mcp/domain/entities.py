@@ -1,5 +1,7 @@
 """Domain models for entities and narrative events."""
 
+import unicodedata
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from lore_mcp.domain.provenance import Provenance
@@ -232,4 +234,66 @@ class EventComparison(BaseModel):
     notices: list[str] = Field(
         default_factory=list[str],
         description="Operational notices or warnings",
+    )
+
+
+class AliasEntry(BaseModel):
+    """Single alias entry mapping a normalized lookup key to a canonical entity."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    lookup_key: str = Field(
+        description="Lowercase and NFC-normalized alias or canonical name"
+    )
+    entity_id: EntityId = Field(description="Target canonical entity identifier")
+    canonical_name: str = Field(description="Display name for the entity")
+    entity_type: str = Field(
+        description="Entity type category (e.g. character, location)"
+    )
+
+
+class AliasTable(BaseModel):
+    """Per-series alias lookup index for case/diacritic-insensitive resolution."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    series_id: ValidatedSeriesId = Field(description="Owning series identifier")
+    entries: list[AliasEntry] = Field(
+        default_factory=list[AliasEntry], description="List of alias mapping entries"
+    )
+
+    def lookup(self, name: str) -> EntityId | None:
+        """Case-insensitive, NFC-normalized lookup. Returns None on miss."""
+        key = unicodedata.normalize("NFC", name.strip().casefold())
+        for entry in self.entries:
+            if entry.lookup_key == key:
+                return entry.entity_id
+        return None
+
+
+class ExtractionReport(BaseModel):
+    """Summary of entity and event extraction results."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    series_id: ValidatedSeriesId = Field(description="Owning series identifier")
+    documents_processed: int = Field(
+        default=0, description="Total source documents processed"
+    )
+    entities_extracted: int = Field(
+        default=0, description="Total valid entities extracted"
+    )
+    events_extracted: int = Field(
+        default=0, description="Total valid events extracted"
+    )
+    disambiguation_pages_skipped: int = Field(
+        default=0, description="Total disambiguation pages skipped"
+    )
+    unmapped_categories: list[str] = Field(
+        default_factory=list[str],
+        description="Categories encountered that had no explicit entity type mapping",
+    )
+    unmapped_category_documents: dict[str, list[str]] = Field(
+        default_factory=dict[str, list[str]],
+        description="Mapping of unmapped categories to affected document titles",
     )

@@ -9,6 +9,8 @@ from lore_mcp.domain.documents import (
     RawDocument,
 )
 from lore_mcp.domain.entities import (
+    AliasEntry,
+    AliasTable,
     Entity,
     EntityDetails,
     Event,
@@ -16,6 +18,7 @@ from lore_mcp.domain.entities import (
     EventComparisonSide,
     EventDetails,
     EventTrace,
+    ExtractionReport,
     SeriesManifest,
 )
 from lore_mcp.domain.identifiers import (
@@ -53,6 +56,8 @@ from lore_mcp.domain.types import (
 
 __all__ = [
     "LORE_CHUNK_NAMESPACE",
+    "AliasEntry",
+    "AliasTable",
     "Chunk",
     "ChunkId",
     "DeduplicationReport",
@@ -73,6 +78,7 @@ __all__ = [
     "EventTrace",
     "Evidence",
     "EvidenceBundle",
+    "ExtractionReport",
     "NormalizedDocument",
     "Provenance",
     "RawDocument",
