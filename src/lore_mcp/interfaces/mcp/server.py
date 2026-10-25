@@ -237,10 +237,12 @@ def create_mcp_server(
         Executes scope-resolved hybrid dense+sparse retrieval with heuristic reranking,
         spoiler bounds, sufficiency verification, and chronological timeline context.
 
-        CLIENT WORKFLOW & QUERY DECOMPOSITION:
-        Decompose complex, multi-faceted narrative questions into several targeted tool
-        calls rather than a single broad query. Investigate distinct entities, events,
-        or timelines sequentially, synthesizing evidence across focused searches.
+        CLIENT WORKFLOW & QUERY DECOMPOSITION (COMPLEX QUERY CONTRACT):
+        The server treats each tool invocation as an independent retrieval request
+        and does NOT decompose multi-entity or compound queries server-side.
+        Clients MUST split complex, multi-part, or multi-entity questions into
+        several focused, independent tool calls (e.g. querying entities or events
+        separately) and synthesize the resulting evidence client-side.
 
         SPOILER BOUNDS & UNSCOPED LORE:
         - `season` & `episode`: Target an exact episode context when analyzing events
@@ -369,7 +371,8 @@ def create_mcp_server(
         Returns concise quote snippets with locators (season, episode, timestamps,
         speaker), avoiding long verbatim runs.
 
-        CLIENT WORKFLOW & QUERY DECOMPOSITION:
+        CLIENT WORKFLOW & QUERY DECOMPOSITION (COMPLEX QUERY CONTRACT):
+        The server does NOT decompose complex or multi-entity questions on the server.
         Decompose dialogue queries by searching for specific speakers or key phrases
         individually. If scene context or narrative implications need verification,
         follow up with `search_series_lore` or fetch the full transcript passage using
@@ -482,7 +485,8 @@ def create_mcp_server(
         Do NOT guess or fabricate event IDs. Only provide them if obtained from
         a previous tool result.
 
-        CLIENT WORKFLOW & QUERY DECOMPOSITION:
+        CLIENT WORKFLOW & QUERY DECOMPOSITION (COMPLEX QUERY CONTRACT):
+        The server does NOT decompose multi-entity queries automatically.
         Decompose multi-sided narrative comparisons into focused pairwise calls.
         To analyze complex relationships spanning multiple events, compare pairs of
         occurrences and follow up with individual `trace_event` or `get_entity` calls.
