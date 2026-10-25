@@ -4,6 +4,7 @@ import unicodedata
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from lore_mcp.domain.chronology import TemporalContext
 from lore_mcp.domain.provenance import Provenance
 from lore_mcp.domain.search import Evidence
 from lore_mcp.domain.types import EntityId, EventId, ValidatedSeriesId
@@ -60,6 +61,12 @@ class Event(BaseModel):
     narrative_order: int | None = Field(
         default=None,
         description="Position in fictional in-universe chronological order",
+    )
+    narrative_confidence: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Confidence in narrative order assignment (0.0 to 1.0)",
     )
     participants: list[EntityId] = Field(
         default_factory=list[EntityId],
@@ -160,6 +167,10 @@ class EventTrace(BaseModel):
         default_factory=list[str],
         description="Sequential chronological notes or timeline markers",
     )
+    temporal_context: TemporalContext | None = Field(
+        default=None,
+        description="Structured chronological organization of event evidence",
+    )
     provenance: list[Provenance] = Field(
         default_factory=list[Provenance],
         description="Deduplicated source provenance records for retrieved evidence",
@@ -208,6 +219,10 @@ class EventComparisonSide(BaseModel):
     chronology: list[str] = Field(
         default_factory=list[str],
         description="Sequential timeline notes for this side",
+    )
+    temporal_context: TemporalContext | None = Field(
+        default=None,
+        description="Structured chronological organization for this side",
     )
     provenance: list[Provenance] = Field(
         default_factory=list[Provenance],

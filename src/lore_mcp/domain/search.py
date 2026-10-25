@@ -5,9 +5,10 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from lore_mcp.domain.chronology import Evidence, TemporalContext
 from lore_mcp.domain.documents import Chunk
 from lore_mcp.domain.provenance import Provenance
-from lore_mcp.domain.types import ChunkId, EntityId, ValidatedSeriesId
+from lore_mcp.domain.types import ChunkId, ValidatedSeriesId
 
 
 class SearchQuery(BaseModel):
@@ -75,38 +76,6 @@ class SearchHit(BaseModel):
     )
 
 
-class Evidence(BaseModel):
-    """Single item of verified evidence returned to an MCP client."""
-
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    chunk_id: ChunkId = Field(description="Unique chunk identifier")
-    series_id: ValidatedSeriesId = Field(description="Owning series identifier")
-    content: str = Field(description="Evidence textual content")
-    entity_id: EntityId | None = Field(
-        default=None, description="Primary entity associated with evidence"
-    )
-    season: int | None = Field(default=None, description="Season number if applicable")
-    episode: int | None = Field(
-        default=None, description="Episode number if applicable"
-    )
-    scene_index: int | None = Field(
-        default=None, description="Scene index within the depicting episode"
-    )
-    narrative_order: int | None = Field(
-        default=None, description="Chronological timeline position"
-    )
-    score: float = Field(description="Final relevance score")
-    dense_score: float | None = Field(
-        default=None, description="Dense vector similarity score"
-    )
-    sparse_score: float | None = Field(default=None, description="Sparse BM25 score")
-    rerank_score: float | None = Field(default=None, description="Reranker score")
-    provenance: Provenance = Field(
-        description="Source provenance for citation and attribution"
-    )
-
-
 class DialogueSnippet(BaseModel):
     """Concise dialogue quotation snippet with episode and timecode locators."""
 
@@ -150,6 +119,10 @@ class EvidenceBundle(BaseModel):
     chronology: list[str] = Field(
         default_factory=list[str],
         description="Chronological event sequence or temporal context notes",
+    )
+    temporal_context: TemporalContext | None = Field(
+        default=None,
+        description="Structured chronological organization of retrieved evidence",
     )
     notices: list[str] = Field(
         default_factory=list[str],

@@ -1,5 +1,11 @@
 """Domain layer: pure business models and domain logic."""
 
+from lore_mcp.domain.chronology import (
+    ChronologicalGroup,
+    OrderingStrategy,
+    TemporalContext,
+    TemporalMetadata,
+)
 from lore_mcp.domain.documents import (
     Chunk,
     DialogueCue,
@@ -58,6 +64,7 @@ __all__ = [
     "LORE_CHUNK_NAMESPACE",
     "AliasEntry",
     "AliasTable",
+    "ChronologicalGroup",
     "Chunk",
     "ChunkId",
     "DeduplicationReport",
@@ -80,6 +87,7 @@ __all__ = [
     "EvidenceBundle",
     "ExtractionReport",
     "NormalizedDocument",
+    "OrderingStrategy",
     "Provenance",
     "RawDocument",
     "SearchHit",
@@ -87,6 +95,8 @@ __all__ = [
     "SeriesConfig",
     "SeriesId",
     "SeriesManifest",
+    "TemporalContext",
+    "TemporalMetadata",
     "ValidatedSeriesId",
     "WebSearchResult",
     "WikiEndpointConfig",

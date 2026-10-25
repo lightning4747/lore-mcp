@@ -113,6 +113,12 @@ class Chunk(BaseModel):
         default=None,
         description="Chronological position in the universe timeline",
     )
+    narrative_confidence: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Confidence in narrative order assignment (0.0 to 1.0)",
+    )
     schema_version: int = Field(
         default=1, description="Data schema version for vector payload"
     )
