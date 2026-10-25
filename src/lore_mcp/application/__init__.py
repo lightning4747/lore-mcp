@@ -7,7 +7,12 @@ from lore_mcp.application.chunking import (
     DefaultEntityChunker,
     DefaultEventChunker,
 )
-from lore_mcp.application.classifier import ClassifiedQuery, QueryClassifier
+from lore_mcp.application.classifier import (
+    ClassifiedQuery,
+    QueryClass,
+    QueryClassifier,
+    QueryIntent,
+)
 from lore_mcp.application.dense import DenseRetriever
 from lore_mcp.application.dialogue_service import DialogueService
 from lore_mcp.application.entity_service import EntityService
@@ -74,7 +79,9 @@ __all__ = [
     "InvalidScope",
     "LoreRetrievalService",
     "ManifestBuilder",
+    "QueryClass",
     "QueryClassifier",
+    "QueryIntent",
     "RateLimited",
     "ResolvedScope",
     "ScopeResolver",
