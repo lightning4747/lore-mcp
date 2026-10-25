@@ -2,6 +2,7 @@
 
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
+from lore_mcp.ports.chronology import ChronologyBuilder
 from lore_mcp.ports.chunking import DialogueChunker, EntityChunker, EventChunker
 from lore_mcp.ports.clock import Clock, SystemClock
 from lore_mcp.ports.documents import DocumentSource, DocumentStore
@@ -21,6 +22,7 @@ from lore_mcp.ports.web_search import WebSearch
 __all__ = [
     "BudgetCounter",
     "Cache",
+    "ChronologyBuilder",
     "Clock",
     "Deduplicator",
     "DialogueChunker",
