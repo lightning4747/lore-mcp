@@ -44,6 +44,13 @@ class ManifestBuilder:
             else str(config.id).title()
         )
 
+        entity_aliases: dict[str, str] = {}
+        for entity in entities:
+            for alias in entity.aliases:
+                cleaned = alias.strip().lower()
+                if cleaned and cleaned not in entity_aliases:
+                    entity_aliases[cleaned] = entity.name
+
         return SeriesManifest(
             series_id=config.id,
             display_name=display_name,
@@ -52,6 +59,7 @@ class ManifestBuilder:
             seasons=seasons,
             entity_count=entity_count,
             chunk_count=chunk_count,
+            entity_aliases=entity_aliases,
             ingest_version=ingest_version,
             schema_version=schema_version,
         )

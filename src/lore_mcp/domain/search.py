@@ -19,6 +19,12 @@ class SearchQuery(BaseModel):
         description="Target series identifier (mandatory scope filter)"
     )
     query: str = Field(description="Search query text")
+    sparse_query: str | None = Field(
+        default=None,
+        description=(
+            "Expanded lexical query with canonical entity names for sparse retrieval"
+        ),
+    )
     season: int | None = Field(
         default=None, description="Exact season filter if specified"
     )

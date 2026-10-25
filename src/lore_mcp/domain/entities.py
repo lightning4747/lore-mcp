@@ -99,6 +99,10 @@ class SeriesManifest(BaseModel):
     chunk_count: int = Field(
         default=0, description="Total number of indexed vector chunks"
     )
+    entity_aliases: dict[str, str] = Field(
+        default_factory=dict,
+        description="Mapping of lowercase entity aliases to canonical entity names",
+    )
     ingest_version: int = Field(
         default=1, description="Current ingestion batch version"
     )
