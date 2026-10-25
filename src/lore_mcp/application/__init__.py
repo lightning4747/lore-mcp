@@ -15,6 +15,13 @@ from lore_mcp.application.errors import (
     RateLimited,
 )
 from lore_mcp.application.event_service import EventService
+from lore_mcp.application.extraction import (
+    AliasTableBuilder,
+    CuratedTimelineLoader,
+    DefaultEntityExtractor,
+    DefaultEventExtractor,
+    ManifestBuilder,
+)
 from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.normalization import (
     ContentDeduplicator,
@@ -34,13 +41,17 @@ from lore_mcp.application.series_loader import (
 from lore_mcp.application.sparse import SparseRetriever
 
 __all__ = [
+    "AliasTableBuilder",
     "ApplicationError",
     "ChunkService",
     "ClassifiedQuery",
     "ContentDeduplicator",
+    "CuratedTimelineLoader",
     "DataUnavailable",
     "DefaultDialogueNormalizer",
     "DefaultDocumentNormalizer",
+    "DefaultEntityExtractor",
+    "DefaultEventExtractor",
     "DefaultNormalizationPipeline",
     "DenseRetriever",
     "DependencyUnavailable",
@@ -52,6 +63,7 @@ __all__ = [
     "InvalidArgument",
     "InvalidScope",
     "LoreRetrievalService",
+    "ManifestBuilder",
     "QueryClassifier",
     "RateLimited",
     "ResolvedScope",
