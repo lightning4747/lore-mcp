@@ -1,5 +1,6 @@
 """Application layer: orchestrations, use cases, and ingestion stages."""
 
+from lore_mcp.application.chronology import DefaultChronologyBuilder
 from lore_mcp.application.chunk_service import ChunkService
 from lore_mcp.application.chunking import (
     ChunkSplitter,
@@ -60,6 +61,7 @@ __all__ = [
     "ContentDeduplicator",
     "CuratedTimelineLoader",
     "DataUnavailable",
+    "DefaultChronologyBuilder",
     "DefaultDialogueChunker",
     "DefaultDialogueNormalizer",
     "DefaultDocumentNormalizer",
