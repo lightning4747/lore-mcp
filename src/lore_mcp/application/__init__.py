@@ -1,6 +1,12 @@
 """Application layer: orchestrations, use cases, and ingestion stages."""
 
 from lore_mcp.application.chunk_service import ChunkService
+from lore_mcp.application.chunking import (
+    ChunkSplitter,
+    DefaultDialogueChunker,
+    DefaultEntityChunker,
+    DefaultEventChunker,
+)
 from lore_mcp.application.classifier import ClassifiedQuery, QueryClassifier
 from lore_mcp.application.dense import DenseRetriever
 from lore_mcp.application.dialogue_service import DialogueService
@@ -44,13 +50,17 @@ __all__ = [
     "AliasTableBuilder",
     "ApplicationError",
     "ChunkService",
+    "ChunkSplitter",
     "ClassifiedQuery",
     "ContentDeduplicator",
     "CuratedTimelineLoader",
     "DataUnavailable",
+    "DefaultDialogueChunker",
     "DefaultDialogueNormalizer",
     "DefaultDocumentNormalizer",
+    "DefaultEntityChunker",
     "DefaultEntityExtractor",
+    "DefaultEventChunker",
     "DefaultEventExtractor",
     "DefaultNormalizationPipeline",
     "DenseRetriever",
