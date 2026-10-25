@@ -6,6 +6,7 @@ from lore_mcp.ports.clock import Clock, SystemClock
 from lore_mcp.ports.documents import DocumentSource, DocumentStore
 from lore_mcp.ports.entity_registry import EntityRegistry
 from lore_mcp.ports.event_registry import EventRegistry
+from lore_mcp.ports.extraction import EntityExtractor, EventExtractor
 from lore_mcp.ports.normalization import (
     Deduplicator,
     DialogueNormalizer,
@@ -25,7 +26,9 @@ __all__ = [
     "DocumentNormalizer",
     "DocumentSource",
     "DocumentStore",
+    "EntityExtractor",
     "EntityRegistry",
+    "EventExtractor",
     "EventRegistry",
     "NormalizationPipeline",
     "SeriesRegistry",
