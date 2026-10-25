@@ -264,7 +264,7 @@ class AliasTable(BaseModel):
 
     def lookup(self, name: str) -> EntityId | None:
         """Case-insensitive, NFC-normalized lookup. Returns None on miss."""
-        key = unicodedata.normalize("NFC", name.strip().casefold())
+        key = " ".join(unicodedata.normalize("NFC", name.strip().casefold()).split())
         for entry in self.entries:
             if entry.lookup_key == key:
                 return entry.entity_id
