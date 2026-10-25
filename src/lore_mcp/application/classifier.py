@@ -136,17 +136,13 @@ class QueryClassifier:
         q_lower = query.lower().strip()
         entities = detected_entities or []
 
-        # 1. Complex / Multi-entity conditions
-        # a) 2 or more distinct entities detected
-        if len(set(entities)) >= 2:
-            return "complex_multi_entity"
-
-        # b) Explicit comparative phrasing
+        # 1. Explicit Complex / Multi-entity conditions
+        # a) Comparative phrasing
         for pat in _COMPLEX_COMPARISON_PATTERNS:
             if re.search(pat, q_lower):
                 return "complex_multi_entity"
 
-        # c) Compound causal inquiries or multi-sentence questions
+        # b) Compound causal inquiries or multi-sentence questions
         for pat in _COMPLEX_COMPOUND_PATTERNS:
             if re.search(pat, q_lower):
                 return "complex_multi_entity"
@@ -154,7 +150,16 @@ class QueryClassifier:
         if re.search(r"\?.*\?", q_lower) or ";" in q_lower:
             return "complex_multi_entity"
 
-        # 2. Entity-focused conditions
+        # 2. Simple factual conditions (e.g. When was X arrested by Y?)
+        for pat in _FACTUAL_PATTERNS:
+            if re.search(pat, q_lower):
+                return "simple_factual"
+
+        # 3. 2 or more distinct entities detected without explicit factual question
+        if len(set(entities)) >= 2:
+            return "complex_multi_entity"
+
+        # 4. Entity-focused conditions
         if len(set(entities)) == 1:
             for pat in _ENTITY_FOCUSED_PATTERNS:
                 if re.search(pat, q_lower):
@@ -162,12 +167,7 @@ class QueryClassifier:
             if len(q_lower.split()) <= 4:
                 return "entity_focused"
 
-        # 3. Simple factual conditions
-        for pat in _FACTUAL_PATTERNS:
-            if re.search(pat, q_lower):
-                return "simple_factual"
-
-        # 4. Fallback: single entity -> entity_focused; else simple_factual
+        # 5. Fallback
         if len(set(entities)) == 1:
             return "entity_focused"
 
@@ -193,11 +193,17 @@ class QueryClassifier:
         if manifest:
             for alias, canonical in manifest.entity_aliases.items():
                 clean_alias = alias.strip().lower()
+                clean_canon = canonical.strip().lower()
                 if clean_alias:
                     if clean_alias not in alias_map:
                         alias_map[clean_alias] = []
                     if canonical not in alias_map[clean_alias]:
                         alias_map[clean_alias].append(canonical)
+                if clean_canon:
+                    if clean_canon not in alias_map:
+                        alias_map[clean_canon] = []
+                    if canonical not in alias_map[clean_canon]:
+                        alias_map[clean_canon].append(canonical)
 
             for s_alias in manifest.aliases:
                 clean_s = s_alias.strip().lower()
@@ -207,23 +213,37 @@ class QueryClassifier:
                     if manifest.display_name not in alias_map[clean_s]:
                         alias_map[clean_s].append(manifest.display_name)
 
+            clean_disp = manifest.display_name.strip().lower()
+            if clean_disp:
+                if clean_disp not in alias_map:
+                    alias_map[clean_disp] = []
+                if manifest.display_name not in alias_map[clean_disp]:
+                    alias_map[clean_disp].append(manifest.display_name)
+
         if alias_table:
             for entry in alias_table.entries:
                 clean_k = entry.lookup_key.strip().lower()
+                clean_c = entry.canonical_name.strip().lower()
                 if clean_k:
                     if clean_k not in alias_map:
                         alias_map[clean_k] = []
                     if entry.canonical_name not in alias_map[clean_k]:
                         alias_map[clean_k].append(entry.canonical_name)
+                if clean_c:
+                    if clean_c not in alias_map:
+                        alias_map[clean_c] = []
+                    if entry.canonical_name not in alias_map[clean_c]:
+                        alias_map[clean_c].append(entry.canonical_name)
 
         for alias, canon_list in alias_map.items():
             escaped = re.escape(alias)
             pattern = rf"\b{escaped}\b"
             if re.search(pattern, q_lower):
-                matched_aliases.append(alias)
                 for canon in canon_list:
                     if canon not in detected_entities:
                         detected_entities.append(canon)
+                    if alias != canon.lower() and alias not in matched_aliases:
+                        matched_aliases.append(alias)
                     if (
                         re.search(rf"\b{re.escape(canon.lower())}\b", q_lower)
                         is None
