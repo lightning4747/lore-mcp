@@ -2,6 +2,7 @@
 
 from lore_mcp.ports.budget import BudgetCounter
 from lore_mcp.ports.cache import Cache
+from lore_mcp.ports.chunking import DialogueChunker, EntityChunker, EventChunker
 from lore_mcp.ports.clock import Clock, SystemClock
 from lore_mcp.ports.documents import DocumentSource, DocumentStore
 from lore_mcp.ports.entity_registry import EntityRegistry
@@ -22,12 +23,15 @@ __all__ = [
     "Cache",
     "Clock",
     "Deduplicator",
+    "DialogueChunker",
     "DialogueNormalizer",
     "DocumentNormalizer",
     "DocumentSource",
     "DocumentStore",
+    "EntityChunker",
     "EntityExtractor",
     "EntityRegistry",
+    "EventChunker",
     "EventExtractor",
     "EventRegistry",
     "NormalizationPipeline",
