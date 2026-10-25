@@ -2,6 +2,7 @@
 
 import hashlib
 import html
+import json
 import re
 from collections.abc import Sequence
 
@@ -200,32 +201,51 @@ class DefaultDialogueNormalizer(DialogueNormalizer):
                         )
                     )
         else:
-            # Fallback line-by-line parsing from content
-            for line in doc.content.split("\n"):
-                line_str = line.strip()
-                if not line_str:
+            # Fallback parsing from content
+            # Supports multi-line SRT blocks and inline lines
+            normalized = doc.content.replace("\r\n", "\n").replace("\r", "\n")
+            blocks = re.split(r"\n\s*\n", normalized)
+            for block in blocks:
+                lines = [ln.strip() for ln in block.split("\n") if ln.strip()]
+                if not lines:
                     continue
-                ts_match = FALLBACK_TIMESTAMP_LINE.match(line_str)
-                if ts_match:
-                    start_time = ts_match.group(1)
-                    end_time = ts_match.group(2)
-                    rest = ts_match.group(3)
-                    start_ms = parse_timestamp_ms(start_time)
-                    end_ms = parse_timestamp_ms(end_time)
-                    clean_text, speaker = self.clean_cue_text(
-                        rest, None, options
-                    )
-                    if clean_text:
-                        cleaned_cues.append(
-                            DialogueCue(
-                                start_ms=start_ms,
-                                end_ms=end_ms,
-                                start_time=start_time,
-                                end_time=end_time,
-                                speaker=speaker,
-                                text=clean_text,
-                            )
+                ts_line_idx = -1
+                ts_match = None
+                for idx, line in enumerate(lines):
+                    ts_match = FALLBACK_TIMESTAMP_LINE.search(line)
+                    if ts_match:
+                        ts_line_idx = idx
+                        break
+                if ts_line_idx == -1 or ts_match is None:
+                    continue
+
+                start_time = ts_match.group(1)
+                end_time = ts_match.group(2)
+                start_ms = parse_timestamp_ms(start_time)
+                end_ms = parse_timestamp_ms(end_time)
+
+                inline_rest = ts_match.group(3).strip()
+                subsequent_lines = lines[ts_line_idx + 1 :]
+                combined_lines: list[str] = []
+                if inline_rest:
+                    combined_lines.append(inline_rest)
+                combined_lines.extend(subsequent_lines)
+                raw_text = "\n".join(combined_lines)
+
+                clean_text, speaker = self.clean_cue_text(
+                    raw_text, None, options
+                )
+                if clean_text:
+                    cleaned_cues.append(
+                        DialogueCue(
+                            start_ms=start_ms,
+                            end_ms=end_ms,
+                            start_time=format_timestamp_ms(start_ms),
+                            end_time=format_timestamp_ms(end_ms),
+                            speaker=speaker,
+                            text=clean_text,
                         )
+                    )
 
         # Sort strictly by start_ms
         cleaned_cues.sort(key=lambda c: (c.start_ms, c.end_ms))
@@ -349,6 +369,9 @@ class DefaultDialogueNormalizer(DialogueNormalizer):
         cleaned_meta["content_hash"] = content_hash
         cleaned_meta["scene_count"] = str(len(segments))
         cleaned_meta["total_cues"] = str(len(cleaned_cues))
+        cleaned_meta["dialogue_segments"] = json.dumps(
+            [s.model_dump() for s in segments]
+        )
 
         return NormalizedDocument(
             series_id=doc.series_id,

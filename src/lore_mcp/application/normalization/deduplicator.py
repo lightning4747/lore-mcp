@@ -12,7 +12,8 @@ from lore_mcp.domain.normalization import DeduplicationReport
 from lore_mcp.ports.normalization import Deduplicator
 
 REDIRECT_PATTERN = re.compile(
-    r"^(?:#REDIRECT|REDIRECT)\s*\[\[([^\]]+)\]\]", re.IGNORECASE
+    r"^(?:#REDIRECT|REDIRECT)\s*(?:\[\[\s*)?([^\]\r\n]+?)(?:\s*\]\])?$",
+    re.IGNORECASE,
 )
 
 
@@ -103,6 +104,7 @@ class ContentDeduplicator(Deduplicator):
                         redirect_map.setdefault(
                             doc.title.strip().lower(), []
                         ).append(alias)
+                    redirects_collapsed += len(meta_list)
                 except Exception:
                     pass
 
@@ -163,7 +165,6 @@ class ContentDeduplicator(Deduplicator):
             if aliases:
                 updated_meta["aliases"] = json.dumps(aliases)
                 updated_meta["redirects"] = json.dumps(aliases)
-                redirects_collapsed += len(aliases)
 
             updated_doc = doc.model_copy(update={"metadata": updated_meta})
             batch_seen_fingerprints.add(fingerprint)

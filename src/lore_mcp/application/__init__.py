@@ -16,6 +16,12 @@ from lore_mcp.application.errors import (
 )
 from lore_mcp.application.event_service import EventService
 from lore_mcp.application.hybrid import HybridRetriever
+from lore_mcp.application.normalization import (
+    ContentDeduplicator,
+    DefaultDialogueNormalizer,
+    DefaultDocumentNormalizer,
+    DefaultNormalizationPipeline,
+)
 from lore_mcp.application.retrieval_service import (
     LoreRetrievalService,
     compute_cache_key,
@@ -31,7 +37,11 @@ __all__ = [
     "ApplicationError",
     "ChunkService",
     "ClassifiedQuery",
+    "ContentDeduplicator",
     "DataUnavailable",
+    "DefaultDialogueNormalizer",
+    "DefaultDocumentNormalizer",
+    "DefaultNormalizationPipeline",
     "DenseRetriever",
     "DependencyUnavailable",
     "DialogueService",

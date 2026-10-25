@@ -9,9 +9,13 @@ from lore_mcp.application.normalization.dialogue_normalizer import (
 from lore_mcp.application.normalization.document_normalizer import (
     DefaultDocumentNormalizer,
 )
+from lore_mcp.application.normalization.pipeline import (
+    DefaultNormalizationPipeline,
+)
 
 __all__ = [
     "ContentDeduplicator",
     "DefaultDialogueNormalizer",
     "DefaultDocumentNormalizer",
+    "DefaultNormalizationPipeline",
 ]

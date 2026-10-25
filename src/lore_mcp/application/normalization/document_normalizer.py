@@ -53,6 +53,12 @@ WIKITEXT_HEADING = re.compile(r"^[ \t]*(={1,6})\s*(.*?)\s*\1[ \t]*$", re.MULTILI
 # Markdown heading line pattern
 MARKDOWN_HEADING = re.compile(r"^[ \t]*(#{1,6})\s+(.+)$")
 
+# Redirect pattern
+RAW_REDIRECT_PATTERN = re.compile(
+    r"^(?:#REDIRECT|REDIRECT)\s*(?:\[\[\s*)?([^\]\r\n]+?)(?:\s*\]\])?$",
+    re.IGNORECASE,
+)
+
 
 def compute_sha256(text: str) -> str:
     """Compute deterministic SHA-256 hex digest of string."""
@@ -284,12 +290,19 @@ class DefaultDocumentNormalizer(DocumentNormalizer):
         # 6. Compute deterministic content hash
         content_hash = compute_sha256(normalized_text)
 
-        # 7. Preserve metadata attributes
+        # 7. Preserve metadata attributes and detect redirects
         cleaned_meta: dict[str, str] = {
             k: v for k, v in doc.metadata.items() if v
         }
         cleaned_meta["content_hash"] = content_hash
         cleaned_meta["title"] = title
+
+        redirect_match = (
+            RAW_REDIRECT_PATTERN.match(doc.content.strip())
+            or RAW_REDIRECT_PATTERN.match(normalized_text.strip())
+        )
+        if redirect_match:
+            cleaned_meta["redirect_target"] = redirect_match.group(1).strip()
 
         return NormalizedDocument(
             series_id=doc.series_id,
