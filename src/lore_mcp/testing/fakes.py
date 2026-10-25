@@ -105,7 +105,8 @@ class FakeVectorIndex(VectorIndex):
 
     async def search_sparse(self, query: SearchQuery) -> list[SearchHit]:
         hits: list[SearchHit] = []
-        query_terms = set(query.query.lower().split())
+        query_text = query.sparse_query or query.query
+        query_terms = set(query_text.lower().split())
         for chunk in self._chunks.values():
             if not self._matches_filters(chunk, query):
                 continue

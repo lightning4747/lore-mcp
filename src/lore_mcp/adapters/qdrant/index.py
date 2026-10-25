@@ -367,7 +367,7 @@ class QdrantVectorIndex(VectorIndex):
             response = await self._client.query_points(
                 collection_name=self._settings.chunks_collection,
                 query=models.Document(
-                    text=query.query,
+                    text=query.sparse_query or query.query,
                     model="Qdrant/bm25",
                 ),
                 using=self._settings.sparse_vector_name,
