@@ -172,7 +172,8 @@ class LoreRetrievalService:
 
         search_query = SearchQuery(
             series_id=series_id,
-            query=classified.expanded_query,
+            query=classified.raw_query,
+            sparse_query=classified.sparse_query,
             season=season,
             episode=episode,
             max_season=max_season,
@@ -191,7 +192,8 @@ class LoreRetrievalService:
         if not hits and source_type_filter is not None:
             fallback_query = SearchQuery(
                 series_id=series_id,
-                query=classified.expanded_query,
+                query=classified.raw_query,
+                sparse_query=classified.sparse_query,
                 season=season,
                 episode=episode,
                 max_season=max_season,
@@ -209,6 +211,12 @@ class LoreRetrievalService:
         )
         status: Any = "ok"
         notices: list[str] = []
+
+        if classified.query_class == "complex_multi_entity":
+            notices.append(
+                "Notice: Query detected as multi-entity/complex. For best accuracy, "
+                "consider decomposing into focused independent calls for each entity."
+            )
 
         if max_season is not None or max_episode is not None:
             notices.append(
