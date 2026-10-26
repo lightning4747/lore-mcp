@@ -142,32 +142,7 @@ class LoreRetrievalService:
         series_id = resolved_scope.series_id
         manifest = resolved_scope.manifest
 
-        # 2. Check Cache
-        cache_key = compute_cache_key(
-            series_id=str(series_id),
-            query=cleaned_query,
-            season=season,
-            episode=episode,
-            max_season=max_season,
-            max_episode=max_episode,
-            include_unscoped=include_unscoped,
-            entity=entity,
-            max_results=limit,
-        )
-        if self._cache is not None:
-            try:
-                cached_data = await self._cache.get(cache_key)
-                if cached_data is not None:
-                    bundle = EvidenceBundle.model_validate_json(cached_data)
-                    # Append notice if not already present
-                    notices = list(bundle.notices)
-                    if "Cached result" not in notices:
-                        notices.append("Cached result")
-                    return bundle.model_copy(update={"notices": notices})
-            except Exception as err:
-                logger.warning("Cache lookup failed for key '%s': %s", cache_key, err)
-
-        # 3. Classify Query and Expand Aliases
+        # 2. Classify Query and Expand Aliases
         classified = self._classifier.expand_aliases(cleaned_query, manifest)
 
         # Source type preference based on intent
@@ -258,16 +233,6 @@ class LoreRetrievalService:
             temporal_context=temporal_ctx,
             notices=notices,
         )
-
-        # Cache result
-        if self._cache is not None:
-            try:
-                # Cache for 5 minutes (300 seconds)
-                await self._cache.set(
-                    cache_key, bundle.model_dump_json(), ttl_seconds=300
-                )
-            except Exception as err:
-                logger.warning("Cache write failed for key '%s': %s", cache_key, err)
 
         return bundle
 

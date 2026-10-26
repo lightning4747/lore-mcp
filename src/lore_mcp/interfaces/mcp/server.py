@@ -117,6 +117,7 @@ def create_mcp_server(
     event_svc = services.event_service
     chunk_svc = services.chunk_service
     dialogue_svc = services.dialogue_service
+    rate_guard = services.rate_guard
     checker = readiness_checker or ReadinessChecker(
         client=qdrant_client,
         settings=app_settings.qdrant,
@@ -277,6 +278,9 @@ def create_mcp_server(
         if entity is not None and not entity.strip():
             validate_non_empty(entity, "entity")
 
+        if rate_guard is not None:
+            await rate_guard.check_rate_limit()
+
         return await retrieval_orch.search(
             query=query,
             series=series,
@@ -318,6 +322,9 @@ def create_mcp_server(
         validate_non_empty(series, "series")
         validate_optional_positive_int(max_results, "max_results")
 
+        if rate_guard is not None:
+            await rate_guard.check_rate_limit()
+
         return await entity_svc.get_entity(
             entity=entity,
             series=series,
@@ -347,6 +354,9 @@ def create_mcp_server(
         """
         validate_non_empty(chunk_id, "chunk_id")
         validate_non_empty(series, "series")
+
+        if rate_guard is not None:
+            await rate_guard.check_rate_limit()
 
         return await chunk_svc.get_chunk(
             chunk_id=chunk_id,
@@ -396,6 +406,9 @@ def create_mcp_server(
         validate_optional_positive_int(season, "season")
         validate_optional_positive_int(episode, "episode")
         validate_optional_positive_int(max_results, "max_results")
+
+        if rate_guard is not None:
+            await rate_guard.check_rate_limit()
 
         return await dialogue_svc.search_dialogue(
             query=query,
@@ -450,6 +463,9 @@ def create_mcp_server(
         if event_id is not None and not event_id.strip():
             validate_non_empty(event_id, "event_id")
         validate_optional_positive_int(max_results, "max_results")
+
+        if rate_guard is not None:
+            await rate_guard.check_rate_limit()
 
         return await event_svc.trace_event(
             query=query,
@@ -508,6 +524,9 @@ def create_mcp_server(
         if event_id_b is not None and not event_id_b.strip():
             validate_non_empty(event_id_b, "event_id_b")
         validate_optional_positive_int(max_results, "max_results")
+
+        if rate_guard is not None:
+            await rate_guard.check_rate_limit()
 
         return await event_svc.compare_events(
             query_a=query_a,

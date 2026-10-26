@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 CURRENT_SCHEMA_VERSION = 1
 
 
-class CachedRetrievalService:
+class CachedRetrievalService(LoreRetrievalService):
     """Decorator wrapping LoreRetrievalService to provide transparent caching.
 
     Use cases remain completely unaware of caching (Task 12.2).
@@ -36,6 +36,19 @@ class CachedRetrievalService:
         cache: Cache,
         settings: RedisSettings | None = None,
     ) -> None:
+        super().__init__(
+            scope_resolver=inner._scope_resolver,
+            retriever=inner._retriever,
+            cache=None,
+            web_search=inner._web_search,
+            budget_counter=inner._budget_counter,
+            classifier=inner._classifier,
+            chronology_builder=inner._chronology_builder,
+            clock=inner._clock,
+            web_search_settings=inner._web_search_settings,
+            limits_settings=inner._limits_settings,
+            sufficiency_threshold=inner._sufficiency_threshold,
+        )
         self._inner = inner
         self._cache = cache
         self._settings = settings or RedisSettings()
