@@ -131,6 +131,43 @@ def test_redis_timeout_validation() -> None:
 
 
 @pytest.mark.unit
+def test_redis_settings_phase12_validation() -> None:
+    # Default values
+    redis = RedisSettings()
+    assert redis.retrieval_cache_ttl == 3600
+    assert redis.web_cache_ttl == 86400
+    assert redis.max_payload_bytes == 65536
+    assert redis.monthly_command_budget == 500000
+    assert redis.command_budget_shedding_ratio == 0.80
+    assert redis.circuit_breaker_failure_threshold == 3
+    assert redis.circuit_breaker_reset_seconds == 30.0
+    assert redis.global_rate_limit_per_minute == 120
+
+    # Positive integer validation
+    with pytest.raises(ValidationError, match="Value must be greater than 0"):
+        RedisSettings(retrieval_cache_ttl=0)
+
+    with pytest.raises(ValidationError, match="Value must be greater than 0"):
+        RedisSettings(max_payload_bytes=-5)
+
+    with pytest.raises(ValidationError, match="Value must be greater than 0"):
+        RedisSettings(monthly_command_budget=0)
+
+    # Shedding ratio bounds
+    with pytest.raises(
+        ValidationError,
+        match=r"command_budget_shedding_ratio must be between 0\.0 and 1\.0",
+    ):
+        RedisSettings(command_budget_shedding_ratio=0.0)
+
+    with pytest.raises(
+        ValidationError,
+        match=r"command_budget_shedding_ratio must be between 0\.0 and 1\.0",
+    ):
+        RedisSettings(command_budget_shedding_ratio=1.2)
+
+
+@pytest.mark.unit
 def test_web_search_budget_validation() -> None:
     with pytest.raises(ValidationError, match="daily_budget must be greater than 0"):
         WebSearchSettings(daily_budget=0)

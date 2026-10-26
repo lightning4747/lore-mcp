@@ -136,12 +136,81 @@ class RedisSettings(BaseSettings):
         validation_alias=AliasChoices("REDIS_CONNECT_TIMEOUT_SECONDS"),
         description="Redis connection timeout in seconds",
     )
+    retrieval_cache_ttl: int = Field(
+        default=3600,
+        validation_alias=AliasChoices("REDIS_RETRIEVAL_CACHE_TTL"),
+        description="Retrieval cache TTL in seconds (~1 hour)",
+    )
+    web_cache_ttl: int = Field(
+        default=86400,
+        validation_alias=AliasChoices("REDIS_WEB_CACHE_TTL"),
+        description="Web search cache TTL in seconds (~24 hours)",
+    )
+    max_payload_bytes: int = Field(
+        default=65536,
+        validation_alias=AliasChoices("REDIS_MAX_PAYLOAD_BYTES"),
+        description=(
+            "Max cache payload size in bytes (64KB); larger entries skip cache"
+        ),
+    )
+    monthly_command_budget: int = Field(
+        default=500000,
+        validation_alias=AliasChoices("REDIS_MONTHLY_COMMAND_BUDGET"),
+        description="Monthly free-tier Redis command limit",
+    )
+    command_budget_shedding_ratio: float = Field(
+        default=0.80,
+        validation_alias=AliasChoices("REDIS_COMMAND_BUDGET_SHEDDING_RATIO"),
+        description=(
+            "Threshold ratio (0.80 = 400K commands) where cache shedding starts"
+        ),
+    )
+    circuit_breaker_failure_threshold: int = Field(
+        default=3,
+        validation_alias=AliasChoices("REDIS_CB_FAILURE_THRESHOLD"),
+        description="Consecutive failures before opening the circuit breaker",
+    )
+    circuit_breaker_reset_seconds: float = Field(
+        default=30.0,
+        validation_alias=AliasChoices("REDIS_CB_RESET_SECONDS"),
+        description="Seconds to wait before probing an open circuit breaker",
+    )
+    global_rate_limit_per_minute: int = Field(
+        default=120,
+        validation_alias=AliasChoices("REDIS_GLOBAL_RATE_LIMIT_PER_MINUTE"),
+        description="Global maximum requests per minute across all connectors",
+    )
 
-    @field_validator("timeout_seconds", "connect_timeout_seconds")
+    @field_validator(
+        "timeout_seconds", "connect_timeout_seconds", "circuit_breaker_reset_seconds"
+    )
     @classmethod
     def validate_positive_timeout(cls, value: float) -> float:
         if value <= 0:
             raise ValueError("Timeout values must be greater than 0")
+        return value
+
+    @field_validator(
+        "retrieval_cache_ttl",
+        "web_cache_ttl",
+        "max_payload_bytes",
+        "monthly_command_budget",
+        "circuit_breaker_failure_threshold",
+        "global_rate_limit_per_minute",
+    )
+    @classmethod
+    def validate_positive_redis_int(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("Value must be greater than 0")
+        return value
+
+    @field_validator("command_budget_shedding_ratio")
+    @classmethod
+    def validate_shedding_ratio(cls, value: float) -> float:
+        if not (0.0 < value <= 1.0):
+            raise ValueError(
+                "command_budget_shedding_ratio must be between 0.0 and 1.0"
+            )
         return value
 
 
