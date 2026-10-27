@@ -80,9 +80,7 @@ class DefaultChronologyBuilder(ChronologyBuilder):
                 it for it in items if it.narrative_order is not None
             ]
             items_with_broadcast = [
-                it
-                for it in items
-                if it.season is not None and it.episode is not None
+                it for it in items if it.season is not None and it.episode is not None
             ]
 
             ordered_items: list[Evidence] = []
@@ -116,9 +114,7 @@ class DefaultChronologyBuilder(ChronologyBuilder):
                         str(it.chunk_id),
                     ),
                 )
-                missing_narrative = [
-                    it for it in items if it.narrative_order is None
-                ]
+                missing_narrative = [it for it in items if it.narrative_order is None]
                 unordered_remainder = sorted(
                     missing_narrative,
                     key=lambda it: (
@@ -157,9 +153,7 @@ class DefaultChronologyBuilder(ChronologyBuilder):
                     ),
                 )
                 missing_broadcast = [
-                    it
-                    for it in items
-                    if it.season is None or it.episode is None
+                    it for it in items if it.season is None or it.episode is None
                 ]
                 unordered_remainder = sorted(
                     missing_broadcast,

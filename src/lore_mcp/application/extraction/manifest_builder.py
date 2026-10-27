@@ -39,9 +39,7 @@ class ManifestBuilder:
         )
 
         display_name = (
-            config.display_names[0]
-            if config.display_names
-            else str(config.id).title()
+            config.display_names[0] if config.display_names else str(config.id).title()
         )
 
         entity_aliases: dict[str, str] = {}

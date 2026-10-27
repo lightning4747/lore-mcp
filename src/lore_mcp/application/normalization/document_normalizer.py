@@ -154,9 +154,7 @@ class DefaultDocumentNormalizer(DocumentNormalizer):
         cleaned = WIKITEXT_HEADING.sub(_sub_heading, cleaned)
         return cleaned
 
-    def _normalize_text(
-        self, text: str, options: DocumentNormalizationOptions
-    ) -> str:
+    def _normalize_text(self, text: str, options: DocumentNormalizationOptions) -> str:
         """Normalize Unicode NFC, characters, and paragraph whitespace."""
         # Unescape HTML entities
         result = html.unescape(text)
@@ -167,9 +165,7 @@ class DefaultDocumentNormalizer(DocumentNormalizer):
 
         # Replace non-breaking spaces and zero-width spaces
         result = (
-            result.replace("\u00a0", " ")
-            .replace("\u200b", "")
-            .replace("\ufeff", "")
+            result.replace("\u00a0", " ").replace("\u200b", "").replace("\ufeff", "")
         )
 
         # Normalize line endings
@@ -291,16 +287,13 @@ class DefaultDocumentNormalizer(DocumentNormalizer):
         content_hash = compute_sha256(normalized_text)
 
         # 7. Preserve metadata attributes and detect redirects
-        cleaned_meta: dict[str, str] = {
-            k: v for k, v in doc.metadata.items() if v
-        }
+        cleaned_meta: dict[str, str] = {k: v for k, v in doc.metadata.items() if v}
         cleaned_meta["content_hash"] = content_hash
         cleaned_meta["title"] = title
 
-        redirect_match = (
-            RAW_REDIRECT_PATTERN.match(doc.content.strip())
-            or RAW_REDIRECT_PATTERN.match(normalized_text.strip())
-        )
+        redirect_match = RAW_REDIRECT_PATTERN.match(
+            doc.content.strip()
+        ) or RAW_REDIRECT_PATTERN.match(normalized_text.strip())
         if redirect_match:
             cleaned_meta["redirect_target"] = redirect_match.group(1).strip()
 

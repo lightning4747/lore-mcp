@@ -302,9 +302,7 @@ class ExtractionReport(BaseModel):
     entities_extracted: int = Field(
         default=0, description="Total valid entities extracted"
     )
-    events_extracted: int = Field(
-        default=0, description="Total valid events extracted"
-    )
+    events_extracted: int = Field(default=0, description="Total valid events extracted")
     disambiguation_pages_skipped: int = Field(
         default=0, description="Total disambiguation pages skipped"
     )

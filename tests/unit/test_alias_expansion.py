@@ -113,9 +113,7 @@ class TestAliasExpansion:
         assert "Sylvie" in classified.sparse_query
         assert classified.raw_query == raw
 
-    def test_alias_table_integration(
-        self, classifier: QueryClassifier
-    ) -> None:
+    def test_alias_table_integration(self, classifier: QueryClassifier) -> None:
         alias_table = AliasTable(
             series_id=SeriesId("loki"),
             entries=[

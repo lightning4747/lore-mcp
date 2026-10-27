@@ -13,15 +13,11 @@ class TestChunkSplitter:
     def splitter(self) -> ChunkSplitter:
         return ChunkSplitter(max_tokens=50)
 
-    def test_empty_content_returns_empty_list(
-        self, splitter: ChunkSplitter
-    ) -> None:
+    def test_empty_content_returns_empty_list(self, splitter: ChunkSplitter) -> None:
         assert splitter.split("") == []
         assert splitter.split("   ", heading="Section") == []
 
-    def test_short_content_under_limit_preserved(
-        self, splitter: ChunkSplitter
-    ) -> None:
+    def test_short_content_under_limit_preserved(self, splitter: ChunkSplitter) -> None:
         text = "Loki was a Frost Giant adopted by Odin."
         results = splitter.split(content=text, heading="Biography")
         assert len(results) == 1
@@ -62,9 +58,7 @@ class TestChunkSplitter:
         indices = [idx for _, idx in results]
         assert indices == list(range(len(results)))
 
-    def test_split_respects_split_index_offset(
-        self, splitter: ChunkSplitter
-    ) -> None:
+    def test_split_respects_split_index_offset(self, splitter: ChunkSplitter) -> None:
         text = "One short sentence."
         results = splitter.split(content=text, split_index_offset=5)
         assert len(results) == 1
@@ -98,9 +92,9 @@ class TestChunkSplitter:
         for n in word_counts:
             # Generate sentence with n words
             words = [f"token{i}" for i in range(n)]
-            content = ". ".join(
-                " ".join(words[i : i + 5]) for i in range(0, n, 5)
-            ) + "."
+            content = (
+                ". ".join(" ".join(words[i : i + 5]) for i in range(0, n, 5)) + "."
+            )
             splits = custom_splitter.split(content=content, heading="Heading")
 
             assert len(splits) > 0

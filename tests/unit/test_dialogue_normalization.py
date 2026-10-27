@@ -58,9 +58,7 @@ def test_subtitle_markup_and_audio_noise_stripping() -> None:
     assert spk == "Loki"
 
     # 2. Standalone music and sound effects dropped
-    text_music, _ = normalizer.clean_cue_text(
-        "♪ [DRAMATIC THEME MUSIC] ♪", None, opts
-    )
+    text_music, _ = normalizer.clean_cue_text("♪ [DRAMATIC THEME MUSIC] ♪", None, opts)
     assert text_music == ""
 
     text_noise, _ = normalizer.clean_cue_text("(CHUCKLES)", None, opts)
@@ -85,9 +83,7 @@ def test_speaker_normalization() -> None:
     assert spk == "Hunter B-15"
     assert text == "Reset the timeline."
 
-    text2, spk2 = normalizer.clean_cue_text(
-        "[MOBIUS] You like jet skis?", None, opts
-    )
+    text2, spk2 = normalizer.clean_cue_text("[MOBIUS] You like jet skis?", None, opts)
     assert spk2 == "Mobius"
     assert text2 == "You like jet skis?"
 

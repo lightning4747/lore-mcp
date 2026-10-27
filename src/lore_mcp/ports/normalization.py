@@ -70,9 +70,7 @@ class Deduplicator(Protocol):
 class NormalizationPipeline(Protocol):
     """Port for orchestrating document normalization, deduplication, and persistence."""
 
-    async def normalize_document(
-        self, doc: RawDocument
-    ) -> NormalizedDocument | None:
+    async def normalize_document(self, doc: RawDocument) -> NormalizedDocument | None:
         """Normalize a single raw document according to its source type."""
         ...
 

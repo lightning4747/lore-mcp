@@ -23,9 +23,7 @@ SSA_TAG_PATTERN = re.compile(r"\{[^\}]+\}")
 MUSIC_NOTES_PATTERN = re.compile(r"[♪♫#]+")
 
 # Standalone bracketed/parenthesized noise (e.g. "[MUSIC PLAYING]", "(CHUCKLES)")
-STANDALONE_NOISE_PATTERN = re.compile(
-    r"^\s*[\[\(][A-Za-z0-9\s,.'\-_!?♪♫#]+[\]\)]\s*$"
-)
+STANDALONE_NOISE_PATTERN = re.compile(r"^\s*[\[\(][A-Za-z0-9\s,.'\-_!?♪♫#]+[\]\)]\s*$")
 
 # Inline sound effect tags within spoken text (e.g. "I am... (laughs) burdened")
 INLINE_SOUND_PATTERN = re.compile(
@@ -84,8 +82,7 @@ def normalize_speaker_name(raw_name: str) -> str:
         # Title case standard names (LOKI -> Loki), preserve designations like B-15
         words = name.split()
         return " ".join(
-            w.capitalize() if not re.match(r"^[A-Z]-\d+$", w) else w
-            for w in words
+            w.capitalize() if not re.match(r"^[A-Z]-\d+$", w) else w for w in words
         )
     return name
 
@@ -164,27 +161,17 @@ class DefaultDialogueNormalizer(DialogueNormalizer):
         if raw_cues_data:
             for item in raw_cues_data:
                 raw_text = str(item.get("text", ""))
-                raw_speaker = (
-                    str(item.get("speaker")) if item.get("speaker") else None
-                )
+                raw_speaker = str(item.get("speaker")) if item.get("speaker") else None
                 start_val = item.get("start_ms", 0)
                 end_val = item.get("end_ms", 0)
                 start_ms = (
-                    int(start_val)
-                    if isinstance(start_val, (int, float, str))
-                    else 0
+                    int(start_val) if isinstance(start_val, (int, float, str)) else 0
                 )
-                end_ms = (
-                    int(end_val)
-                    if isinstance(end_val, (int, float, str))
-                    else 0
-                )
+                end_ms = int(end_val) if isinstance(end_val, (int, float, str)) else 0
                 start_time = str(
                     item.get("start_time") or format_timestamp_ms(start_ms)
                 )
-                end_time = str(
-                    item.get("end_time") or format_timestamp_ms(end_ms)
-                )
+                end_time = str(item.get("end_time") or format_timestamp_ms(end_ms))
 
                 clean_text, speaker = self.clean_cue_text(
                     raw_text, raw_speaker, options
@@ -232,9 +219,7 @@ class DefaultDialogueNormalizer(DialogueNormalizer):
                 combined_lines.extend(subsequent_lines)
                 raw_text = "\n".join(combined_lines)
 
-                clean_text, speaker = self.clean_cue_text(
-                    raw_text, None, options
-                )
+                clean_text, speaker = self.clean_cue_text(raw_text, None, options)
                 if clean_text:
                     cleaned_cues.append(
                         DialogueCue(
@@ -306,8 +291,7 @@ class DefaultDialogueNormalizer(DialogueNormalizer):
 
         if current_cues:
             seg_text = "\n".join(
-                f"{c.speaker}: {c.text}" if c.speaker else c.text
-                for c in current_cues
+                f"{c.speaker}: {c.text}" if c.speaker else c.text for c in current_cues
             )
             segments.append(
                 DialogueSegment(
@@ -349,9 +333,7 @@ class DefaultDialogueNormalizer(DialogueNormalizer):
             )
 
         # 4. Assembled full text
-        full_text_blocks = [
-            f"## {s.heading}\n\n{s.content}" for s in sections
-        ]
+        full_text_blocks = [f"## {s.heading}\n\n{s.content}" for s in sections]
         full_text = "\n\n".join(full_text_blocks)
         content_hash = compute_sha256(full_text)
 

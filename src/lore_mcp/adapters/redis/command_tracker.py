@@ -71,9 +71,8 @@ class CommandTracker:
         elif current_time.month in {4, 6, 9, 11}:
             days_in_month = 30
         else:
-            is_leap = (
-                current_time.year % 4 == 0
-                and (current_time.year % 100 != 0 or current_time.year % 400 == 0)
+            is_leap = current_time.year % 4 == 0 and (
+                current_time.year % 100 != 0 or current_time.year % 400 == 0
             )
             days_in_month = 29 if is_leap else 28
 

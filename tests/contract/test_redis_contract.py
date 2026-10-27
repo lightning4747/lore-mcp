@@ -20,9 +20,7 @@ class InMemoryAsyncRedis:
     async def get(self, key: str) -> str | None:
         return self._data.get(key)
 
-    async def set(
-        self, key: str, value: str, ex: int | None = None
-    ) -> bool:
+    async def set(self, key: str, value: str, ex: int | None = None) -> bool:
         self._data[key] = str(value)
         return True
 
@@ -37,9 +35,7 @@ class InMemoryAsyncRedis:
     async def exists(self, *keys: str) -> int:
         return sum(1 for k in keys if k in self._data)
 
-    async def eval(
-        self, script: str, numkeys: int, *args: Any
-    ) -> int:
+    async def eval(self, script: str, numkeys: int, *args: Any) -> int:
         # Simulates atomic LUA_INCR_EXPIRE script
         key = str(args[0])
         current = int(self._data.get(key, "0")) + 1

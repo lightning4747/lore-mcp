@@ -53,9 +53,7 @@ class TestEntityChunker:
             metadata={"license": "CC-BY-SA-3.0", "attribution": "Fandom Contributors"},
         )
 
-    def test_single_section_document(
-        self, sample_entity: Entity
-    ) -> None:
+    def test_single_section_document(self, sample_entity: Entity) -> None:
         doc = NormalizedDocument(
             series_id=SeriesId("loki"),
             source_url="https://marvel.fandom.com/wiki/Loki",
@@ -99,9 +97,7 @@ class TestEntityChunker:
         assert chunks[0].provenance.license == "CC-BY-SA-3.0"
         assert chunks[1].provenance.attribution_text == "Fandom Contributors"
 
-    def test_coalesces_short_sections(
-        self, sample_entity: Entity
-    ) -> None:
+    def test_coalesces_short_sections(self, sample_entity: Entity) -> None:
         doc = NormalizedDocument(
             series_id=SeriesId("loki"),
             source_url="https://marvel.fandom.com/wiki/Loki",
@@ -167,9 +163,7 @@ class TestEntityChunker:
         for c in chunks:
             assert c.text.startswith("History\n\n")
 
-    def test_empty_document_returns_empty_list(
-        self, sample_entity: Entity
-    ) -> None:
+    def test_empty_document_returns_empty_list(self, sample_entity: Entity) -> None:
         doc = NormalizedDocument(
             series_id=SeriesId("loki"),
             source_url="https://marvel.fandom.com/wiki/Empty",

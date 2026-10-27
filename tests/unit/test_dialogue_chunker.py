@@ -141,7 +141,7 @@ class TestDialogueChunker:
                 start_ms=i * 1000,
                 end_ms=(i + 1) * 1000,
                 start_time=f"00:00:{i:02d},000",
-                end_time=f"00:00:{i+1:02d},000",
+                end_time=f"00:00:{i + 1:02d},000",
                 speaker="SPEAKER",
                 text=(
                     f"Line {i} of scene dialogue that continues for a long duration."
@@ -150,8 +150,7 @@ class TestDialogueChunker:
             for i in range(15)
         ]
         text_lines = [
-            f"[{c.start_time} --> {c.end_time}] {c.speaker}: {c.text}"
-            for c in cues
+            f"[{c.start_time} --> {c.end_time}] {c.speaker}: {c.text}" for c in cues
         ]
         seg = DialogueSegment(
             scene_index=4,

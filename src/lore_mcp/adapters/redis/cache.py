@@ -73,9 +73,7 @@ class RedisCache(Cache):
             logger.warning("Redis cache get failed for key '%s': %s", key, err)
             return None
 
-    async def set(
-        self, key: str, value: str, ttl_seconds: int | None = None
-    ) -> None:
+    async def set(self, key: str, value: str, ttl_seconds: int | None = None) -> None:
         """Store key-value pair. Fails open without raising on any failure."""
         if self._client is None:
             return

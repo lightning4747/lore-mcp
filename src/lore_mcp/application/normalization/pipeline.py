@@ -47,9 +47,7 @@ class DefaultNormalizationPipeline(NormalizationPipeline):
         self._doc_options = doc_options
         self._dialogue_options = dialogue_options
 
-    async def normalize_document(
-        self, doc: RawDocument
-    ) -> NormalizedDocument | None:
+    async def normalize_document(self, doc: RawDocument) -> NormalizedDocument | None:
         """Normalize a single raw document according to its source type."""
         if not doc.content.strip():
             return None
@@ -59,9 +57,7 @@ class DefaultNormalizationPipeline(NormalizationPipeline):
                 doc, self._dialogue_options
             )
         else:
-            normalized = self._doc_normalizer.normalize(
-                doc, self._doc_options
-            )
+            normalized = self._doc_normalizer.normalize(doc, self._doc_options)
 
         if not normalized.text.strip():
             return None

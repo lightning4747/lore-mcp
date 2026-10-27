@@ -61,8 +61,7 @@ class TestEventChunker:
         assert "Participants: loki, hunter-b-15" in c.text
         assert "Location: Gobi Desert, Mongolia" in c.text
         assert (
-            "Consequences: Tesseract confiscated; Brought to TVA headquarters"
-            in c.text
+            "Consequences: Tesseract confiscated; Brought to TVA headquarters" in c.text
         )
         assert c.provenance.source_url == sample_provenance.source_url
 

@@ -420,9 +420,7 @@ class TestChronologyBuilder:
             "chunk-late",
         ]
 
-    def test_no_items_invented_or_dropped(
-        self, sample_provenance: Provenance
-    ) -> None:
+    def test_no_items_invented_or_dropped(self, sample_provenance: Provenance) -> None:
         """Every input evidence chunk must appear in ordered or unordered."""
         builder = DefaultChronologyBuilder()
         ev_items = [

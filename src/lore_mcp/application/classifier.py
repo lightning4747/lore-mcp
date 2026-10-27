@@ -244,10 +244,7 @@ class QueryClassifier:
                         detected_entities.append(canon)
                     if alias != canon.lower() and alias not in matched_aliases:
                         matched_aliases.append(alias)
-                    if (
-                        re.search(rf"\b{re.escape(canon.lower())}\b", q_lower)
-                        is None
-                    ):
+                    if re.search(rf"\b{re.escape(canon.lower())}\b", q_lower) is None:
                         if canon not in canonical_terms_to_add:
                             canonical_terms_to_add.append(canon)
 

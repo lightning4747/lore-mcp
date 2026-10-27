@@ -161,13 +161,9 @@ def test_disambiguation_skipped_in_batch(series_config: SeriesConfig) -> None:
     extractor = DefaultEntityExtractor()
     doc1 = _create_norm_doc("Mobius", "TVA Analyst", categories=["Characters"])
     doc2 = _create_norm_doc("Mobius (disambiguation)", "Pointers", categories=[])
-    doc3 = _create_norm_doc(
-        "Loki", "Variants", categories=["Category:Disambiguation"]
-    )
+    doc3 = _create_norm_doc("Loki", "Variants", categories=["Category:Disambiguation"])
 
-    entities, report = extractor.extract_entities(
-        [doc1, doc2, doc3], series_config
-    )
+    entities, report = extractor.extract_entities([doc1, doc2, doc3], series_config)
 
     assert len(entities) == 1
     assert entities[0].name == "Mobius"
@@ -240,9 +236,7 @@ Second paragraph.
     entity = extractor.extract_entity(doc, series_config)
 
     assert entity is not None
-    expected_summary = (
-        "First real synopsis paragraph explaining who Loki is in detail."
-    )
+    expected_summary = "First real synopsis paragraph explaining who Loki is in detail."
     assert entity.summary == expected_summary
 
 

@@ -164,9 +164,7 @@ class CachedWebSearch(WebSearch):
         self._settings = settings or RedisSettings()
         self._ttl_seconds = self._settings.web_cache_ttl
 
-    async def search(
-        self, query: str, limit: int = 3
-    ) -> list[WebSearchResult]:
+    async def search(self, query: str, limit: int = 3) -> list[WebSearchResult]:
         """Execute web search with 24-hour caching preserving metadata."""
         cache_key = build_web_cache_key(series="global", query=query)
 

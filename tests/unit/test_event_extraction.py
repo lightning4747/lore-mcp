@@ -148,9 +148,7 @@ def test_participant_resolution(
 
 
 @pytest.mark.unit
-def test_location_resolution(
-    series_config: SeriesConfig, sample_alias_table
-) -> None:
+def test_location_resolution(series_config: SeriesConfig, sample_alias_table) -> None:
     extractor = DefaultEventExtractor()
     sections = [
         DocumentSection(

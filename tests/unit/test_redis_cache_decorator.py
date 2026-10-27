@@ -17,7 +17,7 @@ from lore_mcp.config import RedisSettings
 from lore_mcp.domain.entities import SeriesManifest
 from lore_mcp.domain.provenance import Provenance
 from lore_mcp.domain.search import Evidence, EvidenceBundle, WebSearchResult
-from lore_mcp.domain.types import ChunkId, SeriesId, ValidatedSeriesId
+from lore_mcp.domain.types import ChunkId, SeriesId
 from lore_mcp.testing import FakeBudgetCounter, FakeCache, FakeClock
 
 
@@ -25,12 +25,12 @@ from lore_mcp.testing import FakeBudgetCounter, FakeCache, FakeClock
 def sample_bundle() -> EvidenceBundle:
     return EvidenceBundle(
         query="loki coffee",
-        series_id=ValidatedSeriesId("loki"),
+        series_id=SeriesId("loki"),
         status="ok",
         evidence=[
             Evidence(
                 chunk_id=ChunkId("chunk-1"),
-                series_id=ValidatedSeriesId("loki"),
+                series_id=SeriesId("loki"),
                 content="Mobius offers Loki coffee",
                 score=0.9,
                 provenance=Provenance(
@@ -49,9 +49,7 @@ class TestCachedRetrievalService:
     """Tests transparent caching, versioning, invalidation, and payload caps."""
 
     @pytest.mark.asyncio
-    async def test_cache_miss_then_hit(
-        self, sample_bundle: EvidenceBundle
-    ) -> None:
+    async def test_cache_miss_then_hit(self, sample_bundle: EvidenceBundle) -> None:
         mock_inner = AsyncMock()
         mock_scope_resolver = AsyncMock()
         mock_manifest = SeriesManifest(
@@ -61,7 +59,7 @@ class TestCachedRetrievalService:
             ingest_version=1,
         )
         resolved = AsyncMock()
-        resolved.series_id = ValidatedSeriesId("loki")
+        resolved.series_id = SeriesId("loki")
         resolved.manifest = mock_manifest
         mock_scope_resolver.resolve.return_value = resolved
         mock_inner._scope_resolver = mock_scope_resolver
@@ -109,7 +107,7 @@ class TestCachedRetrievalService:
             ingest_version=1,
         )
         resolved_v1 = AsyncMock()
-        resolved_v1.series_id = ValidatedSeriesId("loki")
+        resolved_v1.series_id = SeriesId("loki")
         resolved_v1.manifest = manifest_v1
         mock_scope_resolver.resolve.return_value = resolved_v1
         mock_inner._scope_resolver = mock_scope_resolver
@@ -130,7 +128,7 @@ class TestCachedRetrievalService:
             ingest_version=2,
         )
         resolved_v2 = AsyncMock()
-        resolved_v2.series_id = ValidatedSeriesId("loki")
+        resolved_v2.series_id = SeriesId("loki")
         resolved_v2.manifest = manifest_v2
         mock_scope_resolver.resolve.return_value = resolved_v2
 
@@ -151,7 +149,7 @@ class TestCachedRetrievalService:
             ingest_version=1,
         )
         resolved = AsyncMock()
-        resolved.series_id = ValidatedSeriesId("loki")
+        resolved.series_id = SeriesId("loki")
         resolved.manifest = mock_manifest
         mock_scope_resolver.resolve.return_value = resolved
         mock_inner._scope_resolver = mock_scope_resolver
@@ -192,7 +190,7 @@ class TestCachedRetrievalService:
             ingest_version=1,
         )
         resolved = AsyncMock()
-        resolved.series_id = ValidatedSeriesId("loki")
+        resolved.series_id = SeriesId("loki")
         resolved.manifest = mock_manifest
         mock_scope_resolver.resolve.return_value = resolved
         mock_inner._scope_resolver = mock_scope_resolver

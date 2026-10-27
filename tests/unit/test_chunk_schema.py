@@ -88,9 +88,7 @@ class TestChunkSchema:
         with pytest.raises(ValidationError):
             chunk.text = "Mutated text"  # type: ignore[reportAttributeAccessIssue]
 
-    def test_chunk_extra_fields_forbidden(
-        self, sample_provenance: Provenance
-    ) -> None:
+    def test_chunk_extra_fields_forbidden(self, sample_provenance: Provenance) -> None:
         with pytest.raises(ValidationError):
             Chunk(
                 chunk_id=ChunkId("chunk-extra"),

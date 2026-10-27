@@ -74,4 +74,3 @@ class CuratedTimelineLoader:
             pass
 
         return orders
-

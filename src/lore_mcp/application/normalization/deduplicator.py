@@ -101,9 +101,9 @@ class ContentDeduplicator(Deduplicator):
                     adapter = TypeAdapter(list[str])
                     meta_list = adapter.validate_json(meta_redirects_raw)
                     for alias in meta_list:
-                        redirect_map.setdefault(
-                            doc.title.strip().lower(), []
-                        ).append(alias)
+                        redirect_map.setdefault(doc.title.strip().lower(), []).append(
+                            alias
+                        )
                     redirects_collapsed += len(meta_list)
                 except Exception:
                     pass
@@ -132,15 +132,12 @@ class ContentDeduplicator(Deduplicator):
                 is_duplicate_transcript = False
                 for prior_doc, prior_shingles in transcript_shingles:
                     # Same season & episode: duplicate subtitle release
-                    same_episode = (
-                        doc.metadata.get("season")
-                        == prior_doc.metadata.get("season")
-                        and doc.metadata.get("episode")
-                        == prior_doc.metadata.get("episode")
+                    same_episode = doc.metadata.get("season") == prior_doc.metadata.get(
+                        "season"
+                    ) and doc.metadata.get("episode") == prior_doc.metadata.get(
+                        "episode"
                     )
-                    similarity = jaccard_similarity(
-                        current_shingles, prior_shingles
-                    )
+                    similarity = jaccard_similarity(current_shingles, prior_shingles)
                     if same_episode and similarity >= self._near_duplicate_threshold:
                         is_duplicate_transcript = True
                         exact_dropped += 1
