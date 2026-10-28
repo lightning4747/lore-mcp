@@ -274,8 +274,10 @@ def test_json_roundtrip(sample_chunk: Chunk, sample_provenance: Provenance) -> N
         display_name="Loki",
         kind="show",
         aliases=["MCU Loki"],
+        web_fallback_domain_allowlist=["marvel.fandom.com"],
     )
     assert SeriesManifest.model_validate_json(manifest.model_dump_json()) == manifest
+    assert manifest.web_fallback_domain_allowlist == ["marvel.fandom.com"]
 
     # WebSearchResult roundtrip
     web_res = WebSearchResult(
@@ -284,3 +286,4 @@ def test_json_roundtrip(sample_chunk: Chunk, sample_provenance: Provenance) -> N
         snippet="Snippet text",
     )
     assert WebSearchResult.model_validate_json(web_res.model_dump_json()) == web_res
+    assert web_res.retrieval_timestamp is not None

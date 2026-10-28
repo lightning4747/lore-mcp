@@ -78,6 +78,9 @@ class QdrantSeriesRegistry(SeriesRegistry):
             schema_version=int(
                 payload.get("schema_version", self._settings.schema_version)
             ),
+            web_fallback_domain_allowlist=[
+                str(d) for d in payload.get("web_fallback_domain_allowlist", [])
+            ],
         )
 
     async def register_series(self, manifest: SeriesManifest) -> None:
@@ -105,6 +108,7 @@ class QdrantSeriesRegistry(SeriesRegistry):
             "chunk_count": manifest.chunk_count,
             "ingest_version": manifest.ingest_version,
             "schema_version": manifest.schema_version,
+            "web_fallback_domain_allowlist": manifest.web_fallback_domain_allowlist,
             "_manifest_json": manifest.model_dump_json(),
         }
 

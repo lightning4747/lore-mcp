@@ -116,6 +116,10 @@ class SeriesManifest(BaseModel):
     schema_version: int = Field(
         default=1, description="Data schema version for manifest compatibility"
     )
+    web_fallback_domain_allowlist: list[str] = Field(
+        default_factory=list[str],
+        description="Domain allowlist permitted for dynamic web fallback search",
+    )
 
 
 class EntityDetails(BaseModel):

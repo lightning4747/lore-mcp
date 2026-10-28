@@ -60,4 +60,5 @@ class ManifestBuilder:
             entity_aliases=entity_aliases,
             ingest_version=ingest_version,
             schema_version=schema_version,
+            web_fallback_domain_allowlist=list(config.web_fallback_domain_allowlist),
         )

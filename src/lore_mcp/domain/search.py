@@ -1,6 +1,7 @@
 """Domain models for lore search queries, retrieval hits, and evidence bundles."""
 
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -138,6 +139,10 @@ class WebSearchResult(BaseModel):
     url: str = Field(description="URL of the web result")
     title: str = Field(description="Title of the web search result")
     snippet: str = Field(description="Textual snippet from search result")
+    retrieval_timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        description="Timestamp when the web search result was retrieved",
+    )
 
 
 def reciprocal_rank_fusion(
