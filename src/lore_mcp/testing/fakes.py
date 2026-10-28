@@ -287,6 +287,8 @@ class FakeWebSearch(WebSearch):
         self._default_results = results
 
     async def search(self, query: str, limit: int = 5) -> list[WebSearchResult]:
+        if not query.strip():
+            return []
         results = self._canned_results.get(query, self._default_results)
         return results[:limit]
 

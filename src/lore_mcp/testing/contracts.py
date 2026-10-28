@@ -17,7 +17,7 @@ from lore_mcp.domain.documents import (
 )
 from lore_mcp.domain.entities import Entity, Event, SeriesManifest
 from lore_mcp.domain.provenance import Provenance
-from lore_mcp.domain.search import SearchQuery
+from lore_mcp.domain.search import SearchQuery, WebSearchResult
 from lore_mcp.domain.types import (
     ChunkId,
     EntityId,
@@ -410,6 +410,17 @@ class WebSearchContractSuite:
         results = await search.search("TVA Loki", limit=3)
         assert isinstance(results, list)
         assert len(results) <= 3
+        for res in results:
+            assert isinstance(res, WebSearchResult)
+            assert isinstance(res.url, str)
+            assert isinstance(res.title, str)
+            assert isinstance(res.snippet, str)
+            assert isinstance(res.retrieval_timestamp, datetime)
+
+    @pytest.mark.asyncio
+    async def test_search_empty_query(self, search: WebSearch) -> None:
+        results = await search.search("   ", limit=3)
+        assert results == []
 
 
 class DocumentSourceContractSuite:
