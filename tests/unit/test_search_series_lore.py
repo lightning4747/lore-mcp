@@ -272,7 +272,7 @@ async def test_search_series_lore_web_fallback(
         [
             WebSearchResult(
                 url="https://marvel.com/he-who-remains",
-                title="He Who Remains Lore",
+                title="Loki: He Who Remains Lore",
                 snippet="He Who Remains lives at the Citadel at the End of Time.",
             )
         ]

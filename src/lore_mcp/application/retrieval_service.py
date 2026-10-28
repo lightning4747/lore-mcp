@@ -3,6 +3,7 @@
 import hashlib
 import json
 import logging
+import urllib.parse
 from typing import Any
 
 from lore_mcp.application.chronology import DefaultChronologyBuilder
@@ -11,6 +12,7 @@ from lore_mcp.application.errors import InvalidArgument
 from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.scope import ScopeResolver
 from lore_mcp.config import RequestLimitsSettings, WebSearchSettings
+from lore_mcp.domain.entities import SeriesManifest
 from lore_mcp.domain.provenance import Provenance
 from lore_mcp.domain.search import (
     Evidence,
@@ -54,6 +56,59 @@ def compute_cache_key(
     encoded = json.dumps(payload, sort_keys=True).encode("utf-8")
     digest = hashlib.sha256(encoded).hexdigest()
     return f"lore_retrieval:{series_id}:{digest}"
+
+
+def canonicalize_url(url: str) -> str:
+    """Canonicalize a URL for deduplication."""
+    parsed = urllib.parse.urlparse(url.strip())
+    scheme = (parsed.scheme or "https").lower()
+    netloc = parsed.netloc.lower()
+    if ":" in netloc:
+        host, port = netloc.split(":", 1)
+        if (scheme == "http" and port == "80") or (scheme == "https" and port == "443"):
+            netloc = host
+    path = parsed.path.rstrip("/")
+    canonical = f"{scheme}://{netloc}{path}"
+    if parsed.query:
+        canonical += f"?{parsed.query}"
+    return canonical
+
+
+def is_domain_allowed(url: str, allowlist: list[str]) -> bool:
+    """Check if the URL hostname matches any allowed domain."""
+    if not allowlist:
+        return True
+    parsed = urllib.parse.urlparse(url.strip())
+    host = (parsed.hostname or "").lower()
+    if not host:
+        return False
+    for allowed in allowlist:
+        allowed_clean = allowed.strip().lower()
+        if not allowed_clean:
+            continue
+        if host == allowed_clean or host.endswith("." + allowed_clean):
+            return True
+    return False
+
+
+def is_series_relevant(title: str, snippet: str, manifest: SeriesManifest) -> bool:
+    """Check if the title or snippet mentions the series name or aliases."""
+    content_lower = f"{title} {snippet}".lower()
+    candidates: list[str] = [
+        manifest.display_name.lower(),
+        str(manifest.series_id).lower(),
+    ]
+    for alias in manifest.aliases:
+        alias_clean = alias.strip().lower()
+        if alias_clean:
+            candidates.append(alias_clean)
+    name_tokens = [
+        w.strip("(),.:;\"'")
+        for w in manifest.display_name.lower().split()
+        if len(w.strip("(),.:;\"'")) >= 3
+    ]
+    candidates.extend(name_tokens)
+    return any(c in content_lower for c in candidates if c)
 
 
 class LoreRetrievalService:
@@ -211,14 +266,23 @@ class LoreRetrievalService:
         else:
             # Check if external web search fallback is available and allowed
             status = "insufficient"
+            local_evidence = [self._hit_to_evidence(hit, series_id) for hit in hits]
             if self._web_search is not None:
-                fallback_evidence = await self._execute_web_fallback(
-                    cleaned_query, series_id, manifest.display_name
+                fallback_evidence, fallback_notice = await self._execute_web_fallback(
+                    cleaned_query, series_id, manifest
                 )
                 if fallback_evidence:
-                    evidence_list.extend(fallback_evidence)
+                    evidence_list = fallback_evidence + local_evidence
                     status = "fallback_used"
                     notices.append("Retrieved from external web search fallback")
+                else:
+                    evidence_list = local_evidence
+                    if fallback_notice:
+                        notices.append(fallback_notice)
+            else:
+                evidence_list = local_evidence
+
+        evidence_list = evidence_list[:limit]
 
         # 7. Build Chronological Context
         temporal_ctx = self._chronology_builder.build_context(evidence_list)
@@ -261,29 +325,63 @@ class LoreRetrievalService:
         self,
         query: str,
         series_id: ValidatedSeriesId,
-        series_name: str,
-    ) -> list[Evidence]:
+        manifest: SeriesManifest,
+    ) -> tuple[list[Evidence], str | None]:
         if self._web_search is None:
-            return []
+            return [], None
 
-        # Check daily budget if counter is configured
+        # Check daily budget if counter is configured (fail closed)
         if self._budget_counter is not None:
-            budget_key = f"web_search_budget:{self._clock.now().strftime('%Y-%m-%d')}"
-            has_budget = await self._budget_counter.check_budget(
-                budget_key, self._web_search_settings.daily_budget
-            )
-            if not has_budget:
-                logger.info("Daily web search budget reached. Skipping fallback.")
-                return []
-            await self._budget_counter.increment(budget_key, window_seconds=86400)
+            today_str = self._clock.now().strftime("%Y-%m-%d")
+            budget_key = f"lore:v1:budget:web_search_daily:{today_str}"
+            try:
+                has_budget = await self._budget_counter.check_budget(
+                    budget_key, self._web_search_settings.daily_budget
+                )
+                if not has_budget:
+                    logger.info("Daily web search budget reached. Skipping fallback.")
+                    return [], "Web search budget exhausted"
+                await self._budget_counter.increment(budget_key, window_seconds=86400)
+            except Exception as err:
+                logger.warning(
+                    "Budget counter check failed: %s. Failing closed.",
+                    err,
+                )
+                return [], "Web search budget counter unavailable"
 
-        web_query = f"{series_name} {query}"
-        results = await self._web_search.search(web_query, limit=3)
+        web_query = f"{manifest.display_name} {query}".strip()
+        try:
+            results = await self._web_search.search(web_query, limit=5)
+        except Exception as err:
+            logger.warning(
+                "External web search provider failed for query '%s': %s",
+                web_query,
+                err,
+            )
+            return [], f"Web search provider error: {err}"
+
         fallback_evidence: list[Evidence] = []
+        seen_urls: set[str] = set()
         now = self._clock.now()
 
-        for idx, res in enumerate(results):
-            cid = ChunkId(f"web-fallback-{idx}")
+        for res in results:
+            # 1. Apply series domain allowlist
+            if not is_domain_allowed(res.url, manifest.web_fallback_domain_allowlist):
+                continue
+
+            # 2. Canonicalize and remove duplicate URLs
+            canonical_url = canonicalize_url(res.url)
+            if canonical_url in seen_urls:
+                continue
+            seen_urls.add(canonical_url)
+
+            # 3. Validate series relevance
+            if not is_series_relevant(res.title, res.snippet, manifest):
+                continue
+
+            # 4. Construct verified Evidence model
+            cid_hash = hashlib.sha256(canonical_url.encode("utf-8")).hexdigest()[:12]
+            cid = ChunkId(f"web-{cid_hash}")
             ev = Evidence(
                 chunk_id=cid,
                 series_id=series_id,
@@ -302,13 +400,13 @@ class LoreRetrievalService:
                     source_url=res.url,
                     license=None,
                     attribution_text=res.title,
-                    retrieval_timestamp=now,
+                    retrieval_timestamp=res.retrieval_timestamp or now,
                     revision_id=None,
                 ),
             )
             fallback_evidence.append(ev)
 
-        return fallback_evidence
+        return fallback_evidence, None
 
     def _build_chronology(self, evidence_list: list[Evidence]) -> list[str]:
         """Construct sequential chronological notes from retrieved evidence items."""
