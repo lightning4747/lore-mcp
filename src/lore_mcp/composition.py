@@ -22,6 +22,7 @@ from lore_mcp.adapters.redis import (
     RedisCache,
     create_redis_client,
 )
+from lore_mcp.adapters.tavily import TavilyWebSearch
 from lore_mcp.application.chunk_service import ChunkService
 from lore_mcp.application.dialogue_service import DialogueService
 from lore_mcp.application.entity_service import EntityService
@@ -92,6 +93,13 @@ def build_application_services(
     active_cache = cache
     active_budget_counter = budget_counter
     active_web_search = web_search
+
+    # Wire Tavily web search adapter when API key is configured
+    # and not explicitly provided
+    if active_web_search is None and app_settings.web_search.api_key is not None:
+        key_str = app_settings.web_search.api_key.get_secret_value().strip()
+        if key_str:
+            active_web_search = TavilyWebSearch(api_key=key_str)
 
     # Wire Redis adapter when URL is configured and ports not explicitly provided
     if app_settings.redis.url and active_cache is None:
