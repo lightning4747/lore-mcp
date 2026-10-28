@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from lore_mcp.adapters.redis import CachedWebSearch
 from lore_mcp.adapters.tavily import WebSearchError
 from lore_mcp.application.hybrid import HybridRetriever
 from lore_mcp.application.retrieval_service import (
@@ -24,6 +25,7 @@ from lore_mcp.domain.search import WebSearchResult
 from lore_mcp.domain.types import ChunkId, SeriesId
 from lore_mcp.testing.fakes import (
     FakeBudgetCounter,
+    FakeCache,
     FakeClock,
     FakeSeriesRegistry,
     FakeVectorIndex,
@@ -338,3 +340,45 @@ class TestLoreRetrievalServiceFallback:
         assert bundle.status == "insufficient"
         assert len(bundle.evidence) == 0
         assert any("Web search provider error" in notice for notice in bundle.notices)
+
+    @pytest.mark.asyncio
+    async def test_fallback_with_web_cache_avoids_repeated_provider_call(
+        self,
+        manifest: SeriesManifest,
+        fake_registry: FakeSeriesRegistry,
+        fake_clock: FakeClock,
+    ) -> None:
+        empty_index = FakeVectorIndex()
+        mock_web = AsyncMock()
+        mock_web.search.return_value = [
+            WebSearchResult(
+                url="https://marvel.fandom.com/wiki/Citadel_at_the_End_of_Time",
+                title="Citadel at the End of Time (Loki)",
+                snippet="He Who Remains lives at the Citadel in the Loki series.",
+            )
+        ]
+        fake_cache = FakeCache()
+        cached_web = CachedWebSearch(inner=mock_web, cache=fake_cache)
+
+        scope = ScopeResolver(registry=fake_registry, clock=fake_clock)
+        retriever = HybridRetriever(index=empty_index)
+        service = LoreRetrievalService(
+            scope_resolver=scope,
+            retriever=retriever,
+            web_search=cached_web,
+            clock=fake_clock,
+        )
+
+        bundle1 = await service.search(query="Citadel", series="loki")
+        assert bundle1.status == "fallback_used"
+        assert mock_web.search.await_count == 1
+
+        # Second identical fallback call should hit web cache and NOT invoke mock_web
+        bundle2 = await service.search(query="Citadel", series="loki")
+        assert bundle2.status == "fallback_used"
+        assert mock_web.search.await_count == 1
+        assert len(bundle2.evidence) == 1
+        assert (
+            bundle2.evidence[0].provenance.source_url
+            == "https://marvel.fandom.com/wiki/Citadel_at_the_End_of_Time"
+        )
