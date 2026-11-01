@@ -1,0 +1,124 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: "Cloud Run Service Name"
+        required: false
+        default: "lore-mcp"
+      region:
+        description: "Google Cloud Region"
+        required: false
+        default: "us-central1"
+
+env:
+  SERVICE_NAME: ${{ inputs.service_name || 'lore-mcp' }}
+  REGION: ${{ inputs.region || 'us-central1' }}
+  GAR_REPO: ${{ secrets.GAR_REPO || 'lore-mcp' }}
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || 'lore-mcp-prod' }}
+
+jobs:
+  deploy:
+    name: Build, Deploy & Verify
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        if: env.PROJECT_ID != ''
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker Authentication
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet || true
+
+      - name: Record Current Active Revision
+        id: prev_revision
+        run: |
+          PREV_REV=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.REGION }} \
+            --format="value(status.traffic[0].revisionName)" 2>/dev/null || echo "")
+          echo "previous_revision=$PREV_REV" >> $GITHUB_OUTPUT
+          echo "Active revision prior to deployment: $PREV_REV"
+
+      - name: Build & Tag Container Image
+        env:
+          IMAGE_URI: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/${{ env.SERVICE_NAME }}
+        run: |
+          docker build \
+            --build-arg APP_VERSION=${{ github.sha }} \
+            --build-arg INGEST_VERSION=1 \
+            -t ${IMAGE_URI}:${{ github.sha }} \
+            -t ${IMAGE_URI}:latest .
+
+      - name: Push Container Image to Registry
+        env:
+          IMAGE_URI: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/${{ env.SERVICE_NAME }}
+        run: |
+          docker push ${IMAGE_URI}:${{ github.sha }}
+          docker push ${IMAGE_URI}:latest
+
+      - name: Deploy to Cloud Run
+        env:
+          IMAGE_URI: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/${{ env.SERVICE_NAME }}
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image=${IMAGE_URI}:${{ github.sha }} \
+            --region=${{ env.REGION }} \
+            --platform=managed \
+            --port=8080 \
+            --set-env-vars="APP_VERSION=${{ github.sha }},INGEST_VERSION=1" \
+            --quiet
+
+      - name: Get Cloud Run Service URL
+        id: service_url
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.REGION }} \
+            --format="value(status.url)")
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Cloud Run service URL: $URL"
+
+      - name: Set up Python for Smoke Testing
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Smoke Test Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install httpx
+
+      - name: Run Post-Deploy Smoke Test
+        run: |
+          python scripts/smoke_test.py \
+            --url ${{ steps.service_url.outputs.url }} \
+            --mode deploy \
+            --retries 10 \
+            --delay 3
+
+      - name: Automatic Rollback on Smoke Test Failure
+        if: failure()
+        run: |
+          echo "Post-deploy smoke test failed! Triggering automatic rollback..."
+          python scripts/rollback.py \
+            --service ${{ env.SERVICE_NAME }} \
+            --region ${{ env.REGION }} \
+            --to-revision "${{ steps.prev_revision.outputs.previous_revision }}"
