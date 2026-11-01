@@ -7,9 +7,60 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Lint, Type Check & Test
+  quality-gate:
+    name: Lint, Format, Types & Architecture
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Ruff Format Check
+        run: uv run ruff format --check .
+
+      - name: Ruff Lint
+        run: uv run ruff check .
+
+      - name: Pyright Type Check
+        run: uv run pyright
+
+      - name: Import Linter Architectural Boundaries
+        run: uv run lint-imports
+
+      - name: Unit & Contract Tests
+        run: uv run pytest -m "unit or contract"
+
+  integration-and-eval:
+    name: Integration Tests & Evaluation Gate
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    services:
+      qdrant:
+        image: qdrant/qdrant:latest
+        ports:
+          - 6333:6333
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -29,17 +80,73 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
-      - name: Run Ruff Lint
-        run: uv run ruff check .
+      - name: Wait for Qdrant service readiness
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:6333/readyz | grep -q "all systems operational"; then
+              echo "Qdrant is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Timeout waiting for Qdrant"
+          exit 1
 
-      - name: Run Ruff Format Check
-        run: uv run ruff format --check .
+      - name: Run Integration Tests
+        env:
+          QDRANT_URL: http://localhost:6333
+          REDIS_URL: redis://localhost:6379
+          TAVILY_API_KEY: ""
+        run: uv run pytest -m "integration and not live"
 
-      - name: Run Pyright
-        run: uv run pyright
+      - name: Run Fixture-Corpus Evaluation Gate
+        env:
+          QDRANT_URL: http://localhost:6333
+          REDIS_URL: redis://localhost:6379
+          TAVILY_API_KEY: ""
+        run: uv run lore eval run --config eval/config.yaml
 
-      - name: Run Import Linter
-        run: uv run lint-imports
+  container-check:
+    name: Container Build & Startup Health Check
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Run Pytest
-        run: uv run pytest
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build production container image
+        run: |
+          docker build \
+            --build-arg APP_VERSION=${{ github.sha }} \
+            --build-arg INGEST_VERSION=1 \
+            -t lore-mcp:test .
+
+      - name: Run container in background
+        run: |
+          docker run -d \
+            --name lore-mcp-test \
+            -p 8080:8080 \
+            -e MCP_ACCESS_MODE=open \
+            -e APP_VERSION=${{ github.sha }} \
+            -e INGEST_VERSION=1 \
+            lore-mcp:test
+
+      - name: Set up Python for Smoke Test
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Container Startup Smoke Test
+        run: |
+          python scripts/smoke_test.py --url http://localhost:8080 --mode startup --retries 15 --delay 2
+
+      - name: Inspect container logs on failure
+        if: failure()
+        run: docker logs lore-mcp-test
+
+      - name: Cleanup container
+        if: always()
+        run: docker rm -f lore-mcp-test || true
