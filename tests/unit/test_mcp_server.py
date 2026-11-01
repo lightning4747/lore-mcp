@@ -8,12 +8,13 @@ from unittest.mock import AsyncMock
 import pytest
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
+from pydantic import SecretStr
 from qdrant_client import AsyncQdrantClient
 from starlette.testclient import TestClient
 
 from lore_mcp.adapters.qdrant.initializer import QdrantInitializer
 from lore_mcp.application.errors import DependencyUnavailable, RateLimited
-from lore_mcp.config import QdrantSettings, Settings
+from lore_mcp.config import QdrantSettings, RedisSettings, Settings, WebSearchSettings
 from lore_mcp.domain.documents import Chunk
 from lore_mcp.domain.entities import Entity, Event, SeriesManifest
 from lore_mcp.domain.provenance import Provenance
@@ -52,7 +53,9 @@ def test_settings() -> Settings:
             dimension=384,
             inference_backend="cloud",
             schema_version=1,
-        )
+        ),
+        redis=RedisSettings(url=""),
+        web_search=WebSearchSettings(api_key=SecretStr("")),
     )
 
 
@@ -180,7 +183,10 @@ def test_healthz_route_is_touchless(test_settings: Settings) -> None:
     with TestClient(app) as client:
         response = client.get("/healthz")
         assert response.status_code == 200
-        assert response.json() == {"status": "ok"}
+        data = response.json()
+        assert data["status"] == "ok"
+        assert data["version"] == test_settings.version.app_version
+        assert data["ingest_version"] == test_settings.version.ingest_version
 
     unreachable_client.get_collections.assert_not_called()
 

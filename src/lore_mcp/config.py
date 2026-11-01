@@ -335,6 +335,35 @@ class RequestLimitsSettings(BaseSettings):
         return self
 
 
+class VersionSettings(BaseSettings):
+    """Application deployment and ingestion version metadata (Task 18.4)."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        populate_by_name=True,
+    )
+
+    app_version: str = Field(
+        default="0.1.0-dev",
+        validation_alias=AliasChoices("APP_VERSION", "GIT_SHA", "COMMIT_SHA"),
+        description="Application version or git commit SHA",
+    )
+    ingest_version: int = Field(
+        default=1,
+        validation_alias=AliasChoices("INGEST_VERSION"),
+        description="Active ingestion batch version",
+    )
+
+    @field_validator("ingest_version")
+    @classmethod
+    def validate_ingest_version(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("ingest_version must be greater than 0")
+        return value
+
+
 class Settings(BaseSettings):
     """Root application configuration aggregating all component settings."""
 
@@ -361,6 +390,7 @@ class Settings(BaseSettings):
     web_search: WebSearchSettings = Field(default_factory=WebSearchSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
     limits: RequestLimitsSettings = Field(default_factory=RequestLimitsSettings)
+    version: VersionSettings = Field(default_factory=VersionSettings)
 
 
 @functools.lru_cache(maxsize=1)

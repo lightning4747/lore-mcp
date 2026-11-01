@@ -127,7 +127,13 @@ def create_mcp_server(
 
     @asynccontextmanager
     async def server_lifespan(server: FastMCP) -> AsyncIterator[dict[str, Any]]:
-        logger.info("Initializing lore-mcp server resources...")
+        logger.info(
+            "Initializing lore-mcp server resources "
+            "(version=%s, ingest_version=%d, access_mode=%s)...",
+            app_settings.version.app_version,
+            app_settings.version.ingest_version,
+            app_settings.security.access_mode,
+        )
         try:
             yield {
                 "settings": app_settings,
@@ -178,10 +184,17 @@ def create_mcp_server(
     # Attach checker for direct access if needed
     mcp._readiness_checker = checker  # type: ignore[attr-defined]
 
-    # 1. Liveness probe: touches NO dependencies
+    # 1. Liveness probe: touches NO dependencies, returns version metadata (Task 18.4)
     @mcp.custom_route("/healthz", methods=["GET"])
     async def healthz(request: Request) -> JSONResponse:
-        return JSONResponse({"status": "ok"}, status_code=200)
+        return JSONResponse(
+            {
+                "status": "ok",
+                "version": app_settings.version.app_version,
+                "ingest_version": app_settings.version.ingest_version,
+            },
+            status_code=200,
+        )
 
     # 2. Readiness probe: checks Qdrant reachability and manifest
     # compatibility (cached ~30s)
