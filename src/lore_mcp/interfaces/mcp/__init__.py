@@ -16,7 +16,11 @@ from lore_mcp.interfaces.mcp.models import (
     SeriesSummary,
 )
 from lore_mcp.interfaces.mcp.readiness import ReadinessChecker
-from lore_mcp.interfaces.mcp.server import create_http_app, create_mcp_server
+from lore_mcp.interfaces.mcp.server import (
+    create_app,
+    create_http_app,
+    create_mcp_server,
+)
 
 __all__ = [
     "DialogueSnippet",
@@ -29,6 +33,7 @@ __all__ = [
     "McpErrorResponse",
     "ReadinessChecker",
     "SeriesSummary",
+    "create_app",
     "create_http_app",
     "create_mcp_server",
     "handle_mcp_errors",

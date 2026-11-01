@@ -556,3 +556,9 @@ def create_mcp_server(
 def create_http_app(mcp: FastMCP) -> Starlette:
     """Create Streamable HTTP ASGI application with stateless_http=True at /mcp [S1]."""
     return mcp.http_app(path="/mcp", stateless_http=True)
+
+
+def create_app(settings: Settings | None = None) -> Starlette:
+    """Create production Starlette ASGI application for uvicorn/Cloud Run deployment."""
+    mcp = create_mcp_server(settings=settings)
+    return create_http_app(mcp)

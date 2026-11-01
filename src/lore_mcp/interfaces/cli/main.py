@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, cast
@@ -223,6 +224,24 @@ def diff_reports(
     return 0
 
 
+def run_serve_command(
+    host: str = "0.0.0.0",
+    port: int = 8080,
+    log_level: str = "info",
+) -> int:
+    """Run production uvicorn server for FastMCP Streamable HTTP app."""
+    import uvicorn
+
+    uvicorn.run(
+        "lore_mcp.interfaces.mcp.server:create_app",
+        factory=True,
+        host=host,
+        port=port,
+        log_level=log_level.lower(),
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> None:
     """CLI entrypoint for lore command."""
     parser = argparse.ArgumentParser(
@@ -230,6 +249,25 @@ def main(argv: list[str] | None = None) -> None:
         description="Lore MCP Command Line Interface",
     )
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
+
+    # serve subparser
+    serve_parser = subparsers.add_parser("serve", help="Run Lore MCP HTTP server")
+    serve_parser.add_argument(
+        "--host",
+        default="0.0.0.0",
+        help="Host address to bind to (default: 0.0.0.0)",
+    )
+    serve_parser.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        help="Port to bind to (default: PORT env var or 8080)",
+    )
+    serve_parser.add_argument(
+        "--log-level",
+        default=None,
+        help="Uvicorn log level (default: LOG_LEVEL env var or info)",
+    )
 
     # eval subparser
     eval_parser = subparsers.add_parser("eval", help="Evaluation commands")
@@ -291,6 +329,17 @@ def main(argv: list[str] | None = None) -> None:
                 tolerance=args.tolerance,
             )
             sys.exit(exit_code)
+    elif args.subcommand == "serve":
+        port = args.port
+        if port is None:
+            port = int(os.environ.get("PORT", "8080"))
+        log_level = args.log_level or os.environ.get("LOG_LEVEL", "info")
+        exit_code = run_serve_command(
+            host=args.host,
+            port=port,
+            log_level=log_level,
+        )
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":
