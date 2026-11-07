@@ -53,6 +53,6 @@ USER lore
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz')" || exit 1
+    CMD python3 -c "import os, urllib.request; port=os.environ.get('PORT', '8080'); urllib.request.urlopen(f'http://127.0.0.1:{port}/healthz')" || exit 1
 
-ENTRYPOINT ["lore", "serve", "--host", "0.0.0.0", "--port", "8080"]
+ENTRYPOINT ["lore", "serve", "--host", "0.0.0.0"]
