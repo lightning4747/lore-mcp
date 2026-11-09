@@ -1,0 +1,44 @@
+name: Keep-Alive & Anti-Suspension
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free-tier idle spin-down
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+    inputs:
+      service_url:
+        description: "Service URL override (e.g. https://lore-mcp.onrender.com)"
+        required: false
+
+jobs:
+  keep-alive:
+    name: Ping Service & Qdrant Heartbeat
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install httpx
+
+      - name: Run Keep-Alive Ping
+        env:
+          SERVICE_URL: ${{ inputs.service_url || vars.RENDER_SERVICE_URL || secrets.RENDER_SERVICE_URL }}
+          QDRANT_URL: ${{ vars.QDRANT_URL || secrets.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+        run: |
+          if [ -z "$SERVICE_URL" ] && [ -z "$QDRANT_URL" ]; then
+            echo "Neither RENDER_SERVICE_URL nor QDRANT_URL configured. Skipping keep-alive."
+            exit 0
+          fi
+          python scripts/keep_alive.py \
+            --url "$SERVICE_URL" \
+            --qdrant-url "$QDRANT_URL" \
+            --qdrant-api-key "$QDRANT_API_KEY" \
+            --timeout 20
