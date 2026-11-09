@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: lore-mcp
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /healthz
+    envVars:
+      - key: MCP_ACCESS_MODE
+        value: open
+      - key: LOG_LEVEL
+        value: info
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: MCP_PATH_TOKEN
+        sync: false
