@@ -194,3 +194,46 @@ def test_run_smoke_tests_success() -> None:
         mock_init.assert_called_once()
         mock_tools.assert_called_once()
         mock_search.assert_called_once()
+
+
+@pytest.mark.unit
+def test_run_smoke_tests_with_retries_and_delay() -> None:
+    with (
+        patch("scripts.smoke_test.check_healthz") as mock_h,
+        patch("scripts.smoke_test.check_mcp_initialize") as mock_init,
+        patch("scripts.smoke_test.check_mcp_tools_list") as mock_tools,
+    ):
+        mock_h.return_value = {"status": "ok", "version": "1.0", "ingest_version": 1}
+        mock_init.return_value = {"result": {"serverInfo": {"name": "lore"}}}
+        mock_tools.return_value = ["list_series"]
+
+        code = run_smoke_tests(
+            "http://localhost:8080",
+            mode="startup",
+            retries=3,
+            delay=0.01,
+        )
+        assert code == 0
+        mock_h.assert_called_once()
+
+
+@pytest.mark.unit
+def test_smoke_test_cli_retries_and_delay() -> None:
+    from scripts.smoke_test import main
+
+    with (
+        patch("sys.argv", ["smoke_test.py", "--retries", "15", "--delay", "2"]),
+        patch("scripts.smoke_test.run_smoke_tests", return_value=0) as mock_run,
+        patch("sys.exit") as mock_exit,
+    ):
+        main()
+        mock_run.assert_called_once_with(
+            base_url="http://localhost:8080",
+            mode="startup",
+            series="loki",
+            path_token=None,
+            timeout=30.0,
+            retries=15,
+            delay=2.0,
+        )
+        mock_exit.assert_called_once_with(0)

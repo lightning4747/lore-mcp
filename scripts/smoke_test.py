@@ -177,6 +177,8 @@ def run_smoke_tests(
     series: str = "loki",
     path_token: str | None = None,
     timeout: float = 30.0,
+    retries: int | None = None,
+    delay: float | None = None,
 ) -> int:
     """Run smoke test suite with retries until service becomes available."""
     print(
@@ -185,22 +187,31 @@ def run_smoke_tests(
     start_time = time.monotonic()
     last_err: Exception | None = None
 
+    effective_delay = delay if delay is not None else 1.0
+    effective_max_time = timeout
+    if retries is not None and delay is not None:
+        effective_max_time = max(timeout, retries * delay)
+
     with httpx.Client() as client:
         # 1. Warm-up poll on /healthz
         print("[smoke-test] 1. Probing /healthz...")
         health_data: dict[str, Any] | None = None
-        while time.monotonic() - start_time < timeout:
+        attempt = 0
+        while time.monotonic() - start_time < effective_max_time:
+            attempt += 1
             try:
                 health_data = check_healthz(client, base_url, path_token=path_token)
                 break
             except Exception as err:
                 last_err = err
-                time.sleep(1.0)
+                if retries is not None and attempt >= retries:
+                    break
+                time.sleep(effective_delay)
 
         if health_data is None:
             print(
                 f"[smoke-test] FAILED: /healthz probe timed out "
-                f"after {timeout}s: {last_err}"
+                f"after {effective_max_time}s ({attempt} attempts): {last_err}"
             )
             return 1
 
@@ -279,6 +290,18 @@ def main() -> None:
         default=30.0,
         help="Timeout in seconds for readiness check",
     )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=None,
+        help="Maximum retry attempts for initial health check",
+    )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=None,
+        help="Delay in seconds between health check retries",
+    )
 
     args = parser.parse_args()
     code = run_smoke_tests(
@@ -287,6 +310,8 @@ def main() -> None:
         series=args.series,
         path_token=args.path_token,
         timeout=args.timeout,
+        retries=args.retries,
+        delay=args.delay,
     )
     sys.exit(code)
 

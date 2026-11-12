@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from qdrant_client import AsyncQdrantClient, models
+from qdrant_client.http.exceptions import UnexpectedResponse
 
 from lore_mcp.adapters.qdrant.errors import wrap_qdrant_error
 from lore_mcp.config import QdrantSettings
@@ -114,6 +115,8 @@ class QdrantEventRegistry(EventRegistry):
                 with_vectors=False,
             )
         except Exception as err:
+            if isinstance(err, UnexpectedResponse) and err.status_code == 404:
+                return None
             raise wrap_qdrant_error(
                 err,
                 f"Failed to retrieve event '{event_id}' from "
@@ -149,6 +152,8 @@ class QdrantEventRegistry(EventRegistry):
                 with_vectors=False,
             )
         except Exception as err:
+            if isinstance(err, UnexpectedResponse) and err.status_code == 404:
+                return []
             raise wrap_qdrant_error(
                 err,
                 f"Failed to list events for series '{series_id}' from "

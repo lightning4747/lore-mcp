@@ -5,6 +5,7 @@ import uuid
 from typing import Any
 
 from qdrant_client import AsyncQdrantClient, models
+from qdrant_client.http.exceptions import UnexpectedResponse
 
 from lore_mcp.adapters.qdrant.errors import wrap_qdrant_error
 from lore_mcp.application.errors import IncompatibleData
@@ -143,6 +144,8 @@ class QdrantSeriesRegistry(SeriesRegistry):
                 with_vectors=False,
             )
         except Exception as err:
+            if isinstance(err, UnexpectedResponse) and err.status_code == 404:
+                return None
             raise wrap_qdrant_error(
                 err,
                 f"Failed to retrieve series '{series_id}' from "
@@ -199,6 +202,12 @@ class QdrantSeriesRegistry(SeriesRegistry):
                 with_vectors=False,
             )
         except Exception as err:
+            if isinstance(err, UnexpectedResponse) and err.status_code == 404:
+                logger.info(
+                    "Collection '%s' does not exist yet. Returning empty list.",
+                    self._settings.meta_collection,
+                )
+                return []
             raise wrap_qdrant_error(
                 err,
                 f"Failed to list series manifests from "
