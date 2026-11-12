@@ -15,7 +15,14 @@ import sys
 import time
 from typing import Any
 
-import httpx
+try:
+    import httpx
+except ImportError:
+    sys.stderr.write(
+        "Error: 'httpx' is required to run smoke_test.py. "
+        "Install it via 'pip install httpx'.\n"
+    )
+    sys.exit(1)
 
 
 def parse_mcp_response(response: httpx.Response) -> dict[str, Any]:
