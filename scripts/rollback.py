@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import subprocess
 import sys
 
@@ -27,6 +28,9 @@ def get_current_and_previous_revisions(
 
     Returns (latest_revision, previous_revision).
     """
+    resolved_project = (
+        project or os.environ.get("PROJECT_ID") or os.environ.get("GCP_PROJECT_ID")
+    )
     cmd = [
         "gcloud",
         "run",
@@ -37,8 +41,8 @@ def get_current_and_previous_revisions(
         "--format=value(name)",
         "--limit=3",
     ]
-    if project:
-        cmd.append(f"--project={project}")
+    if resolved_project:
+        cmd.append(f"--project={resolved_project}")
 
     try:
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
@@ -65,6 +69,9 @@ def rollback_traffic(
     project: str | None = None,
 ) -> bool:
     """Route 100% of service traffic to target revision."""
+    resolved_project = (
+        project or os.environ.get("PROJECT_ID") or os.environ.get("GCP_PROJECT_ID")
+    )
     cmd = [
         "gcloud",
         "run",
@@ -75,8 +82,8 @@ def rollback_traffic(
         f"--to-revisions={target_revision}=100",
         "--quiet",
     ]
-    if project:
-        cmd.append(f"--project={project}")
+    if resolved_project:
+        cmd.append(f"--project={resolved_project}")
 
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
@@ -160,8 +167,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--project",
-        default=None,
-        help="Google Cloud project ID (optional)",
+        default=os.environ.get("PROJECT_ID") or os.environ.get("GCP_PROJECT_ID"),
+        help="Google Cloud project ID (optional, defaults to PROJECT_ID env)",
     )
     parser.add_argument(
         "--to-revision",

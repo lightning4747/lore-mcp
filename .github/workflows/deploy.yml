@@ -24,6 +24,7 @@ jobs:
   deploy:
     name: Build, Deploy & Verify
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (secrets.GCP_SA_KEY != '' || secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '')
 
     permissions:
       contents: read
@@ -33,17 +34,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        if: env.PROJECT_ID != ''
+      - name: Authenticate to Google Cloud (Service Account Key)
+        if: secrets.GCP_SA_KEY != ''
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        if: secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && secrets.GCP_SA_KEY == ''
         uses: google-github-actions/auth@v2
         with:
           project_id: ${{ env.PROJECT_ID }}
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
+
+      - name: Set gcloud Project
+        run: gcloud config set project ${{ env.PROJECT_ID }}
 
       - name: Configure Docker Authentication
         run: |
@@ -107,6 +117,7 @@ jobs:
           pip install httpx
 
       - name: Run Post-Deploy Smoke Test
+        id: smoke_test
         run: |
           python scripts/smoke_test.py \
             --url ${{ steps.service_url.outputs.url }} \
@@ -115,10 +126,11 @@ jobs:
             --delay 3
 
       - name: Automatic Rollback on Smoke Test Failure
-        if: failure()
+        if: failure() && steps.smoke_test.outcome == 'failure' && steps.prev_revision.outputs.previous_revision != ''
         run: |
           echo "Post-deploy smoke test failed! Triggering automatic rollback..."
           python scripts/rollback.py \
             --service ${{ env.SERVICE_NAME }} \
             --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
             --to-revision "${{ steps.prev_revision.outputs.previous_revision }}"

@@ -231,3 +231,45 @@ def test_deliberately_broken_release_rolls_back() -> None:
         # Check update traffic target
         update_args = mock_subproc.call_args_list[1][0][0]
         assert f"--to-revisions={healthy_rev}=100" in update_args
+
+
+@pytest.mark.unit
+def test_get_current_and_previous_revisions_env_project(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("PROJECT_ID", "env-injected-project")
+    mock_stdout = "rev-2\nrev-1\n"
+    with patch(
+        "subprocess.run",
+        return_value=subprocess.CompletedProcess(
+            args=["gcloud"], returncode=0, stdout=mock_stdout
+        ),
+    ) as mock_run:
+        latest, prev = get_current_and_previous_revisions(
+            service="lore-mcp", region="us-central1"
+        )
+        assert latest == "rev-2"
+        assert prev == "rev-1"
+        cmd = mock_run.call_args[0][0]
+        assert "--project=env-injected-project" in cmd
+
+
+@pytest.mark.unit
+def test_rollback_traffic_env_project(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("GCP_PROJECT_ID", "env-gcp-project")
+    with patch(
+        "subprocess.run",
+        return_value=subprocess.CompletedProcess(
+            args=["gcloud"], returncode=0, stdout="Success"
+        ),
+    ) as mock_run:
+        result = rollback_traffic(
+            service="lore-mcp",
+            region="us-central1",
+            target_revision="rev-1",
+        )
+        assert result is True
+        cmd = mock_run.call_args[0][0]
+        assert "--project=env-gcp-project" in cmd
